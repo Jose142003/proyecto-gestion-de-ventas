@@ -1,0 +1,783 @@
+[2026-02-14 16:00:16] === INICIO DE PETICIÓN ===
+[2026-02-14 16:00:16] GET: Array
+(
+    [pedido_id] => 16
+    [t] => 1771084816070
+)
+
+[2026-02-14 16:00:16] SESSION: Array
+(
+    [user_id] => 6
+    [user_nombre] => Marivic
+    [user_correo] => c_m_2003@hotmail.com
+    [user_rol] => usuario
+    [user_tipo] => usuario
+    [loggedin] => 1
+    [pedido_pendiente_id] => 16
+    [numero_pedido] => PED-2026-000012
+    [ultimo_pedido] => 1771084482
+)
+
+[2026-02-14 16:00:16] pedido_id: 16, user_id: 6
+[2026-02-14 16:00:16] Conectando a DB: host=localhost, dbname=carrito_db
+[2026-02-14 16:00:16] Conexión DB exitosa
+[2026-02-14 16:00:16] Ejecutando query: SELECT * FROM pedidos WHERE id = 16 AND usuario_id = 6
+[2026-02-14 16:00:16] Resultado pedido: NO ENCONTRADO
+[2026-02-14 16:00:16] ERROR: Pedido no encontrado
+[2026-02-14 16:00:16] JSON enviado: {"error":"Pedido no encontrado"}
+[2026-02-14 16:00:16] === FIN DE PETICIÓN ===
+
+[2026-02-14 16:00:21] === INICIO DE PETICIÓN ===
+[2026-02-14 16:00:21] GET: Array
+(
+    [pedido_id] => 16
+    [t] => 1771084821071
+)
+
+[2026-02-14 16:00:21] SESSION: Array
+(
+    [user_id] => 6
+    [user_nombre] => Marivic
+    [user_correo] => c_m_2003@hotmail.com
+    [user_rol] => usuario
+    [user_tipo] => usuario
+    [loggedin] => 1
+    [pedido_pendiente_id] => 16
+    [numero_pedido] => PED-2026-000012
+    [ultimo_pedido] => 1771084482
+)
+
+[2026-02-14 16:00:21] pedido_id: 16, user_id: 6
+[2026-02-14 16:00:21] Conectando a DB: host=localhost, dbname=carrito_db
+[2026-02-14 16:00:21] Conexión DB exitosa
+[2026-02-14 16:00:21] Ejecutando query: SELECT * FROM pedidos WHERE id = 16 AND usuario_id = 6
+[2026-02-14 16:00:21] Resultado pedido: NO ENCONTRADO
+[2026-02-14 16:00:21] ERROR: Pedido no encontrado
+[2026-02-14 16:00:21] JSON enviado: {"error":"Pedido no encontrado"}
+[2026-02-14 16:00:21] === FIN DE PETICIÓN ===
+
+[2026-02-14 16:00:26] === INICIO DE PETICIÓN ===
+[2026-02-14 16:00:26] GET: Array
+(
+    [pedido_id] => 16
+    [t] => 1771084826073
+)
+
+[2026-02-14 16:00:26] SESSION: Array
+(
+    [user_id] => 6
+    [user_nombre] => Marivic
+    [user_correo] => c_m_2003@hotmail.com
+    [user_rol] => usuario
+    [user_tipo] => usuario
+    [loggedin] => 1
+    [pedido_pendiente_id] => 16
+    [numero_pedido] => PED-2026-000012
+    [ultimo_pedido] => 1771084482
+)
+
+[2026-02-14 16:00:26] pedido_id: 16, user_id: 6
+[2026-02-14 16:00:26] Conectando a DB: host=localhost, dbname=carrito_db
+[2026-02-14 16:00:26] Conexión DB exitosa
+[2026-02-14 16:00:26] Ejecutando query: SELECT * FROM pedidos WHERE id = 16 AND usuario_id = 6
+[2026-02-14 16:00:26] Resultado pedido: NO ENCONTRADO
+[2026-02-14 16:00:26] ERROR: Pedido no encontrado
+[2026-02-14 16:00:26] JSON enviado: {"error":"Pedido no encontrado"}
+[2026-02-14 16:00:26] === FIN DE PETICIÓN ===
+
+[2026-02-14 16:00:31] === INICIO DE PETICIÓN ===
+[2026-02-14 16:00:31] GET: Array
+(
+    [pedido_id] => 16
+    [t] => 1771084831072
+)
+
+[2026-02-14 16:00:31] SESSION: Array
+(
+    [user_id] => 6
+    [user_nombre] => Marivic
+    [user_correo] => c_m_2003@hotmail.com
+    [user_rol] => usuario
+    [user_tipo] => usuario
+    [loggedin] => 1
+    [pedido_pendiente_id] => 16
+    [numero_pedido] => PED-2026-000012
+    [ultimo_pedido] => 1771084482
+)
+
+[2026-02-14 16:00:31] pedido_id: 16, user_id: 6
+[2026-02-14 16:00:31] Conectando a DB: host=localhost, dbname=carrito_db
+[2026-02-14 16:00:31] Conexión DB exitosa
+[2026-02-14 16:00:31] Ejecutando query: SELECT * FROM pedidos WHERE id = 16 AND usuario_id = 6
+[2026-02-14 16:00:31] Resultado pedido: NO ENCONTRADO
+[2026-02-14 16:00:31] ERROR: Pedido no encontrado
+[2026-02-14 16:00:31] JSON enviado: {"error":"Pedido no encontrado"}
+[2026-02-14 16:00:31] === FIN DE PETICIÓN ===
+
+[2026-02-14 16:00:36] === INICIO DE PETICIÓN ===
+[2026-02-14 16:00:36] GET: Array
+(
+    [pedido_id] => 16
+    [t] => 1771084836083
+)
+
+[2026-02-14 16:00:36] SESSION: Array
+(
+    [user_id] => 6
+    [user_nombre] => Marivic
+    [user_correo] => c_m_2003@hotmail.com
+    [user_rol] => usuario
+    [user_tipo] => usuario
+    [loggedin] => 1
+    [pedido_pendiente_id] => 16
+    [numero_pedido] => PED-2026-000012
+    [ultimo_pedido] => 1771084482
+)
+
+[2026-02-14 16:00:36] pedido_id: 16, user_id: 6
+[2026-02-14 16:00:36] Conectando a DB: host=localhost, dbname=carrito_db
+[2026-02-14 16:00:36] Conexión DB exitosa
+[2026-02-14 16:00:36] Ejecutando query: SELECT * FROM pedidos WHERE id = 16 AND usuario_id = 6
+[2026-02-14 16:00:36] Resultado pedido: NO ENCONTRADO
+[2026-02-14 16:00:36] ERROR: Pedido no encontrado
+[2026-02-14 16:00:36] JSON enviado: {"error":"Pedido no encontrado"}
+[2026-02-14 16:00:36] === FIN DE PETICIÓN ===
+
+[2026-02-14 16:00:41] === INICIO DE PETICIÓN ===
+[2026-02-14 16:00:41] GET: Array
+(
+    [pedido_id] => 16
+    [t] => 1771084841447
+)
+
+[2026-02-14 16:00:41] SESSION: Array
+(
+    [user_id] => 6
+    [user_nombre] => Marivic
+    [user_correo] => c_m_2003@hotmail.com
+    [user_rol] => usuario
+    [user_tipo] => usuario
+    [loggedin] => 1
+    [pedido_pendiente_id] => 16
+    [numero_pedido] => PED-2026-000012
+    [ultimo_pedido] => 1771084482
+)
+
+[2026-02-14 16:00:41] pedido_id: 16, user_id: 6
+[2026-02-14 16:00:41] Conectando a DB: host=localhost, dbname=carrito_db
+[2026-02-14 16:00:41] Conexión DB exitosa
+[2026-02-14 16:00:41] Ejecutando query: SELECT * FROM pedidos WHERE id = 16 AND usuario_id = 6
+[2026-02-14 16:00:41] Resultado pedido: NO ENCONTRADO
+[2026-02-14 16:00:41] ERROR: Pedido no encontrado
+[2026-02-14 16:00:41] JSON enviado: {"error":"Pedido no encontrado"}
+[2026-02-14 16:00:41] === FIN DE PETICIÓN ===
+
+[2026-02-14 16:00:46] === INICIO DE PETICIÓN ===
+[2026-02-14 16:00:46] GET: Array
+(
+    [pedido_id] => 16
+    [t] => 1771084846442
+)
+
+[2026-02-14 16:00:46] SESSION: Array
+(
+    [user_id] => 6
+    [user_nombre] => Marivic
+    [user_correo] => c_m_2003@hotmail.com
+    [user_rol] => usuario
+    [user_tipo] => usuario
+    [loggedin] => 1
+    [pedido_pendiente_id] => 16
+    [numero_pedido] => PED-2026-000012
+    [ultimo_pedido] => 1771084482
+)
+
+[2026-02-14 16:00:46] pedido_id: 16, user_id: 6
+[2026-02-14 16:00:46] Conectando a DB: host=localhost, dbname=carrito_db
+[2026-02-14 16:00:46] Conexión DB exitosa
+[2026-02-14 16:00:46] Ejecutando query: SELECT * FROM pedidos WHERE id = 16 AND usuario_id = 6
+[2026-02-14 16:00:46] Resultado pedido: NO ENCONTRADO
+[2026-02-14 16:00:46] ERROR: Pedido no encontrado
+[2026-02-14 16:00:46] JSON enviado: {"error":"Pedido no encontrado"}
+[2026-02-14 16:00:46] === FIN DE PETICIÓN ===
+
+[2026-02-14 16:00:51] === INICIO DE PETICIÓN ===
+[2026-02-14 16:00:51] GET: Array
+(
+    [pedido_id] => 16
+    [t] => 1771084851455
+)
+
+[2026-02-14 16:00:51] SESSION: Array
+(
+    [user_id] => 6
+    [user_nombre] => Marivic
+    [user_correo] => c_m_2003@hotmail.com
+    [user_rol] => usuario
+    [user_tipo] => usuario
+    [loggedin] => 1
+    [pedido_pendiente_id] => 16
+    [numero_pedido] => PED-2026-000012
+    [ultimo_pedido] => 1771084482
+)
+
+[2026-02-14 16:00:51] pedido_id: 16, user_id: 6
+[2026-02-14 16:00:51] Conectando a DB: host=localhost, dbname=carrito_db
+[2026-02-14 16:00:51] Conexión DB exitosa
+[2026-02-14 16:00:51] Ejecutando query: SELECT * FROM pedidos WHERE id = 16 AND usuario_id = 6
+[2026-02-14 16:00:51] Resultado pedido: NO ENCONTRADO
+[2026-02-14 16:00:51] ERROR: Pedido no encontrado
+[2026-02-14 16:00:51] JSON enviado: {"error":"Pedido no encontrado"}
+[2026-02-14 16:00:51] === FIN DE PETICIÓN ===
+
+[2026-02-14 16:00:56] === INICIO DE PETICIÓN ===
+[2026-02-14 16:00:56] GET: Array
+(
+    [pedido_id] => 16
+    [t] => 1771084856449
+)
+
+[2026-02-14 16:00:56] SESSION: Array
+(
+    [user_id] => 6
+    [user_nombre] => Marivic
+    [user_correo] => c_m_2003@hotmail.com
+    [user_rol] => usuario
+    [user_tipo] => usuario
+    [loggedin] => 1
+    [pedido_pendiente_id] => 16
+    [numero_pedido] => PED-2026-000012
+    [ultimo_pedido] => 1771084482
+)
+
+[2026-02-14 16:00:56] pedido_id: 16, user_id: 6
+[2026-02-14 16:00:56] Conectando a DB: host=localhost, dbname=carrito_db
+[2026-02-14 16:00:56] Conexión DB exitosa
+[2026-02-14 16:00:56] Ejecutando query: SELECT * FROM pedidos WHERE id = 16 AND usuario_id = 6
+[2026-02-14 16:00:56] Resultado pedido: NO ENCONTRADO
+[2026-02-14 16:00:56] ERROR: Pedido no encontrado
+[2026-02-14 16:00:56] JSON enviado: {"error":"Pedido no encontrado"}
+[2026-02-14 16:00:56] === FIN DE PETICIÓN ===
+
+[2026-02-14 16:01:01] === INICIO DE PETICIÓN ===
+[2026-02-14 16:01:01] GET: Array
+(
+    [pedido_id] => 16
+    [t] => 1771084861454
+)
+
+[2026-02-14 16:01:01] SESSION: Array
+(
+    [user_id] => 6
+    [user_nombre] => Marivic
+    [user_correo] => c_m_2003@hotmail.com
+    [user_rol] => usuario
+    [user_tipo] => usuario
+    [loggedin] => 1
+    [pedido_pendiente_id] => 16
+    [numero_pedido] => PED-2026-000012
+    [ultimo_pedido] => 1771084482
+)
+
+[2026-02-14 16:01:01] pedido_id: 16, user_id: 6
+[2026-02-14 16:01:01] Conectando a DB: host=localhost, dbname=carrito_db
+[2026-02-14 16:01:01] Conexión DB exitosa
+[2026-02-14 16:01:01] Ejecutando query: SELECT * FROM pedidos WHERE id = 16 AND usuario_id = 6
+[2026-02-14 16:01:01] Resultado pedido: NO ENCONTRADO
+[2026-02-14 16:01:01] ERROR: Pedido no encontrado
+[2026-02-14 16:01:01] JSON enviado: {"error":"Pedido no encontrado"}
+[2026-02-14 16:01:01] === FIN DE PETICIÓN ===
+
+[2026-02-14 16:01:06] === INICIO DE PETICIÓN ===
+[2026-02-14 16:01:06] GET: Array
+(
+    [pedido_id] => 16
+    [t] => 1771084866446
+)
+
+[2026-02-14 16:01:06] SESSION: Array
+(
+    [user_id] => 6
+    [user_nombre] => Marivic
+    [user_correo] => c_m_2003@hotmail.com
+    [user_rol] => usuario
+    [user_tipo] => usuario
+    [loggedin] => 1
+    [pedido_pendiente_id] => 16
+    [numero_pedido] => PED-2026-000012
+    [ultimo_pedido] => 1771084482
+)
+
+[2026-02-14 16:01:06] pedido_id: 16, user_id: 6
+[2026-02-14 16:01:06] Conectando a DB: host=localhost, dbname=carrito_db
+[2026-02-14 16:01:06] Conexión DB exitosa
+[2026-02-14 16:01:06] Ejecutando query: SELECT * FROM pedidos WHERE id = 16 AND usuario_id = 6
+[2026-02-14 16:01:06] Resultado pedido: NO ENCONTRADO
+[2026-02-14 16:01:06] ERROR: Pedido no encontrado
+[2026-02-14 16:01:06] JSON enviado: {"error":"Pedido no encontrado"}
+[2026-02-14 16:01:06] === FIN DE PETICIÓN ===
+
+[2026-02-14 16:01:11] === INICIO DE PETICIÓN ===
+[2026-02-14 16:01:11] GET: Array
+(
+    [pedido_id] => 16
+    [t] => 1771084871456
+)
+
+[2026-02-14 16:01:11] SESSION: Array
+(
+    [user_id] => 6
+    [user_nombre] => Marivic
+    [user_correo] => c_m_2003@hotmail.com
+    [user_rol] => usuario
+    [user_tipo] => usuario
+    [loggedin] => 1
+    [pedido_pendiente_id] => 16
+    [numero_pedido] => PED-2026-000012
+    [ultimo_pedido] => 1771084482
+)
+
+[2026-02-14 16:01:11] pedido_id: 16, user_id: 6
+[2026-02-14 16:01:11] Conectando a DB: host=localhost, dbname=carrito_db
+[2026-02-14 16:01:11] Conexión DB exitosa
+[2026-02-14 16:01:11] Ejecutando query: SELECT * FROM pedidos WHERE id = 16 AND usuario_id = 6
+[2026-02-14 16:01:11] Resultado pedido: NO ENCONTRADO
+[2026-02-14 16:01:11] ERROR: Pedido no encontrado
+[2026-02-14 16:01:11] JSON enviado: {"error":"Pedido no encontrado"}
+[2026-02-14 16:01:11] === FIN DE PETICIÓN ===
+
+[2026-02-14 16:01:16] === INICIO DE PETICIÓN ===
+[2026-02-14 16:01:16] GET: Array
+(
+    [pedido_id] => 16
+    [t] => 1771084876441
+)
+
+[2026-02-14 16:01:16] SESSION: Array
+(
+    [user_id] => 6
+    [user_nombre] => Marivic
+    [user_correo] => c_m_2003@hotmail.com
+    [user_rol] => usuario
+    [user_tipo] => usuario
+    [loggedin] => 1
+    [pedido_pendiente_id] => 16
+    [numero_pedido] => PED-2026-000012
+    [ultimo_pedido] => 1771084482
+)
+
+[2026-02-14 16:01:16] pedido_id: 16, user_id: 6
+[2026-02-14 16:01:16] Conectando a DB: host=localhost, dbname=carrito_db
+[2026-02-14 16:01:16] Conexión DB exitosa
+[2026-02-14 16:01:16] Ejecutando query: SELECT * FROM pedidos WHERE id = 16 AND usuario_id = 6
+[2026-02-14 16:01:16] Resultado pedido: NO ENCONTRADO
+[2026-02-14 16:01:16] ERROR: Pedido no encontrado
+[2026-02-14 16:01:16] JSON enviado: {"error":"Pedido no encontrado"}
+[2026-02-14 16:01:16] === FIN DE PETICIÓN ===
+
+[2026-02-14 16:01:21] === INICIO DE PETICIÓN ===
+[2026-02-14 16:01:21] GET: Array
+(
+    [pedido_id] => 16
+    [t] => 1771084881449
+)
+
+[2026-02-14 16:01:21] SESSION: Array
+(
+    [user_id] => 6
+    [user_nombre] => Marivic
+    [user_correo] => c_m_2003@hotmail.com
+    [user_rol] => usuario
+    [user_tipo] => usuario
+    [loggedin] => 1
+    [pedido_pendiente_id] => 16
+    [numero_pedido] => PED-2026-000012
+    [ultimo_pedido] => 1771084482
+)
+
+[2026-02-14 16:01:21] pedido_id: 16, user_id: 6
+[2026-02-14 16:01:21] Conectando a DB: host=localhost, dbname=carrito_db
+[2026-02-14 16:01:21] Conexión DB exitosa
+[2026-02-14 16:01:21] Ejecutando query: SELECT * FROM pedidos WHERE id = 16 AND usuario_id = 6
+[2026-02-14 16:01:21] Resultado pedido: NO ENCONTRADO
+[2026-02-14 16:01:21] ERROR: Pedido no encontrado
+[2026-02-14 16:01:21] JSON enviado: {"error":"Pedido no encontrado"}
+[2026-02-14 16:01:21] === FIN DE PETICIÓN ===
+
+[2026-02-14 16:01:26] === INICIO DE PETICIÓN ===
+[2026-02-14 16:01:26] GET: Array
+(
+    [pedido_id] => 16
+    [t] => 1771084886451
+)
+
+[2026-02-14 16:01:26] SESSION: Array
+(
+    [user_id] => 6
+    [user_nombre] => Marivic
+    [user_correo] => c_m_2003@hotmail.com
+    [user_rol] => usuario
+    [user_tipo] => usuario
+    [loggedin] => 1
+    [pedido_pendiente_id] => 16
+    [numero_pedido] => PED-2026-000012
+    [ultimo_pedido] => 1771084482
+)
+
+[2026-02-14 16:01:26] pedido_id: 16, user_id: 6
+[2026-02-14 16:01:26] Conectando a DB: host=localhost, dbname=carrito_db
+[2026-02-14 16:01:26] Conexión DB exitosa
+[2026-02-14 16:01:26] Ejecutando query: SELECT * FROM pedidos WHERE id = 16 AND usuario_id = 6
+[2026-02-14 16:01:26] Resultado pedido: NO ENCONTRADO
+[2026-02-14 16:01:26] ERROR: Pedido no encontrado
+[2026-02-14 16:01:26] JSON enviado: {"error":"Pedido no encontrado"}
+[2026-02-14 16:01:26] === FIN DE PETICIÓN ===
+
+[2026-02-14 16:01:31] === INICIO DE PETICIÓN ===
+[2026-02-14 16:01:31] GET: Array
+(
+    [pedido_id] => 16
+    [t] => 1771084891441
+)
+
+[2026-02-14 16:01:31] SESSION: Array
+(
+    [user_id] => 6
+    [user_nombre] => Marivic
+    [user_correo] => c_m_2003@hotmail.com
+    [user_rol] => usuario
+    [user_tipo] => usuario
+    [loggedin] => 1
+    [pedido_pendiente_id] => 16
+    [numero_pedido] => PED-2026-000012
+    [ultimo_pedido] => 1771084482
+)
+
+[2026-02-14 16:01:31] pedido_id: 16, user_id: 6
+[2026-02-14 16:01:31] Conectando a DB: host=localhost, dbname=carrito_db
+[2026-02-14 16:01:31] Conexión DB exitosa
+[2026-02-14 16:01:31] Ejecutando query: SELECT * FROM pedidos WHERE id = 16 AND usuario_id = 6
+[2026-02-14 16:01:31] Resultado pedido: NO ENCONTRADO
+[2026-02-14 16:01:31] ERROR: Pedido no encontrado
+[2026-02-14 16:01:31] JSON enviado: {"error":"Pedido no encontrado"}
+[2026-02-14 16:01:31] === FIN DE PETICIÓN ===
+
+[2026-02-14 16:01:36] === INICIO DE PETICIÓN ===
+[2026-02-14 16:01:36] GET: Array
+(
+    [pedido_id] => 16
+    [t] => 1771084896443
+)
+
+[2026-02-14 16:01:36] SESSION: Array
+(
+    [user_id] => 6
+    [user_nombre] => Marivic
+    [user_correo] => c_m_2003@hotmail.com
+    [user_rol] => usuario
+    [user_tipo] => usuario
+    [loggedin] => 1
+    [pedido_pendiente_id] => 16
+    [numero_pedido] => PED-2026-000012
+    [ultimo_pedido] => 1771084482
+)
+
+[2026-02-14 16:01:36] pedido_id: 16, user_id: 6
+[2026-02-14 16:01:36] Conectando a DB: host=localhost, dbname=carrito_db
+[2026-02-14 16:01:36] Conexión DB exitosa
+[2026-02-14 16:01:36] Ejecutando query: SELECT * FROM pedidos WHERE id = 16 AND usuario_id = 6
+[2026-02-14 16:01:36] Resultado pedido: NO ENCONTRADO
+[2026-02-14 16:01:36] ERROR: Pedido no encontrado
+[2026-02-14 16:01:36] JSON enviado: {"error":"Pedido no encontrado"}
+[2026-02-14 16:01:36] === FIN DE PETICIÓN ===
+
+[2026-02-14 16:02:30] === INICIO DE PETICIÓN ===
+[2026-02-14 16:02:30] GET: Array
+(
+    [pedido_id] => 16
+    [t] => 1771084950449
+)
+
+[2026-02-14 16:02:30] SESSION: Array
+(
+    [user_id] => 6
+    [user_nombre] => Marivic
+    [user_correo] => c_m_2003@hotmail.com
+    [user_rol] => usuario
+    [user_tipo] => usuario
+    [loggedin] => 1
+    [pedido_pendiente_id] => 16
+    [numero_pedido] => PED-2026-000012
+    [ultimo_pedido] => 1771084482
+)
+
+[2026-02-14 16:02:30] pedido_id: 16, user_id: 6
+[2026-02-14 16:02:30] Conectando a DB: host=localhost, dbname=carrito_db
+[2026-02-14 16:02:30] Conexión DB exitosa
+[2026-02-14 16:02:30] Ejecutando query: SELECT * FROM pedidos WHERE id = 16 AND usuario_id = 6
+[2026-02-14 16:02:30] Resultado pedido: NO ENCONTRADO
+[2026-02-14 16:02:30] ERROR: Pedido no encontrado
+[2026-02-14 16:02:30] JSON enviado: {"error":"Pedido no encontrado"}
+[2026-02-14 16:02:30] === FIN DE PETICIÓN ===
+
+[2026-02-14 16:03:30] === INICIO DE PETICIÓN ===
+[2026-02-14 16:03:30] GET: Array
+(
+    [pedido_id] => 16
+    [t] => 1771085010453
+)
+
+[2026-02-14 16:03:30] SESSION: Array
+(
+    [user_id] => 6
+    [user_nombre] => Marivic
+    [user_correo] => c_m_2003@hotmail.com
+    [user_rol] => usuario
+    [user_tipo] => usuario
+    [loggedin] => 1
+    [pedido_pendiente_id] => 16
+    [numero_pedido] => PED-2026-000012
+    [ultimo_pedido] => 1771084482
+)
+
+[2026-02-14 16:03:30] pedido_id: 16, user_id: 6
+[2026-02-14 16:03:30] Conectando a DB: host=localhost, dbname=carrito_db
+[2026-02-14 16:03:30] Conexión DB exitosa
+[2026-02-14 16:03:30] Ejecutando query: SELECT * FROM pedidos WHERE id = 16 AND usuario_id = 6
+[2026-02-14 16:03:30] Resultado pedido: NO ENCONTRADO
+[2026-02-14 16:03:30] ERROR: Pedido no encontrado
+[2026-02-14 16:03:30] JSON enviado: {"error":"Pedido no encontrado"}
+[2026-02-14 16:03:30] === FIN DE PETICIÓN ===
+
+[2026-02-14 16:04:30] === INICIO DE PETICIÓN ===
+[2026-02-14 16:04:30] GET: Array
+(
+    [pedido_id] => 16
+    [t] => 1771085070445
+)
+
+[2026-02-14 16:04:30] SESSION: Array
+(
+    [user_id] => 6
+    [user_nombre] => Marivic
+    [user_correo] => c_m_2003@hotmail.com
+    [user_rol] => usuario
+    [user_tipo] => usuario
+    [loggedin] => 1
+    [pedido_pendiente_id] => 16
+    [numero_pedido] => PED-2026-000012
+    [ultimo_pedido] => 1771084482
+)
+
+[2026-02-14 16:04:30] pedido_id: 16, user_id: 6
+[2026-02-14 16:04:30] Conectando a DB: host=localhost, dbname=carrito_db
+[2026-02-14 16:04:30] Conexión DB exitosa
+[2026-02-14 16:04:30] Ejecutando query: SELECT * FROM pedidos WHERE id = 16 AND usuario_id = 6
+[2026-02-14 16:04:30] Resultado pedido: NO ENCONTRADO
+[2026-02-14 16:04:30] ERROR: Pedido no encontrado
+[2026-02-14 16:04:30] JSON enviado: {"error":"Pedido no encontrado"}
+[2026-02-14 16:04:30] === FIN DE PETICIÓN ===
+
+[2026-02-14 16:04:35] === INICIO DE PETICIÓN ===
+[2026-02-14 16:04:35] GET: Array
+(
+    [pedido_id] => 16
+    [t] => 1771085075096
+)
+
+[2026-02-14 16:04:35] SESSION: Array
+(
+    [user_id] => 6
+    [user_nombre] => Marivic
+    [user_correo] => c_m_2003@hotmail.com
+    [user_rol] => usuario
+    [user_tipo] => usuario
+    [loggedin] => 1
+    [pedido_pendiente_id] => 16
+    [numero_pedido] => PED-2026-000012
+    [ultimo_pedido] => 1771084482
+)
+
+[2026-02-14 16:04:35] pedido_id: 16, user_id: 6
+[2026-02-14 16:04:35] Conectando a DB: host=localhost, dbname=carrito_db
+[2026-02-14 16:04:35] Conexión DB exitosa
+[2026-02-14 16:04:35] Ejecutando query: SELECT * FROM pedidos WHERE id = 16 AND usuario_id = 6
+[2026-02-14 16:04:35] Resultado pedido: NO ENCONTRADO
+[2026-02-14 16:04:35] ERROR: Pedido no encontrado
+[2026-02-14 16:04:35] JSON enviado: {"error":"Pedido no encontrado"}
+[2026-02-14 16:04:35] === FIN DE PETICIÓN ===
+
+[2026-02-14 16:04:36] === INICIO DE PETICIÓN ===
+[2026-02-14 16:04:36] GET: Array
+(
+    [pedido_id] => 16
+    [t] => 1771085076079
+)
+
+[2026-02-14 16:04:36] SESSION: Array
+(
+    [user_id] => 6
+    [user_nombre] => Marivic
+    [user_correo] => c_m_2003@hotmail.com
+    [user_rol] => usuario
+    [user_tipo] => usuario
+    [loggedin] => 1
+    [pedido_pendiente_id] => 16
+    [numero_pedido] => PED-2026-000012
+    [ultimo_pedido] => 1771084482
+)
+
+[2026-02-14 16:04:36] pedido_id: 16, user_id: 6
+[2026-02-14 16:04:36] Conectando a DB: host=localhost, dbname=carrito_db
+[2026-02-14 16:04:36] Conexión DB exitosa
+[2026-02-14 16:04:36] Ejecutando query: SELECT * FROM pedidos WHERE id = 16 AND usuario_id = 6
+[2026-02-14 16:04:36] Resultado pedido: NO ENCONTRADO
+[2026-02-14 16:04:36] ERROR: Pedido no encontrado
+[2026-02-14 16:04:36] JSON enviado: {"error":"Pedido no encontrado"}
+[2026-02-14 16:04:36] === FIN DE PETICIÓN ===
+
+[2026-02-14 16:04:36] === INICIO DE PETICIÓN ===
+[2026-02-14 16:04:36] GET: Array
+(
+    [pedido_id] => 16
+    [t] => 1771085076277
+)
+
+[2026-02-14 16:04:36] SESSION: Array
+(
+    [user_id] => 6
+    [user_nombre] => Marivic
+    [user_correo] => c_m_2003@hotmail.com
+    [user_rol] => usuario
+    [user_tipo] => usuario
+    [loggedin] => 1
+    [pedido_pendiente_id] => 16
+    [numero_pedido] => PED-2026-000012
+    [ultimo_pedido] => 1771084482
+)
+
+[2026-02-14 16:04:36] pedido_id: 16, user_id: 6
+[2026-02-14 16:04:36] Conectando a DB: host=localhost, dbname=carrito_db
+[2026-02-14 16:04:36] Conexión DB exitosa
+[2026-02-14 16:04:36] Ejecutando query: SELECT * FROM pedidos WHERE id = 16 AND usuario_id = 6
+[2026-02-14 16:04:36] Resultado pedido: NO ENCONTRADO
+[2026-02-14 16:04:36] ERROR: Pedido no encontrado
+[2026-02-14 16:04:36] JSON enviado: {"error":"Pedido no encontrado"}
+[2026-02-14 16:04:36] === FIN DE PETICIÓN ===
+
+[2026-02-14 16:04:41] === INICIO DE PETICIÓN ===
+[2026-02-14 16:04:41] GET: Array
+(
+    [pedido_id] => 16
+    [t] => 1771085081288
+)
+
+[2026-02-14 16:04:41] SESSION: Array
+(
+    [user_id] => 6
+    [user_nombre] => Marivic
+    [user_correo] => c_m_2003@hotmail.com
+    [user_rol] => usuario
+    [user_tipo] => usuario
+    [loggedin] => 1
+    [pedido_pendiente_id] => 16
+    [numero_pedido] => PED-2026-000012
+    [ultimo_pedido] => 1771084482
+)
+
+[2026-02-14 16:04:41] pedido_id: 16, user_id: 6
+[2026-02-14 16:04:41] Conectando a DB: host=localhost, dbname=carrito_db
+[2026-02-14 16:04:41] Conexión DB exitosa
+[2026-02-14 16:04:41] Ejecutando query: SELECT * FROM pedidos WHERE id = 16 AND usuario_id = 6
+[2026-02-14 16:04:41] Resultado pedido: NO ENCONTRADO
+[2026-02-14 16:04:41] ERROR: Pedido no encontrado
+[2026-02-14 16:04:41] JSON enviado: {"error":"Pedido no encontrado"}
+[2026-02-14 16:04:41] === FIN DE PETICIÓN ===
+
+[2026-02-14 16:05:21] === INICIO DE PETICIÓN ===
+[2026-02-14 16:05:21] GET: Array
+(
+    [pedido_id] => 16
+    [t] => 1771085121975
+)
+
+[2026-02-14 16:05:21] SESSION: Array
+(
+    [user_id] => 6
+    [user_nombre] => Marivic
+    [user_correo] => c_m_2003@hotmail.com
+    [user_rol] => usuario
+    [user_tipo] => usuario
+    [loggedin] => 1
+    [pedido_pendiente_id] => 16
+    [numero_pedido] => PED-2026-000012
+    [ultimo_pedido] => 1771084482
+)
+
+[2026-02-14 16:05:21] pedido_id: 16, user_id: 6
+[2026-02-14 16:05:21] Conectando a DB: host=localhost, dbname=carrito_db
+[2026-02-14 16:05:22] Conexión DB exitosa
+[2026-02-14 16:05:22] Ejecutando query: SELECT * FROM pedidos WHERE id = 16 AND usuario_id = 6
+[2026-02-14 16:05:22] Resultado pedido: NO ENCONTRADO
+[2026-02-14 16:05:22] ERROR: Pedido no encontrado
+[2026-02-14 16:05:22] JSON enviado: {"error":"Pedido no encontrado"}
+[2026-02-14 16:05:22] === FIN DE PETICIÓN ===
+
+[2026-02-14 16:05:26] === INICIO DE PETICIÓN ===
+[2026-02-14 16:05:26] GET: Array
+(
+    [pedido_id] => 16
+    [t] => 1771085126984
+)
+
+[2026-02-14 16:05:26] SESSION: Array
+(
+    [user_id] => 6
+    [user_nombre] => Marivic
+    [user_correo] => c_m_2003@hotmail.com
+    [user_rol] => usuario
+    [user_tipo] => usuario
+    [loggedin] => 1
+    [pedido_pendiente_id] => 16
+    [numero_pedido] => PED-2026-000012
+    [ultimo_pedido] => 1771084482
+)
+
+[2026-02-14 16:05:26] pedido_id: 16, user_id: 6
+[2026-02-14 16:05:26] Conectando a DB: host=localhost, dbname=carrito_db
+[2026-02-14 16:05:27] Conexión DB exitosa
+[2026-02-14 16:05:27] Ejecutando query: SELECT * FROM pedidos WHERE id = 16 AND usuario_id = 6
+[2026-02-14 16:05:27] Resultado pedido: NO ENCONTRADO
+[2026-02-14 16:05:27] ERROR: Pedido no encontrado
+[2026-02-14 16:05:27] JSON enviado: {"error":"Pedido no encontrado"}
+[2026-02-14 16:05:27] === FIN DE PETICIÓN ===
+
+[2026-02-14 16:05:30] === INICIO DE PETICIÓN ===
+[2026-02-14 16:05:30] GET: Array
+(
+    [pedido_id] => 13
+    [t] => 1771085130706
+)
+
+[2026-02-14 16:05:30] SESSION: Array
+(
+    [user_id] => 6
+    [user_nombre] => Marivic
+    [user_correo] => c_m_2003@hotmail.com
+    [user_rol] => usuario
+    [user_tipo] => usuario
+    [loggedin] => 1
+    [pedido_pendiente_id] => 13
+    [numero_pedido] => PED-2026-000012
+    [ultimo_pedido] => 1771084482
+)
+
+[2026-02-14 16:05:30] pedido_id: 13, user_id: 6
+[2026-02-14 16:05:30] Conectando a DB: host=localhost, dbname=carrito_db
+[2026-02-14 16:05:30] Conexión DB exitosa
+[2026-02-14 16:05:30] Ejecutando query: SELECT * FROM pedidos WHERE id = 13 AND usuario_id = 6
+[2026-02-14 16:05:30] Resultado pedido: NO ENCONTRADO
+[2026-02-14 16:05:30] ERROR: Pedido no encontrado
+[2026-02-14 16:05:30] JSON enviado: {"error":"Pedido no encontrado"}
+[2026-02-14 16:05:30] === FIN DE PETICIÓN ===
+

@@ -1,0 +1,945 @@
+[2026-02-05 20:09:44] Array
+(
+    [timestamp] => 2026-02-05 20:09:44
+    [method] => POST
+    [content_type] => multipart/form-data; boundary=----WebKitFormBoundaryKk7rwwTHosvA44o0
+    [php_input] => 
+    [post_data] => Array
+        (
+            [id] => 1
+        )
+
+    [get_data] => Array
+        (
+        )
+
+    [session] => Array
+        (
+            [user_id] => 12
+            [user_nombre] => Jose Chacon
+            [user_correo] => Picca.admin@gmail.com
+            [user_rol] => admin
+            [loggedin] => 1
+        )
+
+)
+
+
+[2026-02-05 20:09:50] Array
+(
+    [timestamp] => 2026-02-05 20:09:50
+    [method] => GET
+    [content_type] => No especificado
+    [php_input] => 
+    [post_data] => Array
+        (
+        )
+
+    [get_data] => Array
+        (
+        )
+
+    [session] => Array
+        (
+            [user_id] => 12
+            [user_nombre] => Jose Chacon
+            [user_correo] => Picca.admin@gmail.com
+            [user_rol] => admin
+            [loggedin] => 1
+        )
+
+)
+
+
+[2026-02-05 20:19:25] Array
+(
+    [timestamp] => 2026-02-05 20:19:25
+    [method] => POST
+    [content_type] => application/json
+    [php_input] => {"id":1}
+    [post_data] => Array
+        (
+        )
+
+    [get_data] => Array
+        (
+        )
+
+    [session] => Array
+        (
+            [user_id] => 12
+            [user_nombre] => Jose Chacon
+            [user_correo] => Picca.admin@gmail.com
+            [user_rol] => admin
+            [loggedin] => 1
+        )
+
+)
+
+
+[2026-02-05 20:30:07] Array
+(
+    [timestamp] => 2026-02-05 20:30:07
+    [method] => GET
+    [content_type] => No especificado
+    [php_input] => 
+    [post_data] => Array
+        (
+        )
+
+    [get_data] => Array
+        (
+        )
+
+    [session] => Array
+        (
+            [user_id] => 12
+            [user_nombre] => Jose Chacon
+            [user_correo] => Picca.admin@gmail.com
+            [user_rol] => admin
+            [loggedin] => 1
+        )
+
+)
+
+
+[2026-02-10 18:48:43] Array
+(
+    [timestamp] => 2026-02-10 18:48:43
+    [method] => POST
+    [content_type] => application/json
+    [php_input] => {"id":1}
+    [post_data] => Array
+        (
+        )
+
+    [get_data] => Array
+        (
+        )
+
+    [session] => Array
+        (
+            [user_id] => 6
+            [user_nombre] => Jose Chacon
+            [user_correo] => admin@pic.com
+            [user_rol] => admin
+            [loggedin] => 1
+        )
+
+)
+
+
+[2026-03-06 12:53:13] Array
+(
+    [timestamp] => 2026-03-06 12:53:13
+    [method] => POST
+    [content_type] => application/json
+    [php_input] => {"id":7}
+    [post_data] => Array
+        (
+        )
+
+    [get_data] => Array
+        (
+        )
+
+    [session] => Array
+        (
+            [loggedin] => 1
+            [user_id] => 6
+            [user_nombre] => Jose Chacon
+            [user_correo] => admin@pic.com
+            [user_rol] => admin
+            [user_tipo] => usuario
+        )
+
+)
+
+
+[2026-03-06 12:53:13] ERROR: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'carrito_db.admin_logs' doesn't exist
+Trace: #0 C:\laragon\www\proyecto\admin\eliminar_usuario.php(290): PDOStatement->execute(Array)
+#1 {main}
+
+[2026-04-21 13:20:51] Array
+(
+    [timestamp] => 2026-04-21 13:20:51
+    [method] => POST
+    [content_type] => application/json
+    [php_input] => {"id":5}
+    [post_data] => Array
+        (
+        )
+
+    [get_data] => Array
+        (
+        )
+
+    [session] => Array
+        (
+            [loggedin] => 1
+            [user_id] => 7
+            [user_nombre] => Marivic
+            [user_correo] => Picca.admin@gmail.com
+            [user_rol] => admin
+            [user_telefono] => 04120244589
+            [user_cedula] => 17314511
+            [user_direccion] => Urb trigal Sur Calle Camoruco
+            [user_estado] => activo
+            [user_tipo] => usuario
+        )
+
+)
+
+
+[2026-04-21 13:20:51] ERROR: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'carrito_db.admin_logs' doesn't exist
+Trace: #0 C:\laragon\www\proyecto\admin\eliminar_usuario.php(307): PDOStatement->execute(Array)
+#1 {main}
+
+[2026-04-21 13:20:59] Array
+(
+    [timestamp] => 2026-04-21 13:20:59
+    [method] => POST
+    [content_type] => application/json
+    [php_input] => {"id":5}
+    [post_data] => Array
+        (
+        )
+
+    [get_data] => Array
+        (
+        )
+
+    [session] => Array
+        (
+            [loggedin] => 1
+            [user_id] => 7
+            [user_nombre] => Marivic
+            [user_correo] => Picca.admin@gmail.com
+            [user_rol] => admin
+            [user_telefono] => 04120244589
+            [user_cedula] => 17314511
+            [user_direccion] => Urb trigal Sur Calle Camoruco
+            [user_estado] => activo
+            [user_tipo] => usuario
+        )
+
+)
+
+
+[2026-04-21 13:20:59] ERROR: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'carrito_db.admin_logs' doesn't exist
+Trace: #0 C:\laragon\www\proyecto\admin\eliminar_usuario.php(307): PDOStatement->execute(Array)
+#1 {main}
+
+[2026-04-21 13:21:08] Array
+(
+    [timestamp] => 2026-04-21 13:21:08
+    [method] => POST
+    [content_type] => application/json
+    [php_input] => {"id":4}
+    [post_data] => Array
+        (
+        )
+
+    [get_data] => Array
+        (
+        )
+
+    [session] => Array
+        (
+            [loggedin] => 1
+            [user_id] => 7
+            [user_nombre] => Marivic
+            [user_correo] => Picca.admin@gmail.com
+            [user_rol] => admin
+            [user_telefono] => 04120244589
+            [user_cedula] => 17314511
+            [user_direccion] => Urb trigal Sur Calle Camoruco
+            [user_estado] => activo
+            [user_tipo] => usuario
+        )
+
+)
+
+
+[2026-04-21 13:21:08] ERROR: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'carrito_db.admin_logs' doesn't exist
+Trace: #0 C:\laragon\www\proyecto\admin\eliminar_usuario.php(307): PDOStatement->execute(Array)
+#1 {main}
+
+[2026-04-21 13:21:17] Array
+(
+    [timestamp] => 2026-04-21 13:21:17
+    [method] => POST
+    [content_type] => application/json
+    [php_input] => {"id":4}
+    [post_data] => Array
+        (
+        )
+
+    [get_data] => Array
+        (
+        )
+
+    [session] => Array
+        (
+            [loggedin] => 1
+            [user_id] => 7
+            [user_nombre] => Marivic
+            [user_correo] => Picca.admin@gmail.com
+            [user_rol] => admin
+            [user_telefono] => 04120244589
+            [user_cedula] => 17314511
+            [user_direccion] => Urb trigal Sur Calle Camoruco
+            [user_estado] => activo
+            [user_tipo] => usuario
+        )
+
+)
+
+
+[2026-04-21 13:21:17] ERROR: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'carrito_db.admin_logs' doesn't exist
+Trace: #0 C:\laragon\www\proyecto\admin\eliminar_usuario.php(307): PDOStatement->execute(Array)
+#1 {main}
+
+[2026-04-21 13:21:22] Array
+(
+    [timestamp] => 2026-04-21 13:21:22
+    [method] => POST
+    [content_type] => application/json
+    [php_input] => {"id":4}
+    [post_data] => Array
+        (
+        )
+
+    [get_data] => Array
+        (
+        )
+
+    [session] => Array
+        (
+            [loggedin] => 1
+            [user_id] => 7
+            [user_nombre] => Marivic
+            [user_correo] => Picca.admin@gmail.com
+            [user_rol] => admin
+            [user_telefono] => 04120244589
+            [user_cedula] => 17314511
+            [user_direccion] => Urb trigal Sur Calle Camoruco
+            [user_estado] => activo
+            [user_tipo] => usuario
+        )
+
+)
+
+
+[2026-04-21 13:21:22] ERROR: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'carrito_db.admin_logs' doesn't exist
+Trace: #0 C:\laragon\www\proyecto\admin\eliminar_usuario.php(307): PDOStatement->execute(Array)
+#1 {main}
+
+[2026-04-21 13:21:47] Array
+(
+    [timestamp] => 2026-04-21 13:21:47
+    [method] => POST
+    [content_type] => application/json
+    [php_input] => {"id":3}
+    [post_data] => Array
+        (
+        )
+
+    [get_data] => Array
+        (
+        )
+
+    [session] => Array
+        (
+            [loggedin] => 1
+            [user_id] => 7
+            [user_nombre] => Marivic
+            [user_correo] => Picca.admin@gmail.com
+            [user_rol] => admin
+            [user_telefono] => 04120244589
+            [user_cedula] => 17314511
+            [user_direccion] => Urb trigal Sur Calle Camoruco
+            [user_estado] => activo
+            [user_tipo] => usuario
+        )
+
+)
+
+
+[2026-04-21 13:21:47] ERROR: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'carrito_db.admin_logs' doesn't exist
+Trace: #0 C:\laragon\www\proyecto\admin\eliminar_usuario.php(307): PDOStatement->execute(Array)
+#1 {main}
+
+[2026-04-21 13:28:14] Array
+(
+    [timestamp] => 2026-04-21 13:28:14
+    [method] => POST
+    [content_type] => application/json
+    [php_input] => {"id":4}
+    [post_data] => Array
+        (
+        )
+
+    [get_data] => Array
+        (
+        )
+
+    [session] => Array
+        (
+            [loggedin] => 1
+            [user_id] => 7
+            [user_nombre] => Marivic
+            [user_correo] => Picca.admin@gmail.com
+            [user_rol] => admin
+            [user_telefono] => 04120244589
+            [user_cedula] => 17314511
+            [user_direccion] => Urb trigal Sur Calle Camoruco
+            [user_estado] => activo
+            [user_tipo] => usuario
+        )
+
+)
+
+
+[2026-04-21 13:28:26] Array
+(
+    [timestamp] => 2026-04-21 13:28:26
+    [method] => POST
+    [content_type] => application/json
+    [php_input] => {"id":5}
+    [post_data] => Array
+        (
+        )
+
+    [get_data] => Array
+        (
+        )
+
+    [session] => Array
+        (
+            [loggedin] => 1
+            [user_id] => 7
+            [user_nombre] => Marivic
+            [user_correo] => Picca.admin@gmail.com
+            [user_rol] => admin
+            [user_telefono] => 04120244589
+            [user_cedula] => 17314511
+            [user_direccion] => Urb trigal Sur Calle Camoruco
+            [user_estado] => activo
+            [user_tipo] => usuario
+        )
+
+)
+
+
+[2026-04-21 13:28:33] Array
+(
+    [timestamp] => 2026-04-21 13:28:33
+    [method] => POST
+    [content_type] => application/json
+    [php_input] => {"id":2}
+    [post_data] => Array
+        (
+        )
+
+    [get_data] => Array
+        (
+        )
+
+    [session] => Array
+        (
+            [loggedin] => 1
+            [user_id] => 7
+            [user_nombre] => Marivic
+            [user_correo] => Picca.admin@gmail.com
+            [user_rol] => admin
+            [user_telefono] => 04120244589
+            [user_cedula] => 17314511
+            [user_direccion] => Urb trigal Sur Calle Camoruco
+            [user_estado] => activo
+            [user_tipo] => usuario
+        )
+
+)
+
+
+[2026-04-21 13:28:39] Array
+(
+    [timestamp] => 2026-04-21 13:28:39
+    [method] => POST
+    [content_type] => application/json
+    [php_input] => {"id":3}
+    [post_data] => Array
+        (
+        )
+
+    [get_data] => Array
+        (
+        )
+
+    [session] => Array
+        (
+            [loggedin] => 1
+            [user_id] => 7
+            [user_nombre] => Marivic
+            [user_correo] => Picca.admin@gmail.com
+            [user_rol] => admin
+            [user_telefono] => 04120244589
+            [user_cedula] => 17314511
+            [user_direccion] => Urb trigal Sur Calle Camoruco
+            [user_estado] => activo
+            [user_tipo] => usuario
+        )
+
+)
+
+
+[2026-04-21 13:28:45] Array
+(
+    [timestamp] => 2026-04-21 13:28:45
+    [method] => POST
+    [content_type] => application/json
+    [php_input] => {"id":1}
+    [post_data] => Array
+        (
+        )
+
+    [get_data] => Array
+        (
+        )
+
+    [session] => Array
+        (
+            [loggedin] => 1
+            [user_id] => 7
+            [user_nombre] => Marivic
+            [user_correo] => Picca.admin@gmail.com
+            [user_rol] => admin
+            [user_telefono] => 04120244589
+            [user_cedula] => 17314511
+            [user_direccion] => Urb trigal Sur Calle Camoruco
+            [user_estado] => activo
+            [user_tipo] => usuario
+        )
+
+)
+
+
+[2026-04-21 13:28:58] Array
+(
+    [timestamp] => 2026-04-21 13:28:58
+    [method] => POST
+    [content_type] => application/json
+    [php_input] => {"id":1}
+    [post_data] => Array
+        (
+        )
+
+    [get_data] => Array
+        (
+        )
+
+    [session] => Array
+        (
+            [loggedin] => 1
+            [user_id] => 7
+            [user_nombre] => Marivic
+            [user_correo] => Picca.admin@gmail.com
+            [user_rol] => admin
+            [user_telefono] => 04120244589
+            [user_cedula] => 17314511
+            [user_direccion] => Urb trigal Sur Calle Camoruco
+            [user_estado] => activo
+            [user_tipo] => usuario
+        )
+
+)
+
+
+[2026-04-21 13:40:22] Array
+(
+    [timestamp] => 2026-04-21 13:40:22
+    [method] => POST
+    [content_type] => application/json
+    [php_input] => {"id":3}
+    [post_data] => Array
+        (
+        )
+
+    [get_data] => Array
+        (
+        )
+
+    [session] => Array
+        (
+            [loggedin] => 1
+            [user_id] => 6
+            [user_nombre] => Jose Chacon
+            [user_correo] => Picca.admin@gmail.com
+            [user_rol] => usuario
+            [user_telefono] => 04121311228
+            [user_cedula] => 31129605
+            [user_direccion] => Urb trigal Sur Calle Camoruco
+            [user_estado] => activo
+            [user_tipo] => usuario
+        )
+
+)
+
+
+[2026-04-21 13:42:19] Array
+(
+    [timestamp] => 2026-04-21 13:42:19
+    [method] => POST
+    [content_type] => application/json
+    [php_input] => {"id":4}
+    [post_data] => Array
+        (
+        )
+
+    [get_data] => Array
+        (
+        )
+
+    [session] => Array
+        (
+            [loggedin] => 1
+            [user_id] => 6
+            [user_nombre] => Jose Chacon
+            [user_correo] => Picca.admin@gmail.com
+            [user_rol] => usuario
+            [user_telefono] => 04121311228
+            [user_cedula] => 31129605
+            [user_direccion] => Urb trigal Sur Calle Camoruco
+            [user_estado] => activo
+            [user_tipo] => usuario
+        )
+
+)
+
+
+[2026-04-21 13:42:28] Array
+(
+    [timestamp] => 2026-04-21 13:42:28
+    [method] => POST
+    [content_type] => application/json
+    [php_input] => {"id":5}
+    [post_data] => Array
+        (
+        )
+
+    [get_data] => Array
+        (
+        )
+
+    [session] => Array
+        (
+            [loggedin] => 1
+            [user_id] => 6
+            [user_nombre] => Jose Chacon
+            [user_correo] => Picca.admin@gmail.com
+            [user_rol] => usuario
+            [user_telefono] => 04121311228
+            [user_cedula] => 31129605
+            [user_direccion] => Urb trigal Sur Calle Camoruco
+            [user_estado] => activo
+            [user_tipo] => usuario
+        )
+
+)
+
+
+[2026-04-21 13:42:36] Array
+(
+    [timestamp] => 2026-04-21 13:42:36
+    [method] => POST
+    [content_type] => application/json
+    [php_input] => {"id":2}
+    [post_data] => Array
+        (
+        )
+
+    [get_data] => Array
+        (
+        )
+
+    [session] => Array
+        (
+            [loggedin] => 1
+            [user_id] => 6
+            [user_nombre] => Jose Chacon
+            [user_correo] => Picca.admin@gmail.com
+            [user_rol] => usuario
+            [user_telefono] => 04121311228
+            [user_cedula] => 31129605
+            [user_direccion] => Urb trigal Sur Calle Camoruco
+            [user_estado] => activo
+            [user_tipo] => usuario
+        )
+
+)
+
+
+[2026-04-21 13:42:47] Array
+(
+    [timestamp] => 2026-04-21 13:42:47
+    [method] => POST
+    [content_type] => application/json
+    [php_input] => {"id":3}
+    [post_data] => Array
+        (
+        )
+
+    [get_data] => Array
+        (
+        )
+
+    [session] => Array
+        (
+            [loggedin] => 1
+            [user_id] => 6
+            [user_nombre] => Jose Chacon
+            [user_correo] => Picca.admin@gmail.com
+            [user_rol] => usuario
+            [user_telefono] => 04121311228
+            [user_cedula] => 31129605
+            [user_direccion] => Urb trigal Sur Calle Camoruco
+            [user_estado] => activo
+            [user_tipo] => usuario
+        )
+
+)
+
+
+[2026-04-26 11:46:55] Array
+(
+    [timestamp] => 2026-04-26 11:46:55
+    [method] => POST
+    [content_type] => application/json
+    [php_input] => {"id":1}
+    [post_data] => Array
+        (
+        )
+
+    [get_data] => Array
+        (
+        )
+
+    [session] => Array
+        (
+            [loggedin] => 1
+            [user_id] => 4
+            [user_nombre] => jhon
+            [user_correo] => Picca.ventas@gmail.com
+            [user_rol] => admin
+            [tabla_origen] => admin_users
+            [user_tipo] => admin
+            [es_admin] => 1
+        )
+
+)
+
+
+[2026-04-26 11:47:04] Array
+(
+    [timestamp] => 2026-04-26 11:47:04
+    [method] => POST
+    [content_type] => application/json
+    [php_input] => {"id":8}
+    [post_data] => Array
+        (
+        )
+
+    [get_data] => Array
+        (
+        )
+
+    [session] => Array
+        (
+            [loggedin] => 1
+            [user_id] => 4
+            [user_nombre] => jhon
+            [user_correo] => Picca.ventas@gmail.com
+            [user_rol] => admin
+            [tabla_origen] => admin_users
+            [user_tipo] => admin
+            [es_admin] => 1
+        )
+
+)
+
+
+[2026-04-26 12:00:23] Array
+(
+    [timestamp] => 2026-04-26 12:00:23
+    [method] => POST
+    [content_type] => application/json
+    [php_input] => {"id":7}
+    [post_data] => Array
+        (
+        )
+
+    [get_data] => Array
+        (
+        )
+
+    [session] => Array
+        (
+            [loggedin] => 1
+            [user_id] => 4
+            [user_nombre] => jhon
+            [user_correo] => Picca.ventas@gmail.com
+            [user_rol] => admin
+            [tabla_origen] => admin_users
+            [user_tipo] => admin
+            [es_admin] => 1
+        )
+
+)
+
+
+[2026-04-26 15:07:57] Array
+(
+    [timestamp] => 2026-04-26 15:07:57
+    [method] => POST
+    [content_type] => application/json
+    [php_input] => {"id":8}
+    [post_data] => Array
+        (
+        )
+
+    [get_data] => Array
+        (
+        )
+
+    [session] => Array
+        (
+            [loggedin] => 1
+            [user_id] => 4
+            [user_nombre] => jhon
+            [user_correo] => Picca.ventas@gmail.com
+            [user_rol] => admin
+            [tabla_origen] => admin_users
+            [user_tipo] => admin
+            [es_admin] => 1
+        )
+
+)
+
+
+[2026-04-26 15:08:35] Array
+(
+    [timestamp] => 2026-04-26 15:08:35
+    [method] => GET
+    [content_type] => No especificado
+    [php_input] => 
+    [post_data] => Array
+        (
+        )
+
+    [get_data] => Array
+        (
+        )
+
+    [session] => Array
+        (
+            [loggedin] => 1
+            [user_id] => 4
+            [user_nombre] => jhon
+            [user_correo] => Picca.ventas@gmail.com
+            [user_rol] => admin
+            [tabla_origen] => admin_users
+            [user_tipo] => admin
+            [es_admin] => 1
+        )
+
+)
+
+
+[2026-04-26 15:09:04] Array
+(
+    [timestamp] => 2026-04-26 15:09:04
+    [method] => POST
+    [content_type] => application/json
+    [php_input] => {"id":8}
+    [post_data] => Array
+        (
+        )
+
+    [get_data] => Array
+        (
+        )
+
+    [session] => Array
+        (
+            [loggedin] => 1
+            [user_id] => 4
+            [user_nombre] => jhon
+            [user_correo] => Picca.ventas@gmail.com
+            [user_rol] => admin
+            [tabla_origen] => admin_users
+            [user_tipo] => admin
+            [es_admin] => 1
+        )
+
+)
+
+
+[2026-04-26 15:12:18] Array
+(
+    [timestamp] => 2026-04-26 15:12:18
+    [method] => POST
+    [content_type] => application/json
+    [php_input] => {"id":8}
+    [post_data] => Array
+        (
+        )
+
+    [get_data] => Array
+        (
+        )
+
+    [session] => Array
+        (
+            [loggedin] => 1
+            [user_id] => 4
+            [user_nombre] => jhon
+            [user_correo] => Picca.ventas@gmail.com
+            [user_rol] => admin
+            [tabla_origen] => admin_users
+            [user_tipo] => admin
+            [es_admin] => 1
+        )
+
+)
+
+
+[2026-04-26 15:20:41] Array
+(
+    [timestamp] => 2026-04-26 15:20:41
+    [method] => POST
+    [content_type] => application/json
+    [php_input] => {"id":5}
+    [post_data] => Array
+        (
+        )
+
+    [get_data] => Array
+        (
+        )
+
+    [session] => Array
+        (
+            [loggedin] => 1
+            [user_id] => 4
+            [user_nombre] => Jose Chacon
+            [user_correo] => Picca.ventas@gmail.com
+            [user_rol] => admin
+            [tabla_origen] => admin_users
+            [user_tipo] => admin
+            [es_admin] => 1
+        )
+
+)
+
+

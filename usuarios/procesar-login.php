@@ -1,0 +1,223 @@
+<?php
+// /proyecto/usuarios/procesar-login.php
+// VERSIÓN CORREGIDA - SESIÓN PERSISTENTE CON SEPARACIÓN DE ROLES
+
+// Desactivar errores en pantalla
+error_reporting(0);
+ini_set('display_errors', 0);
+
+header('Content-Type: application/json');
+
+// Configurar sesión para persistencia
+ini_set('session.cookie_httponly', 1);
+ini_set('session.use_only_cookies', 1);
+ini_set('session.cookie_secure', 0);
+ini_set('session.cookie_samesite', 'Lax');
+
+// Conexión directa a la base de datos
+$host = 'localhost';
+$dbname = 'carrito_db';
+$username = 'root';
+$password = '';
+
+try {
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    echo json_encode(["success" => false, "message" => "Error de conexión a la base de datos"]);
+    exit;
+}
+
+// Iniciar sesión al principio
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+    echo json_encode(["success" => false, "message" => "Método no permitido"]);
+    exit;
+}
+
+$correo = trim($_POST['correo'] ?? '');
+$password = $_POST['password'] ?? '';
+$tipo_usuario = trim($_POST['tipo_usuario'] ?? '');
+
+if (empty($correo) || empty($password)) {
+    echo json_encode(["success" => false, "message" => "Correo y contraseña son obligatorios"]);
+    exit;
+}
+
+try {
+    $user = null;
+    $tabla_origen = null;
+    $es_admin = false;
+    
+    // Si se especificó tipo_usuario, buscar SOLO en esa tabla
+    if ($tipo_usuario === 'admin') {
+        // Buscar SOLO en admin_users
+        $query_admin = "SELECT id, nombre, correo, contrasena as password, rol, activo as is_active 
+                        FROM admin_users 
+                        WHERE correo = :correo AND activo = 1";
+        
+        $stmt_admin = $pdo->prepare($query_admin);
+        $stmt_admin->bindParam(":correo", $correo);
+        $stmt_admin->execute();
+        
+        if ($stmt_admin->rowCount() > 0) {
+            $user = $stmt_admin->fetch(PDO::FETCH_ASSOC);
+            $tabla_origen = 'admin_users';
+            $es_admin = true;
+            
+            $sha2_hash = strtoupper(hash('sha256', $password));
+            if ($user['password'] !== $sha2_hash) {
+                echo json_encode(["success" => false, "message" => "Credenciales de administrador incorrectas"]);
+                exit;
+            }
+        }
+    } 
+    elseif ($tipo_usuario === 'cliente') {
+        // Buscar SOLO en users (clientes)
+        $query_user = "SELECT id, nombre, correo, password, rol, is_active, estado
+                       FROM users 
+                       WHERE correo = :correo";
+        
+        $stmt_user = $pdo->prepare($query_user);
+        $stmt_user->bindParam(":correo", $correo);
+        $stmt_user->execute();
+        
+        if ($stmt_user->rowCount() > 0) {
+            $user = $stmt_user->fetch(PDO::FETCH_ASSOC);
+            $tabla_origen = 'users';
+            
+            if (!$user['is_active'] || $user['estado'] !== 'activo') {
+                echo json_encode(["success" => false, "message" => "Usuario inactivo"]);
+                exit;
+            }
+            
+            if (!password_verify($password, $user['password'])) {
+                echo json_encode(["success" => false, "message" => "Credenciales incorrectas"]);
+                exit;
+            }
+            
+            $es_admin = false;
+        }
+    }
+    else {
+        // Sin especificar - buscar en ambas (modo automático)
+        // Buscar en admin_users primero
+        $query_admin = "SELECT id, nombre, correo, contrasena as password, rol, activo as is_active 
+                        FROM admin_users 
+                        WHERE correo = :correo AND activo = 1";
+        
+        $stmt_admin = $pdo->prepare($query_admin);
+        $stmt_admin->bindParam(":correo", $correo);
+        $stmt_admin->execute();
+        
+        if ($stmt_admin->rowCount() > 0) {
+            $user = $stmt_admin->fetch(PDO::FETCH_ASSOC);
+            $tabla_origen = 'admin_users';
+            $es_admin = true;
+            
+            $sha2_hash = strtoupper(hash('sha256', $password));
+            if ($user['password'] !== $sha2_hash) {
+                echo json_encode(["success" => false, "message" => "Credenciales incorrectas"]);
+                exit;
+            }
+        } else {
+            // Buscar en users
+            $query_user = "SELECT id, nombre, correo, password, rol, is_active, estado
+                           FROM users 
+                           WHERE correo = :correo";
+            
+            $stmt_user = $pdo->prepare($query_user);
+            $stmt_user->bindParam(":correo", $correo);
+            $stmt_user->execute();
+            
+            if ($stmt_user->rowCount() > 0) {
+                $user = $stmt_user->fetch(PDO::FETCH_ASSOC);
+                $tabla_origen = 'users';
+                
+                if (!$user['is_active'] || $user['estado'] !== 'activo') {
+                    echo json_encode(["success" => false, "message" => "Usuario inactivo"]);
+                    exit;
+                }
+                
+                if (!password_verify($password, $user['password'])) {
+                    echo json_encode(["success" => false, "message" => "Credenciales incorrectas"]);
+                    exit;
+                }
+                
+                $es_admin = false;
+            }
+        }
+    }
+    
+    if (!$user) {
+        echo json_encode(["success" => false, "message" => "Credenciales incorrectas"]);
+        exit;
+    }
+    
+    // ========== LIMPIAR Y REGENERAR SESIÓN ==========
+    $_SESSION = array();
+    session_regenerate_id(true);
+    
+    // ========== VARIABLES OBLIGATORIAS ==========
+    $_SESSION['loggedin'] = true;
+    $_SESSION['user_id'] = $user['id'];
+    $_SESSION['user_nombre'] = $user['nombre'];
+    $_SESSION['user_correo'] = $user['correo'];
+    $_SESSION['user_rol'] = $user['rol'];
+    $_SESSION['tabla_origen'] = $tabla_origen; // CRÍTICO: 'users' o 'admin_users'
+    $_SESSION['user_tipo_login'] = $tipo_usuario ?: ($es_admin ? 'admin' : 'cliente');
+    
+    // ========== BANDERAS CLARAS ==========
+    if ($tabla_origen === 'admin_users') {
+        $_SESSION['es_admin'] = true;
+        $_SESSION['is_admin'] = true;
+        $_SESSION['is_cliente'] = false;
+        $_SESSION['user_tipo'] = 'admin';
+    } else {
+        $_SESSION['es_admin'] = false;
+        $_SESSION['is_admin'] = false;
+        $_SESSION['is_cliente'] = true;
+        $_SESSION['user_tipo'] = 'cliente';
+    }
+    
+    // Actualizar último login
+    if ($tabla_origen === 'users') {
+        $update = "UPDATE users SET last_login = NOW() WHERE id = :id";
+        $stmt_update = $pdo->prepare($update);
+        $stmt_update->bindParam(":id", $user['id']);
+        $stmt_update->execute();
+    } else {
+        $update = "UPDATE admin_users SET ultimo_login = NOW() WHERE id = :id";
+        $stmt_update = $pdo->prepare($update);
+        $stmt_update->bindParam(":id", $user['id']);
+        $stmt_update->execute();
+    }
+    
+    // Redirección
+    $redirect_url = ($tabla_origen === 'admin_users')
+        ? '/proyecto/panel admin/panel_admin.php'
+        : '/proyecto/interfaz usuario/pagina_modernizada.html';
+    
+    echo json_encode([
+        "success" => true,
+        "message" => $es_admin ? "Bienvenido administrador" : "Bienvenido",
+        "redirect_url" => $redirect_url,
+        "user_tipo" => $es_admin ? "admin" : "cliente",
+        "is_admin" => $es_admin,
+        "is_cliente" => !$es_admin,
+        "user_id" => $user['id'],
+        "user_nombre" => $user['nombre'],
+        "tabla_origen" => $tabla_origen
+    ]);
+    
+} catch (PDOException $e) {
+    error_log("Error en login: " . $e->getMessage());
+    echo json_encode(["success" => false, "message" => "Error de base de datos"]);
+} catch (Exception $e) {
+    error_log("Error general: " . $e->getMessage());
+    echo json_encode(["success" => false, "message" => "Error en el servidor"]);
+}
+?>

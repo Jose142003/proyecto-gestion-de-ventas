@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Usuario | Proyectos Industriales del Centro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+      <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/proyecto/manifest.json">
+    <meta name="theme-color" content="#050C18">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="PIC Industrial">
+    <link rel="apple-touch-icon" href="/proyecto/img/pic.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/proyecto/img/pic.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/proyecto/img/pic.png">
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 32px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.25), 0 10px 30px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 900px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+        
+        .logo {
+            width: 130px;
+            height: auto;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+        }
+        
+        h2 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+        }
+        
+        .header p {
+            color: #475569;
+            font-size: 16px;
+            font-weight: 400;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .form-group {
+            text-align: left;
+        }
+        
+        .full-width {
+            grid-column: span 2;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #1e293b;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        
+        .input-icon {
+            position: absolute;
+            left: 16px;
+            color: #64748b;
+            font-size: 16px;
+            transition: color 0.2s;
+            z-index: 1;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 14px 16px 14px 48px;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            font-size: 15px;
+            transition: all 0.2s;
+            background: #f8fafc;
+            font-family: inherit;
+            color: #0f172a;
+            font-weight: 500;
+        }
+        
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            background-size: 16px;
+            padding-right: 45px;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background: #ffffff;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+        }
+        
+        input:focus + .input-icon,
+        select:focus + .input-icon {
+            color: #3b82f6;
+        }
+        
+        .phone-group {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .phone-group select {
+            width: 160px;
+            flex-shrink: 0;
+            padding-left: 16px;
+            background-color: #ffffff;
+        }
+        
+        .phone-group .input-wrapper {
+            flex: 1;
+        }
+        
+        .password-wrapper {
+            position: relative;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #64748b;
+            font-size: 18px;
+            z-index: 2;
+            transition: color 0.2s;
+            background: transparent;
+            border: none;
+            padding: 8px;
+        }
+        
+        .password-toggle:hover {
+            color: #3b82f6;
+        }
+        
+        .error-message {
+            color: #ef4444;
+            font-size: 13px;
+            margin-top: 6px;
+            display: none;
+            font-weight: 500;
+            padding-left: 16px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 0;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            border-radius: 6px;
+            border: 2px solid #cbd5e1;
+            cursor: pointer;
+            accent-color: #3b82f6;
+        }
+        
+        .checkbox-group label {
+            margin-bottom: 0;
+            text-transform: none;
+            font-weight: 500;
+            color: #334155;
+            font-size: 15px;
+            cursor: pointer;
+        }
+        
+        .checkbox-group a {
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .checkbox-group a:hover {
+            text-decoration: underline;
+        }
+        
+        button {
+            width: 100%;
+            padding: 18px 28px;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
+            margin-top: 16px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(37, 99, 235, 0.35);
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .loading-spinner {
+            display: none;
+            width: 22px;
+            height: 22px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .links {
+            margin-top: 32px;
+            text-align: center;
+            padding-top: 24px;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .links a {
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 15px;
+            transition: color 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .links a:hover {
+            color: #1d4ed8;
+            gap: 12px;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: white;
+            color: #0f172a;
+            padding: 16px 24px;
+            border-radius: 50px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            font-weight: 600;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            opacity: 0;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        
+        .toast.success {
+            background: #10b981;
+            color: white;
+            border: none;
+        }
+        
+        .toast.error {
+            background: #ef4444;
+            color: white;
+            border: none;
+        }
+        
+        .toast.info {
+            background: #3b82f6;
+            color: white;
+            border: none;
+        }
+        
+        .alert-message {
+            padding: 16px 20px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideDown 0.3s ease;
+        }
+        
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        
+        .alert-danger {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 16px;
+                align-items: flex-start;
+            }
+            
+            .container {
+                padding: 24px;
+                border-radius: 24px;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .full-width {
+                grid-column: span 1;
+            }
+            
+            h2 {
+                font-size: 28px;
+            }
+            
+            .logo {
+                width: 100px;
+            }
+            
+            .phone-group {
+                flex-direction: column;
+            }
+            
+            .phone-group select {
+                width: 100%;
+            }
+            
+            button {
+                padding: 16px 24px;
+                font-size: 16px;
+            }
+            
+            .toast {
+                width: 90%;
+                border-radius: 16px;
+                text-align: center;
+                justify-content: center;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+            
+            input, select {
+                padding: 12px 16px 12px 42px;
+                font-size: 14px;
+            }
+            
+            .input-icon {
+                left: 14px;
+                font-size: 14px;
+            }
+            
+            h2 {
+                font-size: 24px;
+            }
+        }
+        
+        .input-wrapper:hover input:not(:focus),
+        .input-wrapper:hover select:not(:focus) {
+            border-color: #94a3b8;
+        }
+        
+        input.error, select.error {
+            border-color: #ef4444;
+            background: #fef2f2;
+        }
+        
+        .btn-text {
+            transition: all 0.2s;
+        }
+
+        /* Ajustes para Móvil - Registro */
+@media (max-width: 600px) {
+    .container { width: 95%; padding: 20px; border-radius: 20px; }
+    .header-section h2 { font-size: 1.5rem; }
+    .form-grid { grid-template-columns: 1fr; } /* Los campos se ponen uno sobre otro */
+    .btn-submit { padding: 15px; font-size: 1rem; }
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="https://img1.wsimg.com/isteam/ip/16eb95ed-5a34-487a-92a4-4ff1fb94a98b/pic.png/:/rs=w:150,h:150,mx" class="logo" alt="Logo">
+            <h2><i class="fas fa-user-plus" style="margin-right: 12px;"></i>Crear cuenta</h2>
+            <p>Completa tus datos para registrarte en Proyectos Industriales</p>
+        </div>
+        
+        <div id="message-container"></div>
+        
+        <form id="registroForm">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label><i class="fas fa-user" style="margin-right: 6px;"></i>Nombre completo</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-user input-icon"></i>
+                        <input type="text" id="nombre" name="nombre" required placeholder="Ej: Juan Pérez">
+                    </div>
+                    <div class="error-message" id="nombre-error">El nombre es requerido</div>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-id-card" style="margin-right: 6px;"></i>Cédula</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-id-card input-icon"></i>
+                        <input type="text" id="cedula" name="cedula" required pattern="[0-9]{6,12}" placeholder="8 dígitos sin puntos">
+                    </div>
+                    <div class="error-message" id="cedula-error">La cédula debe tener 6-12 dígitos</div>
+                </div>
+                
+                <div class="form-group full-width">
+                    <label><i class="fas fa-phone" style="margin-right: 6px;"></i>Teléfono</label>
+                    <div class="phone-group">
+                        <select id="codigo-telefono" name="codigo_telefono" required>
+                            <option value="">Selecciona código</option>
+                            <option value="0412">0412 - Digitel</option>
+                            <option value="0414">0414 - Movistar</option>
+                            <option value="0416">0416 - Movilnet</option>
+                            <option value="0426">0426 - Movilnet</option>
+                            <option value="0415">0415 - Tesan</option>
+                            <option value="0417">0417 - Digitel</option>
+                            <option value="0418">0418 - Digitel</option>
+                            <option value="0422">0422 - Digitel</option>
+                            <option value="0424">0424 - Movistar</option>
+                        </select>
+                        <div class="input-wrapper">
+                            <i class="fas fa-phone input-icon"></i>
+                            <input type="text" id="telefono" name="telefono" required placeholder="7 dígitos" maxlength="7">
+                        </div>
+                    </div>
+                    <div class="error-message" id="telefono-error">El número debe tener 7 dígitos</div>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-envelope" style="margin-right: 6px;"></i>Correo electrónico</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-envelope input-icon"></i>
+                        <input type="email" id="correo" name="correo" required placeholder="ejemplo@correo.com">
+                    </div>
+                    <div class="error-message" id="correo-error">Ingresa un correo válido</div>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-map-marker-alt" style="margin-right: 6px;"></i>Dirección fiscal</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-map-marker-alt input-icon"></i>
+                        <input type="text" id="direccion" name="direccion" required placeholder="Calle, número, ciudad">
+                    </div>
+                    <div class="error-message" id="direccion-error">La dirección es requerida</div>
+                </div>
+                <!-- Agrega esto dentro del .form-grid, después del campo de dirección -->
+<div class="form-group full-width">
+    <label><i class="fas fa-user-tag" style="margin-right: 6px;"></i>Tipo de cuenta</label>
+    <div class="input-wrapper">
+        <i class="fas fa-user-shield input-icon"></i>
+        <select id="tipo_cuenta" name="tipo_cuenta" required>
+            <option value="cliente">Cliente - Acceso a tienda y compras</option>
+            <option value="admin">Administrador - Acceso a panel de control</option>
+        </select>
+    </div>
+    <small style="color: #64748b; display: block; margin-top: 5px;">
+        <i class="fas fa-info-circle"></i> Selecciona "Administrador" solo si tienes autorización
+    </small>
+</div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-lock" style="margin-right: 6px;"></i>Contraseña</label>
+                    <div class="input-wrapper password-wrapper">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input type="password" id="password" name="password" required minlength="6" placeholder="Mínimo 6 caracteres">
+                        <button type="button" class="password-toggle" id="password-toggle" tabindex="-1">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <div class="error-message" id="password-error">Mínimo 6 caracteres</div>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-check-circle" style="margin-right: 6px;"></i>Confirmar contraseña</label>
+                    <div class="input-wrapper password-wrapper">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input type="password" id="confirm-password" name="confirm-password" required placeholder="Repite tu contraseña">
+                        <button type="button" class="password-toggle" id="confirm-password-toggle" tabindex="-1">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <div class="error-message" id="confirm-password-error">Las contraseñas no coinciden</div>
+                </div>
+                
+                <div class="form-group full-width checkbox-group">
+                    <input type="checkbox" id="terminos" name="terminos" required>
+                    <label for="terminos">Acepto los <a href="#">términos y condiciones</a> y la <a href="#">política de privacidad</a></label>
+                </div>
+            </div>
+            
+            <button type="submit" id="submit-btn">
+                <span class="btn-text">Registrarme ahora</span>
+                <span id="loading-spinner" class="loading-spinner"></span>
+                <i class="fas fa-arrow-right" style="font-size: 18px;"></i>
+            </button>
+        </form>
+        
+        <div class="links">
+            <a href="login.html">
+                <i class="fas fa-sign-in-alt"></i>
+                ¿Ya tienes cuenta? Inicia sesión
+                <i class="fas fa-arrow-right" style="font-size: 12px;"></i>
+            </a>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('registroForm');
+            const submitBtn = document.getElementById('submit-btn');
+            const btnText = document.querySelector('.btn-text');
+            const loadingSpinner = document.getElementById('loading-spinner');
+            const messageContainer = document.getElementById('message-container');
+            const passwordToggle = document.getElementById('password-toggle');
+            const confirmPasswordToggle = document.getElementById('confirm-password-toggle');
+            const passwordInput = document.getElementById('password');
+            const confirmPasswordInput = document.getElementById('confirm-password');
+            const codigoTelefono = document.getElementById('codigo-telefono');
+            const telefonoInput = document.getElementById('telefono');
+            const toast = document.getElementById('toast');
+            
+            // Alternar visibilidad de contraseña
+            function setupPasswordToggle(button, input) {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const icon = this.querySelector('i');
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        icon.className = 'fas fa-eye-slash';
+                    } else {
+                        input.type = 'password';
+                        icon.className = 'fas fa-eye';
+                    }
+                });
+            }
+            
+            setupPasswordToggle(passwordToggle, passwordInput);
+            setupPasswordToggle(confirmPasswordToggle, confirmPasswordInput);
+            
+            function showToast(message, type = 'info') {
+                toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i> ${message}`;
+                toast.className = `toast show ${type}`;
+                
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
+            
+            function showMessage(message, type = 'success') {
+                messageContainer.innerHTML = '';
+                const messageElement = document.createElement('div');
+                messageElement.className = `alert-message alert-${type === 'success' ? 'success' : 'danger'}`;
+                messageElement.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${message}`;
+                messageContainer.appendChild(messageElement);
+                
+                setTimeout(() => {
+                    messageElement.remove();
+                }, 5000);
+            }
+            
+            // Validación en tiempo real
+            form.querySelectorAll('input').forEach(input => {
+                input.addEventListener('input', function() {
+                    validateField(this);
+                });
+            });
+            
+            // Validar teléfono (solo números)
+            telefonoInput.addEventListener('input', function() {
+                this.value = this.value.replace(/[^0-9]/g, '');
+                if (this.value.length > 7) {
+                    this.value = this.value.slice(0, 7);
+                }
+                validatePhone();
+            });
+            
+            codigoTelefono.addEventListener('change', validatePhone);
+            
+            function validatePasswordsMatch() {
+                const password = passwordInput.value;
+                const confirmPassword = confirmPasswordInput.value;
+                const errorElement = document.getElementById('confirm-password-error');
+                
+                if (confirmPassword && password !== confirmPassword) {
+                    confirmPasswordInput.classList.add('error');
+                    errorElement.style.display = 'block';
+                    return false;
+                } else {
+                    confirmPasswordInput.classList.remove('error');
+                    errorElement.style.display = 'none';
+                    return true;
+                }
+            }
+            
+            function validateField(field) {
+                const errorElement = document.getElementById(`${field.id}-error`);
+                if (!errorElement) return true;
+                
+                let isValid = true;
+                
+                if (field.required && !field.value.trim()) {
+                    isValid = false;
+                } else if (field.type === 'email' && field.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(field.value)) {
+                    isValid = false;
+                } else if (field.pattern && field.value && !new RegExp(field.pattern).test(field.value)) {
+                    isValid = false;
+                } else if (field.minLength && field.value.length < field.minLength) {
+                    isValid = false;
+                }
+                
+                if (!isValid) {
+                    field.classList.add('error');
+                    errorElement.style.display = 'block';
+                } else {
+                    field.classList.remove('error');
+                    errorElement.style.display = 'none';
+                }
+                
+                return isValid;
+            }
+            
+            function validatePhone() {
+                const codigo = codigoTelefono.value;
+                const telefono = telefonoInput.value;
+                const errorElement = document.getElementById('telefono-error');
+                
+                let isValid = true;
+                
+                if (!codigo) {
+                    codigoTelefono.classList.add('error');
+                    isValid = false;
+                } else {
+                    codigoTelefono.classList.remove('error');
+                }
+                
+                if (telefono.length !== 7) {
+                    telefonoInput.classList.add('error');
+                    isValid = false;
+                } else {
+                    telefonoInput.classList.remove('error');
+                }
+                
+                errorElement.style.display = isValid ? 'none' : 'block';
+                return isValid;
+            }
+            
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                // Validar todos los campos
+                let isValid = true;
+                form.querySelectorAll('input:not([type="checkbox"])').forEach(input => {
+                    if (input.id !== 'telefono' && !validateField(input)) {
+                        isValid = false;
+                    }
+                });
+                
+                if (!validatePhone()) isValid = false;
+                if (!validatePasswordsMatch()) isValid = false;
+                
+                const terminos = document.getElementById('terminos');
+                if (!terminos.checked) {
+                    showToast('Debes aceptar los términos y condiciones', 'error');
+                    isValid = false;
+                }
+                
+                if (!isValid) {
+                    showToast('Por favor, completa todos los campos correctamente', 'error');
+                    return;
+                }
+                
+                // Configurar estado de carga
+                submitBtn.disabled = true;
+                btnText.textContent = 'Registrando...';
+                loadingSpinner.style.display = 'inline-block';
+                
+                try {
+                    const formData = new FormData(form);
+                    const telefonoCompleto = codigoTelefono.value + telefonoInput.value;
+                    formData.set('telefono', telefonoCompleto);
+                    
+                    const response = await fetch('/proyecto/usuarios/procesar-registro.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        showToast(result.message || '¡Registro exitoso!', 'success');
+                        showMessage(result.message || 'Redirigiendo al inicio de sesión...', 'success');
+                        
+                        setTimeout(() => {
+                            window.location.href = 'login.html';
+                        }, 2000);
+                    } else {
+                        showMessage(result.message || 'Error al registrar', 'error');
+                        showToast(result.message || 'Error en el registro', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showMessage('Error de conexión con el servidor', 'error');
+                    showToast('Error de conexión', 'error');
+                } finally {
+                    submitBtn.disabled = false;
+                    btnText.textContent = 'Registrarme ahora';
+                    loadingSpinner.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

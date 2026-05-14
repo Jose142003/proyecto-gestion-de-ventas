@@ -1,0 +1,269 @@
+2026-04-26 11:03:15 - INICIO PROCESAMIENTO
+Array
+(
+    [nombre] => jhon
+    [cedula] => 28145865
+    [codigo_telefono] => 0412
+    [telefono] => 04121311220
+    [correo] => Picca.ventas@gmail.com
+    [direccion] => Urb trigal Sur Calle Camoruco
+    [tipo_cuenta] => admin
+    [password] => 123456
+    [confirm-password] => 123456
+    [terminos] => on
+)
+
+Tipo cuenta recibido: 'admin'
+PROCESANDO REGISTRO ADMIN
+Intentando insertar admin: jhon, Picca.ventas@gmail.com, jhon
+Admin insertado correctamente con ID: 4
+2026-04-26 15:19:25 - INICIO PROCESAMIENTO
+Array
+(
+    [nombre] => Jose Chacon
+    [cedula] => 31129605
+    [codigo_telefono] => 0412
+    [telefono] => 04121311228
+    [correo] => Picca.ventas@gmail.com
+    [direccion] => Urb trigal Sur Calle Camoruco
+    [tipo_cuenta] => admin
+    [password] => 123456
+    [confirm-password] => 123456
+    [terminos] => on
+)
+
+Tipo cuenta recibido: 'admin'
+PROCESANDO REGISTRO ADMIN
+2026-04-26 15:19:52 - INICIO PROCESAMIENTO
+Array
+(
+    [nombre] => Jose Chacon
+    [cedula] => 31129605
+    [codigo_telefono] => 0412
+    [telefono] => 04121311228
+    [correo] => Picca.ventas@gmail.com
+    [direccion] => Urb trigal Sur Calle Camoruco
+    [tipo_cuenta] => admin
+    [password] => 123456
+    [confirm-password] => 123456
+    [terminos] => on
+)
+
+Tipo cuenta recibido: 'admin'
+PROCESANDO REGISTRO ADMIN
+Intentando insertar admin: Jose Chacon, Picca.ventas@gmail.com, jose_chacon
+Admin insertado correctamente con ID: 4
+2026-04-26 16:12:39 - INICIO PROCESAMIENTO
+Array
+(
+    [nombre] => Alejandro
+    [cedula] => 17314511
+    [codigo_telefono] => 0424
+    [telefono] => 04242011547
+    [correo] => jose14chacon2003@gmail.com
+    [direccion] => Urb trigal Sur Calle Camoruco
+    [tipo_cuenta] => cliente
+    [password] => 123456
+    [confirm-password] => 123456
+    [terminos] => on
+)
+
+Tipo cuenta recibido: 'cliente'
+PROCESANDO REGISTRO CLIENTE
+Cliente insertado correctamente con ID: 6
+2026-04-26 20:08:54 - INICIO PROCESAMIENTO
+Array
+(
+    [nombre] => Jose Chacon
+    [cedula] => 31129605
+    [codigo_telefono] => 0412
+    [telefono] => 04121311228
+    [correo] => jose14chacon2003@gmail.com
+    [direccion] => Urb trigal Sur Calle Camoruco
+    [tipo_cuenta] => cliente
+    [password] => 123456
+    [confirm-password] => 123456
+    [terminos] => on
+)
+
+Tipo cuenta recibido: 'cliente'
+PROCESANDO REGISTRO CLIENTE
+2026-04-26 20:08:59 - INICIO PROCESAMIENTO
+Array
+(
+    [nombre] => Jose Chacon
+    [cedula] => 31129605
+    [codigo_telefono] => 0412
+    [telefono] => 04121311228
+    [correo] => jose14chacon2003@gmail.com
+    [direccion] => Urb trigal Sur Calle Camoruco
+    [tipo_cuenta] => cliente
+    [password] => 123456
+    [confirm-password] => 123456
+    [terminos] => on
+)
+
+Tipo cuenta recibido: 'cliente'
+PROCESANDO REGISTRO CLIENTE
+2026-04-27 17:48:23 - INICIO PROCESAMIENTO
+Array
+(
+    [nombre] => Marivic
+    [cedula] => 12345678
+    [codigo_telefono] => 0412
+    [telefono] => 04120424158
+    [correo] => c_m_2003@hotmail.com
+    [direccion] => Urb trigal Sur Calle Camoruco
+    [tipo_cuenta] => cliente
+    [password] => 123456
+    [confirm-password] => 123456
+    [terminos] => on
+)
+
+Tipo cuenta recibido: 'cliente'
+PROCESANDO REGISTRO CLIENTE
+Cliente insertado correctamente con ID: 7
+2026-04-27 21:35:39 - INICIO PROCESAMIENTO
+Array
+(
+    [nombre] => Jose Chacon
+    [cedula] => 31129605
+    [codigo_telefono] => 0412
+    [telefono] => 04121311228
+    [correo] => jose14chacon2003@gmail.com
+    [direccion] => Urb trigal Sur Calle Camoruco
+    [tipo_cuenta] => admin
+    [password] => 123456
+    [confirm-password] => 123456
+    [terminos] => on
+)
+
+Tipo cuenta recibido: 'admin'
+PROCESANDO REGISTRO ADMIN
+Intentando insertar admin: Jose Chacon, jose14chacon2003@gmail.com, jose_chacon
+Admin insertado correctamente con ID: 4
+2026-04-28 12:10:21 - INICIO PROCESAMIENTO
+Array
+(
+    [nombre] => Jose Chacon
+    [cedula] => 12544102
+    [codigo_telefono] => 0422
+    [telefono] => 04221311228
+    [correo] => jose14chacon2003@gmail.com
+    [direccion] => Urb trigal Sur Calle Camoruco
+    [tipo_cuenta] => cliente
+    [password] => 123456
+    [confirm-password] => 123456
+    [terminos] => on
+)
+
+Tipo cuenta recibido: 'cliente'
+PROCESANDO REGISTRO CLIENTE
+2026-04-28 12:10:35 - INICIO PROCESAMIENTO
+Array
+(
+    [nombre] => Jose Chacon
+    [cedula] => 12544102
+    [codigo_telefono] => 0422
+    [telefono] => 04221311228
+    [correo] => jose14chacon200@gmail.com
+    [direccion] => Urb trigal Sur Calle Camoruco
+    [tipo_cuenta] => cliente
+    [password] => 123456
+    [confirm-password] => 123456
+    [terminos] => on
+)
+
+Tipo cuenta recibido: 'cliente'
+PROCESANDO REGISTRO CLIENTE
+Cliente insertado correctamente con ID: 6
+2026-04-28 18:51:30 - INICIO PROCESAMIENTO
+Array
+(
+    [nombre] => Aileen Peña
+    [cedula] => 16135621
+    [codigo_telefono] => 0412
+    [telefono] => 04124359211
+    [correo] => aileen_marquez@hotmail.com
+    [direccion] => Los Caobos
+    [tipo_cuenta] => admin
+    [password] => 123456
+    [confirm-password] => 123456
+    [terminos] => on
+)
+
+Tipo cuenta recibido: 'admin'
+PROCESANDO REGISTRO ADMIN
+Intentando insertar admin: Aileen Peña, aileen_marquez@hotmail.com, aileen_pe__a
+Admin insertado correctamente con ID: 5
+2026-04-29 17:59:22 - INICIO PROCESAMIENTO
+Array
+(
+    [nombre] => antonio
+    [cedula] => 17314511
+    [codigo_telefono] => 0412
+    [telefono] => 04121311220
+    [correo] => jose14chacon2003@gmail.com
+    [direccion] => Urb trigal Sur Calle Camoruco
+    [tipo_cuenta] => cliente
+    [password] => 123456
+    [confirm-password] => 123456
+    [terminos] => on
+)
+
+Tipo cuenta recibido: 'cliente'
+PROCESANDO REGISTRO CLIENTE
+Cliente insertado correctamente con ID: 6
+2026-04-29 18:00:25 - INICIO PROCESAMIENTO
+Array
+(
+    [nombre] => Jose Chacon
+    [cedula] => 31129605
+    [codigo_telefono] => 0412
+    [telefono] => 04121311228
+    [correo] => jose14chacon2003@gmail.com
+    [direccion] => Urb trigal Sur Calle Camoruco
+    [tipo_cuenta] => admin
+    [password] => 142003
+    [confirm-password] => 142003
+    [terminos] => on
+)
+
+Tipo cuenta recibido: 'admin'
+PROCESANDO REGISTRO ADMIN
+2026-04-29 18:01:24 - INICIO PROCESAMIENTO
+Array
+(
+    [nombre] => Jose Chacon
+    [cedula] => 31129605
+    [codigo_telefono] => 0412
+    [telefono] => 04121311228
+    [correo] => jose142003chacon@gmail.com
+    [direccion] => Urb trigal Sur Calle Camoruco
+    [tipo_cuenta] => admin
+    [password] => 142003
+    [confirm-password] => 142003
+    [terminos] => on
+)
+
+Tipo cuenta recibido: 'admin'
+PROCESANDO REGISTRO ADMIN
+Intentando insertar admin: Jose Chacon, jose142003chacon@gmail.com, jose_chacon
+Admin insertado correctamente con ID: 4
+2026-04-30 12:18:27 - INICIO PROCESAMIENTO
+Array
+(
+    [nombre] => Jose Chacon
+    [cedula] => 123456
+    [codigo_telefono] => 0422
+    [telefono] => 04221311228
+    [correo] => jose142003chacon@gmail.com
+    [direccion] => Urb trigal Sur Calle Camoruco
+    [tipo_cuenta] => admin
+    [password] => 123456
+    [confirm-password] => 123456
+    [terminos] => on
+)
+
+Tipo cuenta recibido: 'admin'
+PROCESANDO REGISTRO ADMIN

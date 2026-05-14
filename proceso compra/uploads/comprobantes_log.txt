@@ -1,0 +1,2 @@
+[2026-01-26 21:00:18] ID: REC-20260126-210018-23938E | Comprobante: 0hkhh | Monto: $2300.00 | Archivo: PIC1.png_20260126-210018_6977c7d238b7d.jpg (image/jpeg) | IP: ::1
+[2026-01-27 13:41:09] ID: REC-20260127-134109-5C26D0 | Comprobante: dep01577850 | Monto: $300.00 | Archivo: 9b82d9db4a6e1a3f6e6e8d6d2c84a007_20260127-134109_6978b265c1c80.jpg (image/jpeg) | IP: ::1

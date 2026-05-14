@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Sin conexión - PIC Industrial</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #050C18, #294E90);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            padding: 20px;
+        }
+        
+        .offline-container {
+            text-align: center;
+            max-width: 800px;
+            width: 100%;
+        }
+        
+        /* Canvas del juego */
+        .game-container {
+            background: #1a1a2e;
+            border-radius: 20px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        canvas {
+            display: block;
+            margin: 0 auto;
+            border-radius: 12px;
+            cursor: pointer;
+            background: linear-gradient(180deg, #87CEEB 0%, #E0F7FA 100%);
+            width: 100%;
+            height: auto;
+        }
+        
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .score-box {
+            background: rgba(0,0,0,0.5);
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+        
+        .high-score {
+            background: rgba(0,0,0,0.5);
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+        }
+        
+        .game-controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+        
+        .game-btn {
+            background: #3C91ED;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .game-btn:hover {
+            transform: translateY(-2px);
+            background: #7EBDE9;
+        }
+        
+        .game-instruction {
+            background: rgba(0,0,0,0.4);
+            padding: 10px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-size: 0.8rem;
+        }
+        
+        .offline-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            color: #ffa502;
+        }
+        
+        .btn-retry {
+            background: #ffa502;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 15px;
+        }
+        
+        .btn-retry:hover {
+            transform: translateY(-2px);
+            background: #e67e22;
+        }
+        
+        /* Emoji/símbolos en lugar de Font Awesome */
+        .icon {
+            display: inline-block;
+            margin-right: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .offline-container { padding: 10px; }
+            .score-box { font-size: 1rem; padding: 5px 15px; }
+            .game-btn { padding: 8px 18px; font-size: 0.8rem; }
+            .game-instruction { font-size: 0.7rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="offline-icon">
+            📡
+        </div>
+        
+        <div class="game-container">
+            <div class="game-header">
+                <div class="score-box">
+                    ⭐ <span id="score">0</span>
+                </div>
+                <div class="score-box">
+                    🎮 <span id="game-status">Juego</span>
+                </div>
+                <div class="high-score">
+                    👑 Récord: <span id="highScore">0</span>
+                </div>
+            </div>
+            
+            <canvas id="gameCanvas" width="700" height="400" style="width:100%; height:auto; max-width:700px; aspect-ratio:700/400"></canvas>
+            
+            <div class="game-controls">
+                <button class="game-btn" id="startBtn">
+                    ▶ Jugar
+                </button>
+                <button class="game-btn" id="restartBtn">
+                    🔄 Reiniciar
+                </button>
+            </div>
+            
+            <div class="game-instruction">
+                ⬆ Presiona <strong>ESPACIO</strong> o <strong>CLICK</strong> para saltar | 
+                📦 Esquiva los productos industriales
+            </div>
+        </div>
+        
+        <button class="btn-retry" onclick="location.reload()">
+            🔄 Reintentar conexión
+        </button>
+        
+        <div style="margin-top: 20px; font-size: 0.7rem; opacity: 0.6;">
+            🎮 Gorila Ingeniero - Entretenimiento offline
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // JUEGO DEL GORILA INGENIERO - SIN DEPENDENCIAS EXTERNAS
+        // ============================================
+        
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Dimensiones del canvas
+        canvas.width = 700;
+        canvas.height = 400;
+        
+        // ===== OBJETOS DEL JUEGO =====
+        const gorila = {
+            x: 80,
+            y: canvas.height - 90,
+            width: 45,
+            height: 55,
+            ySpeed: 0,
+            gravity: 0.6,
+            jumpPower: -10,
+            isJumping: false
+        };
+        
+        // Productos de la empresa como obstáculos
+        const productos = [
+            { nombre: '🔧 Herramientas', ancho: 35, alto: 40, color: '#e67e22' },
+            { nombre: '⚡ Autonics', ancho: 35, alto: 40, color: '#3498db' },
+            { nombre: '🔩 Schneider', ancho: 35, alto: 40, color: '#2ecc71' },
+            { nombre: '📐 UNI-T', ancho: 35, alto: 40, color: '#9b59b6' },
+            { nombre: '🏭 Motor', ancho: 40, alto: 45, color: '#e74c3c' },
+            { nombre: '📦 Caja Industrial', ancho: 38, alto: 38, color: '#f39c12' },
+            { nombre: '🔌 Cables', ancho: 40, alto: 35, color: '#1abc9c' },
+            { nombre: '💻 PLC', ancho: 42, alto: 35, color: '#34495e' }
+        ];
+        
+        let obstaculos = [];
+        let frameCounter = 0;
+        let spawnRate = 90;
+        let score = 0;
+        let highScore = localStorage.getItem('gorilaHighScore') || 0;
+        let gameRunning = false;
+        let gameOver = false;
+        let velocidadBase = 4;
+        
+        document.getElementById('highScore').innerHTML = highScore;
+        
+        function spawnObstaculo() {
+            const producto = productos[Math.floor(Math.random() * productos.length)];
+            obstaculos.push({
+                x: canvas.width,
+                y: canvas.height - producto.alto - 35,
+                width: producto.ancho,
+                height: producto.alto,
+                color: producto.color,
+                nombre: producto.nombre
+            });
+        }
+        
+        function drawGround() {
+            ctx.fillStyle = '#5C4033';
+            ctx.fillRect(0, canvas.height - 35, canvas.width, 35);
+            
+            ctx.fillStyle = '#8B7355';
+            for(let i = 0; i < canvas.width; i += 30) {
+                ctx.fillRect(i, canvas.height - 38, 15, 5);
+            }
+            
+            ctx.fillStyle = '#ffd700';
+            ctx.fillRect(0, canvas.height - 38, canvas.width, 3);
+            
+            ctx.fillStyle = '#A0855B';
+            ctx.fillRect(canvas.width/2 - 50, canvas.height - 35, 100, 35);
+        }
+        
+        function drawGorila() {
+            const y = gorila.y;
+            const x = gorila.x;
+            const w = gorila.width;
+            
+            ctx.fillStyle = 'rgba(0,0,0,0.2)';
+            ctx.fillRect(x + 5, y + gorila.height - 5, w - 10, 8);
+            
+            ctx.fillStyle = '#5C3317';
+            ctx.beginPath();
+            ctx.ellipse(x + w/2, y + gorila.height/2 - 10, w/2, gorila.height/2, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = '#8B5A2B';
+            ctx.beginPath();
+            ctx.ellipse(x + w/2, y + gorila.height/2 - 5, w/3, gorila.height/3, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = '#5C3317';
+            ctx.beginPath();
+            ctx.ellipse(x + w/2, y + 5, 22, 25, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = '#8B5A2B';
+            ctx.beginPath();
+            ctx.ellipse(x + 8, y + 8, 10, 12, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(x + w - 8, y + 8, 10, 12, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = '#D2A679';
+            ctx.beginPath();
+            ctx.ellipse(x + 8, y + 8, 5, 7, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(x + w - 8, y + 8, 5, 7, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = '#FFFFFF';
+            ctx.beginPath();
+            ctx.arc(x + 15, y + 5, 6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x + w - 15, y + 5, 6, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = '#1a1a2e';
+            ctx.beginPath();
+            ctx.arc(x + 13, y + 4, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x + w - 17, y + 4, 3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = '#FFFFFF';
+            ctx.beginPath();
+            ctx.arc(x + 11, y + 2, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x + w - 19, y + 2, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = '#3d1f00';
+            ctx.beginPath();
+            ctx.ellipse(x + w/2, y + 12, 6, 5, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.arc(x + w/2, y + 18, 8, 0.1, Math.PI - 0.1);
+            ctx.strokeStyle = '#3d1f00';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.fillStyle = '#ffd700';
+            ctx.beginPath();
+            ctx.ellipse(x + w/2, y - 3, 24, 12, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#e6c200';
+            ctx.fillRect(x + w/2 - 6, y - 7, 12, 8);
+            
+            ctx.fillStyle = '#c9a000';
+            ctx.fillRect(x + w/2 - 20, y - 5, 40, 4);
+            
+            ctx.fillStyle = '#ff6600';
+            ctx.fillRect(x + 8, y + 20, w - 16, 22);
+            
+            ctx.fillStyle = '#ffff00';
+            ctx.fillRect(x + 8, y + 25, w - 16, 4);
+            ctx.fillRect(x + 8, y + 33, w - 16, 4);
+            
+            ctx.fillStyle = '#5C3317';
+            ctx.fillRect(x - 10, y + 20, 12, 18);
+            ctx.fillRect(x + w - 2, y + 20, 12, 18);
+            
+            ctx.fillStyle = '#4a2810';
+            ctx.fillRect(x - 12, y + 35, 16, 8);
+            ctx.fillRect(x + w - 4, y + 35, 16, 8);
+            
+            ctx.fillStyle = '#c0c0c0';
+            ctx.fillRect(x + w - 5, y + 25, 22, 6);
+            ctx.beginPath();
+            ctx.arc(x + w + 12, y + 28, 7, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#a0a0a0';
+            ctx.fillRect(x + w, y + 23, 4, 14);
+            
+            ctx.fillStyle = '#5C3317';
+            ctx.fillRect(x + 5, y + gorila.height - 15, 12, 15);
+            ctx.fillRect(x + w - 17, y + gorila.height - 15, 12, 15);
+            
+            ctx.fillStyle = '#2c3e50';
+            ctx.fillRect(x + 2, y + gorila.height - 5, 18, 10);
+            ctx.fillRect(x + w - 20, y + gorila.height - 5, 18, 10);
+        }
+        
+        function drawObstaculo(obs) {
+            ctx.fillStyle = 'rgba(0,0,0,0.2)';
+            ctx.fillRect(obs.x + 5, obs.y + obs.height - 5, obs.width, 8);
+            
+            const gradiente = ctx.createLinearGradient(obs.x, obs.y, obs.x + obs.width, obs.y + obs.height);
+            gradiente.addColorStop(0, obs.color);
+            gradiente.addColorStop(1, obs.color);
+            ctx.fillStyle = gradiente;
+            ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+            
+            ctx.strokeStyle = '#2c3e50';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(obs.x, obs.y, obs.width, obs.height);
+            
+            ctx.font = `${obs.height - 10}px "Segoe UI Emoji", "Apple Color Emoji"`;
+            ctx.fillStyle = '#FFFFFF';
+            ctx.shadowBlur = 2;
+            ctx.shadowColor = 'rgba(0,0,0,0.5)';
+            ctx.fillText(obs.nombre.charAt(0) + obs.nombre.charAt(1), obs.x + 12, obs.y + obs.height - 12);
+            
+            ctx.font = 'bold 9px "Segoe UI"';
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillText(obs.nombre.substring(0, 12), obs.x + 5, obs.y - 3);
+            
+            ctx.shadowBlur = 0;
+        }
+        
+        function update() {
+            if (!gameRunning) return;
+            
+            gorila.ySpeed += gorila.gravity;
+            gorila.y += gorila.ySpeed;
+            
+            if (gorila.y >= canvas.height - gorila.height - 35) {
+                gorila.y = canvas.height - gorila.height - 35;
+                gorila.ySpeed = 0;
+                gorila.isJumping = false;
+            }
+            
+            if (gorila.y <= 0) {
+                gorila.y = 0;
+                if (gorila.ySpeed < 0) gorila.ySpeed = 0;
+            }
+            
+            for (let i = 0; i < obstaculos.length; i++) {
+                obstaculos[i].x -= velocidadBase;
+                
+                if (obstaculos[i].x + obstaculos[i].width < 0) {
+                    obstaculos.splice(i, 1);
+                    i--;
+                    if (gameRunning) {
+                        score++;
+                        document.getElementById('score').innerHTML = score;
+                    }
+                }
+            }
+            
+            frameCounter++;
+            if (frameCounter >= spawnRate && gameRunning) {
+                frameCounter = 0;
+                spawnObstaculo();
+                if (spawnRate > 45) spawnRate -= 0.5;
+                if (velocidadBase < 8) velocidadBase += 0.05;
+            }
+            
+            for (let obs of obstaculos) {
+                if (gorila.x < obs.x + obs.width &&
+                    gorila.x + gorila.width > obs.x &&
+                    gorila.y + gorila.height > obs.y &&
+                    gorila.y < obs.y + obs.height) {
+                    gameOver = true;
+                    gameRunning = false;
+                    document.getElementById('game-status').innerHTML = 'GAME OVER';
+                    document.getElementById('game-status').style.color = '#ff4757';
+                    
+                    if (score > highScore) {
+                        highScore = score;
+                        localStorage.setItem('gorilaHighScore', highScore);
+                        document.getElementById('highScore').innerHTML = highScore;
+                    }
+                    break;
+                }
+            }
+        }
+        
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#4A90D9');
+            gradient.addColorStop(0.5, '#87CEEB');
+            gradient.addColorStop(1, '#B0E0E6');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = 'rgba(255,255,255,0.9)';
+            ctx.beginPath();
+            ctx.ellipse(80, 45, 40, 30, 0, 0, Math.PI * 2);
+            ctx.ellipse(120, 40, 35, 28, 0, 0, Math.PI * 2);
+            ctx.ellipse(50, 40, 35, 28, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.ellipse(520, 65, 45, 32, 0, 0, Math.PI * 2);
+            ctx.ellipse(560, 60, 38, 30, 0, 0, Math.PI * 2);
+            ctx.ellipse(490, 60, 38, 30, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.font = 'bold 16px "Segoe UI"';
+            ctx.fillStyle = 'rgba(5,12,24,0.15)';
+            ctx.fillText('⚡ PIC Industrial ⚡', canvas.width - 170, 35);
+            
+            drawGround();
+            
+            for (let obs of obstaculos) {
+                drawObstaculo(obs);
+            }
+            
+            drawGorila();
+            
+            if (!gameRunning && !gameOver && score === 0) {
+                ctx.font = 'bold 24px "Segoe UI"';
+                ctx.fillStyle = '#050C18';
+                ctx.fillText('🦍 PRESIONA "JUGAR"', canvas.width/2 - 140, canvas.height/2 - 40);
+                ctx.font = '14px "Segoe UI"';
+                ctx.fillStyle = '#294E90';
+                ctx.fillText('Ayuda al Gorila Ingeniero a esquivar los productos', canvas.width/2 - 180, canvas.height/2 + 20);
+            }
+            
+            if (gameOver) {
+                ctx.font = 'bold 28px "Segoe UI"';
+                ctx.fillStyle = '#e74c3c';
+                ctx.fillText('💀 GAME OVER 💀', canvas.width/2 - 115, canvas.height/2 - 50);
+                ctx.font = '18px "Segoe UI"';
+                ctx.fillStyle = '#2c3e50';
+                ctx.fillText(`Puntaje: ${score}`, canvas.width/2 - 45, canvas.height/2);
+            }
+        }
+        
+        function jump() {
+            if (!gameRunning) return;
+            if (!gorila.isJumping) {
+                gorila.ySpeed = gorila.jumpPower;
+                gorila.isJumping = true;
+            }
+        }
+        
+        function startGame() {
+            if (gameOver) resetGame();
+            gameRunning = true;
+            gameOver = false;
+            document.getElementById('game-status').innerHTML = 'Corriendo...';
+            document.getElementById('game-status').style.color = '#2ed573';
+        }
+        
+        function resetGame() {
+            obstaculos = [];
+            frameCounter = 0;
+            score = 0;
+            velocidadBase = 4;
+            spawnRate = 90;
+            gorila.y = canvas.height - gorila.height - 35;
+            gorila.ySpeed = 0;
+            gorila.isJumping = false;
+            gameRunning = true;
+            gameOver = false;
+            document.getElementById('score').innerHTML = score;
+            document.getElementById('game-status').innerHTML = 'Corriendo...';
+            document.getElementById('game-status').style.color = '#2ed573';
+        }
+        
+        document.getElementById('startBtn').addEventListener('click', startGame);
+        document.getElementById('restartBtn').addEventListener('click', resetGame);
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                jump();
+            }
+            if (e.code === 'KeyR') resetGame();
+        });
+        
+        canvas.addEventListener('click', (e) => {
+            e.preventDefault();
+            jump();
+        });
+        
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            jump();
+        });
+        
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        gameLoop();
+    </script>
+</body>
+</html>

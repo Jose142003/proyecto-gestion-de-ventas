@@ -1,0 +1,58 @@
+<?php
+session_start();
+header('Content-Type: application/json');
+
+$host = 'localhost';
+$dbname = 'carrito_db';
+$username = 'root';
+$password = '';
+
+try {
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    echo json_encode(['success' => false, 'message' => 'Error de conexión']);
+    exit;
+}
+
+if (!isset($_SESSION['user_id'])) {
+    echo json_encode(['success' => false, 'message' => 'No autorizado']);
+    exit;
+}
+
+$data = json_decode(file_get_contents('php://input'), true);
+
+if (!$data || empty($data['id'])) {
+    echo json_encode(['success' => false, 'message' => 'ID no proporcionado']);
+    exit;
+}
+
+$id = intval($data['id']);
+
+try {
+    // Obtener la ruta del archivo antes de eliminar el registro
+    $stmt = $pdo->prepare("SELECT ruta_archivo FROM backups WHERE id = ?");
+    $stmt->execute([$id]);
+    $backup = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$backup) {
+        echo json_encode(['success' => false, 'message' => 'Backup no encontrado']);
+        exit;
+    }
+    
+    // Eliminar archivo físico
+    if (file_exists($backup['ruta_archivo'])) {
+        unlink($backup['ruta_archivo']);
+    }
+    
+    // Eliminar registro de la base de datos
+    $stmt = $pdo->prepare("DELETE FROM backups WHERE id = ?");
+    $stmt->execute([$id]);
+    
+    echo json_encode(['success' => true, 'message' => 'Backup eliminado correctamente']);
+    
+} catch (Exception $e) {
+    error_log("Error en eliminar_backup.php: " . $e->getMessage());
+    echo json_encode(['success' => false, 'message' => 'Error al eliminar backup']);
+}
+?>
