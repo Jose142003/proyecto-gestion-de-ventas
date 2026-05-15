@@ -1139,8 +1139,8 @@ function cerrarSesion() {
 function eliminarCuenta() {
     if (confirm('⚠️ ¿Estás seguro de que deseas eliminar tu cuenta?\n\nEsta acción es irreversible.')) {
         fetch('/proyecto/usuarios/eliminar_cuenta.php', { method: 'POST' })
-            .then(() => window.location.href = '/proyecto/interfaz usuario/bienvenida.html')
-            .catch(() => window.location.href = '/proyecto/interfaz usuario/bienvenida.html');
+            .then(() => window.location.href = '/proyecto/interfaz usuario/index.html')
+            .catch(() => window.location.href = '/proyecto/interfaz usuario/index.html');
     }
 }
 
