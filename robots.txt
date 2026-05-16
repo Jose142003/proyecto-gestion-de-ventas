@@ -1,0 +1,27 @@
+User-agent: *
+Allow: /proyecto/interfaz%20usuario/pagina_modernizada.html
+Allow: /proyecto/interfaz%20usuario/pasarela%20de%20pago.html
+Allow: /proyecto/interfaz%20usuario/login.html
+Allow: /proyecto/img/
+Allow: /proyecto/producto/obtener_producto.php
+Allow: /proyecto/tasas/
+
+Disallow: /proyecto/panel%20admin/
+Disallow: /proyecto/admin/
+Disallow: /proyecto/backups/
+Disallow: /proyecto/conexion/
+Disallow: /proyecto/sql/
+Disallow: /proyecto/logs/
+Disallow: /proyecto/carrito/
+Disallow: /proyecto/usuarios/
+Disallow: /proyecto/proceso%20compra/
+Disallow: /proyecto/facturacion/
+Disallow: /proyecto/caja/
+Disallow: /proyecto/compras/
+Disallow: /proyecto/proveedores/
+Disallow: /proyecto/reportes/
+Disallow: /proyecto/stock/
+Disallow: /proyecto/uploads/
+Disallow: */?*
+
+Sitemap: /proyecto/sitemap.xml

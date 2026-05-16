@@ -8,8 +8,8 @@ header('Pragma: no-cache');
 header('Expires: 0');
 
 // Habilitar errores para depuración
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+error_reporting(0);
+ini_set('display_errors', 0);
 
 // Configuración de la base de datos
 $host = 'localhost';

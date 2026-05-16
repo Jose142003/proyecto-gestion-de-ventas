@@ -2,7 +2,7 @@
 // /proyecto/proceso compra/editar_pedido.php
 session_start();
 header('Content-Type: text/html; charset=utf-8');
-error_reporting(E_ALL);
+error_reporting(0);
 ini_set('display_errors', 0);
 
 require_once '../conexion/conexion.php';

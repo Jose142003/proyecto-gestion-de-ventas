@@ -4,8 +4,8 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Credentials: true');
 
 // Habilitar errores para depuración
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+error_reporting(0);
+ini_set('display_errors', 0);
 
 session_start();
 

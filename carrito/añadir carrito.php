@@ -4,8 +4,8 @@ require_once '../conexion/conexion.php';
 header('Content-Type: application/json');
 
 // Habilitar logging de errores
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
+ini_set('display_errors', 0);
+error_reporting(0);
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Obtener datos del POST
