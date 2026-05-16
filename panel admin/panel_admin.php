@@ -2194,7 +2194,7 @@ try {
             <!-- Backup Section -->
             <div id="backupSection" class="content-section">
                 <div class="table-container">
-                    <div class="table-header"><h3><i class="fas fa-database"></i> Copias de Seguridad</h3><button class="btn-primary" id="btnCrearBackup"><i class="fas fa-plus"></i> Crear Backup</button></div>
+                    <div class="table-header"><h3><i class="fas fa-database"></i> Copias de Seguridad</h3><div><button class="btn-primary" id="btnCrearBackup"><i class="fas fa-plus"></i> Crear Backup</button></div></div>
                     <div class="table-content"><table class="data-table"><thead><tr><th>ID</th><th>Archivo</th><th>Tamaño</th><th>Tipo</th><th>Fecha</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="backupsList"><tr><td colspan="7" style="text-align:center">Cargando...</tbody></table></div>
                 </div>
             </div>
@@ -3920,7 +3920,7 @@ function renderAuditoria() {
                     <td>${escapeHtml(b.tipo)}</td>
                     <td>${formatDate(b.fecha)}</td>
                     <td><span class="badge ${b.estado === 'completado' ? 'badge-active' : 'badge-pending'}">${b.estado || 'completado'}</span></td>
-                    <td class="action-buttons"><button class="btn-action btn-view" onclick="descargarBackup(${b.id})"><i class="fas fa-download"></i></button><button class="btn-action btn-delete" onclick="eliminarBackup(${b.id})"><i class="fas fa-trash"></i></button>
+                    <td class="action-buttons"><button class="btn-action btn-view" onclick="descargarBackup(${b.id})" title="Descargar"><i class="fas fa-download"></i></button><button class="btn-action btn-edit" onclick="restaurarBackup(${b.id})" title="Restaurar"><i class="fas fa-undo"></i></button><button class="btn-action btn-delete" onclick="eliminarBackup(${b.id})" title="Eliminar"><i class="fas fa-trash"></i></button>
                 </tr>`;
             }
             tbody.innerHTML = html;
@@ -4246,6 +4246,11 @@ function renderAuditoria() {
         function exportarReporteGeneralPDF() { window.open('/proyecto/reportes/exportar_reporte_general_pdf.php', '_blank'); }
         function exportarReporteGeneralExcel() { window.open('/proyecto/reportes/exportar_reporte_general_excel.php', '_blank'); }
         
+        function getBackupFriendlyName() {
+            const backupsSelect = document.getElementById('backupSelect');
+            return backupsSelect ? backupsSelect.options[backupsSelect.selectedIndex]?.text || '' : '';
+        }
+
         async function crearBackup() {
             mostrarLoading('Creando copia de seguridad...');
             try {
@@ -4254,6 +4259,26 @@ function renderAuditoria() {
                 if(data.success) { mostrarNotificacion('Backup creado correctamente', 'success'); cargarBackups(); }
                 else { mostrarNotificacion(data.message || 'Error al crear backup', 'error'); }
             } catch(e) { mostrarNotificacion('Error al crear backup', 'error'); }
+            finally { ocultarLoading(); }
+        }
+        
+        async function restaurarBackup(id) {
+            const respaldo = backupsData.find(b => b.id == id);
+            const nombre = respaldo ? respaldo.archivo : `#${id}`;
+            if(!confirm(`⚠️ RESTAURAR ${nombre}\n\nEsta acción SOBREESCRIBIRÁ todos los datos actuales en la base de datos.\n¿Estás absolutamente seguro?`)) return;
+            if(!confirm(`🔴 CONFIRMACIÓN FINAL\n\n¿Estás seguro de restaurar "${nombre}"?\nSe perderán todos los cambios NO respaldados.`)) return;
+            mostrarLoading('Restaurando backup...');
+            try {
+                const response = await fetch('/proyecto/backups/restaurar_backup.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }), credentials: 'include' });
+                const data = await response.json();
+                if(data.success) {
+                    mostrarNotificacion(`✅ Backup restaurado: ${data.message}`, 'success');
+                    cargarBackups();
+                    cargarDashboard();
+                } else {
+                    mostrarNotificacion(data.message || 'Error al restaurar backup', 'error');
+                }
+            } catch(e) { console.error('Error:', e); mostrarNotificacion('Error al restaurar backup', 'error'); }
             finally { ocultarLoading(); }
         }
         

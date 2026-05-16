@@ -682,6 +682,7 @@
                             </div>
                             <div class="dropdown-divider"></div>
                             <a class="dropdown-item" href="#" data-target="#changeProfilePhotoModal" data-toggle="modal"><i class="fas fa-camera"></i> Cambiar Foto</a>
+                            <a class="dropdown-item" href="#" id="deletePhotoBtn"><i class="fas fa-trash-alt"></i> Eliminar Foto</a>
                             <a class="dropdown-item" href="#" data-target="#contactModal" data-toggle="modal"><i class="fas fa-envelope"></i> Contáctanos</a>
                             <a class="dropdown-item" href="#" data-target="#changePasswordModal" data-toggle="modal"><i class="fas fa-lock"></i> Cambiar Contraseña</a>
                             <a class="dropdown-item" href="#" id="viewHistoryBtn"><i class="fas fa-history"></i> Historial</a>
@@ -1631,22 +1632,77 @@ function setupPagination() {
     
     if (totalPages <= 1) return;
     
-    for (let i = 1; i <= totalPages; i++) {
+    function goToPage(page) {
+        if (page < 1 || page > totalPages) return;
+        currentPage = page;
+        displayProducts();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    
+    const prevLi = document.createElement('li');
+    prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+    const prevA = document.createElement('a');
+    prevA.className = 'page-link'; prevA.href = '#'; prevA.innerHTML = '&laquo;';
+    prevA.addEventListener('click', (e) => { e.preventDefault(); goToPage(currentPage - 1); });
+    prevLi.appendChild(prevA);
+    paginationList.appendChild(prevLi);
+    
+    const maxVisible = 7;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+    if (endPage - startPage < maxVisible - 1) startPage = Math.max(1, endPage - maxVisible + 1);
+    
+    if (startPage > 1) {
+        const firstLi = document.createElement('li');
+        firstLi.className = 'page-item';
+        const firstA = document.createElement('a');
+        firstA.className = 'page-link'; firstA.href = '#'; firstA.textContent = '1';
+        firstA.addEventListener('click', (e) => { e.preventDefault(); goToPage(1); });
+        firstLi.appendChild(firstA);
+        paginationList.appendChild(firstLi);
+        if (startPage > 2) {
+            const dotsLi = document.createElement('li');
+            dotsLi.className = 'page-item disabled';
+            dotsLi.innerHTML = '<a class="page-link">...</a>';
+            paginationList.appendChild(dotsLi);
+        }
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
         const li = document.createElement('li');
         li.className = `page-item ${i === currentPage ? 'active' : ''}`;
         const a = document.createElement('a');
         a.className = 'page-link';
         a.href = '#';
         a.textContent = i;
-        a.addEventListener('click', (e) => {
-            e.preventDefault();
-            currentPage = i;
-            displayProducts();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
+        a.addEventListener('click', (e) => { e.preventDefault(); goToPage(i); });
         li.appendChild(a);
         paginationList.appendChild(li);
     }
+    
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            const dotsLi = document.createElement('li');
+            dotsLi.className = 'page-item disabled';
+            dotsLi.innerHTML = '<a class="page-link">...</a>';
+            paginationList.appendChild(dotsLi);
+        }
+        const lastLi = document.createElement('li');
+        lastLi.className = 'page-item';
+        const lastA = document.createElement('a');
+        lastA.className = 'page-link'; lastA.href = '#'; lastA.textContent = totalPages;
+        lastA.addEventListener('click', (e) => { e.preventDefault(); goToPage(totalPages); });
+        lastLi.appendChild(lastA);
+        paginationList.appendChild(lastLi);
+    }
+    
+    const nextLi = document.createElement('li');
+    nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+    const nextA = document.createElement('a');
+    nextA.className = 'page-link'; nextA.href = '#'; nextA.innerHTML = '&raquo;';
+    nextA.addEventListener('click', (e) => { e.preventDefault(); goToPage(currentPage + 1); });
+    nextLi.appendChild(nextA);
+    paginationList.appendChild(nextLi);
 }
 
 function attachProductEvents() {
@@ -1698,6 +1754,9 @@ async function addToCart(productId, quantity) {
         return;
     }
     
+    const btns = document.querySelectorAll(`.add-to-cart-btn[data-id="${productId}"], #modal-add-to-cart-btn`);
+    btns.forEach(b => { b.disabled = true; b.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; });
+    
     try {
         const response = await fetch('/proyecto/carrito/añadir carrito.php', {
             method: 'POST',
@@ -1716,6 +1775,15 @@ async function addToCart(productId, quantity) {
         console.error('Error:', error);
         showNotification('Error de conexión', true);
     }
+    
+    btns.forEach(b => {
+        b.disabled = false;
+        if (b.id === 'modal-add-to-cart-btn') {
+            b.textContent = 'Añadir al Carrito';
+        } else {
+            b.innerHTML = '<i class="fas fa-cart-plus"></i>';
+        }
+    });
 }
 
 async function updateCartUI() {
@@ -1833,6 +1901,9 @@ async function handleRemove(e) {
 async function actualizarCantidadCarrito(productId, quantity) {
     if (!CURRENT_USER || !CURRENT_USER.id) return;
     
+    const btns = document.querySelectorAll(`.cart-qty-minus[data-id="${productId}"], .cart-qty-plus[data-id="${productId}"]`);
+    btns.forEach(b => b.disabled = true);
+    
     try {
         const response = await fetch('/proyecto/carrito/añadir carrito.php', {
             method: 'POST',
@@ -1850,6 +1921,8 @@ async function actualizarCantidadCarrito(productId, quantity) {
         console.error('Error:', error);
         showNotification('Error de conexión', true);
     }
+    
+    btns.forEach(b => b.disabled = false);
 }
 
 async function removeFromCart(productId) {
@@ -2109,10 +2182,15 @@ function setupEventListeners() {
     });
     
     document.getElementById('viewHistoryBtn')?.addEventListener('click', async () => {
+        if (!CURRENT_USER || !CURRENT_USER.id) {
+            showNotification('Debes iniciar sesión para ver tu historial', true);
+            document.getElementById('historyContent').innerHTML = '<p class="text-center text-muted">Inicia sesión para ver tu historial</p>';
+            return;
+        }
         $('#historyModal').modal('show');
         document.getElementById('historyContent').innerHTML = '<p class="text-center">Cargando...</p>';
         try {
-            const response = await fetch(`/proyecto/producto/obtener_historial_pedidos.php?user_id=${CURRENT_USER?.id || 1}`);
+            const response = await fetch(`/proyecto/producto/obtener_historial_pedidos.php?user_id=${CURRENT_USER.id}`);
             const data = await response.json();
             if (data.success && data.historial && data.historial.length > 0) {
                 let html = '<div class="list-group">';
@@ -2176,6 +2254,11 @@ function setupEventListeners() {
             }
         });
     }
+    
+    document.getElementById('deletePhotoBtn')?.addEventListener('click', function(e) {
+        e.preventDefault();
+        eliminarFotoPerfil();
+    });
 }
 
 // ===== INICIALIZACIÓN =====
