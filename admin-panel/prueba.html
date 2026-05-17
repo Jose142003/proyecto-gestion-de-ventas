@@ -5,14 +5,14 @@ session_start();
 
 // Verificar autenticación
 if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
-    header('Location: /proyecto/interfaz usuario/login.html');
+    header('Location: /proyecto/usuario/login.html');
     exit;
 }
 
 // Verificar que sea administrador
 if (!isset($_SESSION['es_admin']) || $_SESSION['es_admin'] !== true) {
     // Si es cliente, redirigir a página de cliente
-    header('Location: /proyecto/interfaz usuario/pagina_modernizada.html');
+    header('Location: /proyecto/usuario/pagina_modernizada.html');
     exit;
 }
 
@@ -20,7 +20,7 @@ if (!isset($_SESSION['es_admin']) || $_SESSION['es_admin'] !== true) {
 if ($_SESSION['tabla_origen'] !== 'admin_users') {
     // Si no viene de admin_users, no es admin válido
     session_destroy();
-    header('Location: /proyecto/interfaz usuario/login.html?error=invalid_access');
+    header('Location: /proyecto/usuario/login.html?error=invalid_access');
     exit;
 }
 
@@ -44,13 +44,13 @@ try {
     if (!$admin_user) {
         // Usuario no es admin en la BD
         session_destroy();
-        header('Location: /proyecto/interfaz usuario/login.html?error=invalid_admin');
+        header('Location: /proyecto/usuario/login.html?error=invalid_admin');
         exit;
     }
     
     if ($admin_user['activo'] == 0) {
         session_destroy();
-        header('Location: /proyecto/interfaz usuario/login.html?error=inactive');
+        header('Location: /proyecto/usuario/login.html?error=inactive');
         exit;
     }
     
@@ -61,7 +61,7 @@ try {
     
 } catch (PDOException $e) {
     error_log("Error en panel_admin: " . $e->getMessage());
-    header('Location: /proyecto/interfaz usuario/login.html');
+    header('Location: /proyecto/usuario/login.html');
     exit;
 }
 ?>
@@ -1145,7 +1145,7 @@ try {
             background: var(--accent-color);
             color: white;
         }
-        /* ========== RESPONSIVE DESIGN PARA PANEL ADMIN ========== */
+        /* ========== RESPONSIVE DESIGN PARA admin-panel ========== */
 
 /* Tablets y pantallas medianas (max-width: 1200px) */
 @media (max-width: 1200px) {
@@ -2870,7 +2870,7 @@ function renderCompras() {
         async function cargarPedidos() {
             mostrarLoading('Cargando pedidos...');
             try {
-                const response = await fetch('/proyecto/proceso compra/obtener_todos_los_pedidos.php', { credentials: 'include' });
+                const response = await fetch('/proyecto/proceso-compra/obtener_todos_los_pedidos.php', { credentials: 'include' });
                 if(response.ok) {
                     const data = await response.json();
                     if(data.success) pedidosData = data.pedidos || [];
@@ -4197,7 +4197,7 @@ function renderAuditoria() {
         function verFactura(id) { window.open(`/proyecto/facturacion/ver_factura.php?id=${id}`, '_blank'); }
         function exportarFacturaPDF(id) { window.open(`/proyecto/facturacion/generar_pdf_factura.php?id=${id}`, '_blank'); }
         function verDetalleCliente(id) { window.location.href = `/proyecto/clientes/detalle_cliente.php?id=${id}`; }
-        function editarPedido(pedidoId) { window.location.href = `/proyecto/proceso compra/editar_pedido.php?id=${pedidoId}`; }
+        function editarPedido(pedidoId) { window.location.href = `/proyecto/proceso-compra/editar_pedido.php?id=${pedidoId}`; }
         function exportarPedidoPDF(pedidoId) { if(pedidoId) window.open(`/proyecto/producto/generar_pdf_pedido.php?id=${pedidoId}`, '_blank'); }
         function nuevaFactura() { window.location.href = '/proyecto/facturacion/nueva_factura.php'; }
         function nuevaCompra() { window.location.href = '/proyecto/compras/nueva_compra.php'; }
@@ -4230,7 +4230,7 @@ function renderAuditoria() {
         async function verDetallePedido(pedidoId) {
             mostrarLoading('Cargando detalles del pedido...');
             try {
-                const response = await fetch(`/proyecto/proceso compra/obtener_detalles_pedido.php?id=${pedidoId}`, { credentials: 'include' });
+                const response = await fetch(`/proyecto/proceso-compra/obtener_detalles_pedido.php?id=${pedidoId}`, { credentials: 'include' });
                 if(response.ok) {
                     const data = await response.json();
                     if(data.success) {
@@ -4460,7 +4460,7 @@ async function cambiarPasswordRecuperacion(event) {
             emailRecuperacion = null; 
             setTimeout(() => { 
                 if(confirm('Contraseña cambiada correctamente. ¿Deseas iniciar sesión?')) 
-                    window.location.href = '/proyecto/interfaz usuario/login.html'; 
+                    window.location.href = '/proyecto/usuario/login.html'; 
             }, 1000); 
         } else { 
             mostrarNotificacion(data.message || 'Error al cambiar la contraseña', 'error'); 
@@ -4481,7 +4481,7 @@ async function cambiarPasswordRecuperacion(event) {
             try {
                 const response = await fetch('/proyecto/usuarios/eliminar_cuenta.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password }), credentials: 'include' });
                 const data = await response.json();
-                if(data.success) { mostrarNotificacion('Cuenta eliminada. Cerrando sesión...', 'success'); setTimeout(() => { window.location.href = '/proyecto/interfaz usuario/login.html'; }, 2000); }
+                if(data.success) { mostrarNotificacion('Cuenta eliminada. Cerrando sesión...', 'success'); setTimeout(() => { window.location.href = '/proyecto/usuario/login.html'; }, 2000); }
                 else { mostrarNotificacion(data.message || 'Error al eliminar cuenta', 'error'); }
             } catch(e) { mostrarNotificacion('Error al eliminar cuenta', 'error'); }
             finally { ocultarLoading(); }
@@ -4646,7 +4646,7 @@ async function cambiarPasswordRecuperacion(event) {
             const loader = loaders[sectionId];
             if(loader) loader();
         }
-        function cerrarSesion() { if(confirm('¿Cerrar sesión?')) fetch('/proyecto/usuarios/cerrar_sesion.php', { method: 'POST', credentials: 'include' }).finally(() => { window.location.href = '/proyecto/interfaz usuario/login.html'; }); }
+        function cerrarSesion() { if(confirm('¿Cerrar sesión?')) fetch('/proyecto/usuarios/cerrar_sesion.php', { method: 'POST', credentials: 'include' }).finally(() => { window.location.href = '/proyecto/usuario/login.html'; }); }
         function toggleMobileMenu() { document.querySelector('.sidebar').classList.toggle('active'); }
         function inicializarFechasReporte() { const hoy = new Date(); const primerDiaMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1); const fechaHastaInput = document.getElementById('espFechaHasta'); const fechaDesdeInput = document.getElementById('espFechaDesde'); if(fechaHastaInput && !fechaHastaInput.value) fechaHastaInput.value = hoy.toISOString().split('T')[0]; if(fechaDesdeInput && !fechaDesdeInput.value) fechaDesdeInput.value = primerDiaMes.toISOString().split('T')[0]; }
 
@@ -4658,7 +4658,7 @@ async function cambiarPasswordRecuperacion(event) {
                 if(!response.ok) throw new Error('No autenticado');
             } catch(e) {
                 mostrarNotificacion('Error de autenticacion. Por favor inicie sesion nuevamente.', 'error');
-                window.location.href = '/proyecto/interfaz usuario/login.html';
+                window.location.href = '/proyecto/usuario/login.html';
                 ocultarLoading();
                 return;
             }

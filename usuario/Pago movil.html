@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transferencia Bancaria | Proyectos Industriales</title>
+    <title>Pago Móvil | Proyectos Industriales</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
       <!-- PWA Meta Tags -->
     <link rel="manifest" href="/proyecto/manifest.json">
@@ -42,7 +42,7 @@
             overflow: hidden;
         }
         .header {
-            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+            background: linear-gradient(135deg, var(--success-green), #2ecc71);
             color: white;
             padding: 30px;
             text-align: center;
@@ -103,6 +103,7 @@
             padding: 20px; 
             border-radius: 15px; 
             margin: 20px 0; 
+            border-left: 4px solid var(--secondary-blue);
         }
         .btn-confirm { 
             padding: 15px 30px; 
@@ -113,6 +114,7 @@
             cursor: pointer; 
             font-weight: bold;
             width: 100%;
+            font-size: 1.1rem;
         }
         .btn-confirm:disabled {
             background-color: #95a5a6;
@@ -190,11 +192,6 @@
             border-color: var(--success-green);
             background: #f0fff4;
         }
-        .total-grande {
-            font-size: 1.3rem;
-            font-weight: bold;
-            color: var(--primary-blue);
-        }
         .back-link {
             text-align: center;
             margin-top: 20px;
@@ -203,14 +200,22 @@
             color: var(--primary-blue);
             text-decoration: none;
         }
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+        .total-grande {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--primary-blue);
+        }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="header">
-        <i class="fas fa-university"></i>
-        <h2>Transferencia Bancaria</h2>
-        <p>Confirma tu transferencia para completar el pedido</p>
+        <i class="fas fa-mobile-alt"></i>
+        <h2>Pago Móvil</h2>
+        <p>Confirma tu pago para completar el pedido</p>
     </div>
     
     <div class="content">
@@ -244,16 +249,16 @@
         </div>
         
         <div class="bank-info">
-            <h4><i class="fas fa-building"></i> Datos Bancarios</h4>
+            <h4><i class="fas fa-university"></i> Datos para Pago Móvil</h4>
             <p><strong>Banco:</strong> Mercantil</p>
-            <p><strong>Cuenta:</strong> 0105-0094-54-1094383937</p>
-            <p><strong>Titular:</strong> Proyectos Industriales C.A</p>
-            <p><strong>RIF:</strong> J-29384799-0</p>
+            <p><strong>Teléfono:</strong> 0414-3417373</p>
+            <p><strong>Cédula:</strong> V-5.687.588</p>
+            <p><strong>Titular:</strong> Jose Chacon</p>
         </div>
         
         <div class="reference-field">
             <label>
-                <i class="fas fa-hashtag"></i> Número de Referencia de la Transferencia:
+                <i class="fas fa-hashtag"></i> Número de Referencia del Pago Móvil:
             </label>
             <input type="text" id="referenciaPago" 
                    placeholder="Ej: 1234567890" 
@@ -265,9 +270,9 @@
             <div class="spinner"></div>
             <p>Procesando tu pago...</p>
         </div>
-
+        
         <button class="btn-confirm" id="btnConfirm" onclick="procesarPago()" disabled>
-            <i class="fas fa-check-circle"></i> Confirmar Transferencia
+            <i class="fas fa-check-circle"></i> Confirmar Pago Realizado
         </button>
         
         <div class="back-link">
@@ -295,8 +300,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function cargarCarrito() {
     try {
-        const user_id = localStorage.getItem('user_id') || 1;
-        const response = await fetch(`/proyecto/carrito/tomar carrito.php?user_id=${user_id}`);
+        let user_id = localStorage.getItem('user_id');
+        
+        if (!user_id) {
+            try {
+                const userResponse = await fetch('/proyecto/usuarios/obtener usuario.php', {
+                    credentials: 'include'
+                });
+                const userData = await userResponse.json();
+                if (userData.success && userData.usuario) {
+                    user_id = userData.usuario.id;
+                    localStorage.setItem('user_id', user_id);
+                }
+            } catch(e) {
+                console.log('Error obteniendo usuario:', e);
+            }
+        }
+        
+        if (!user_id) {
+            user_id = 1;
+        }
+        
+        const response = await fetch(`/proyecto/carrito/tomar carrito.php?user_id=${user_id}`, {
+            credentials: 'include'
+        });
         const data = await response.json();
         
         if (data.success && data.items && data.items.length > 0) {
@@ -464,7 +491,7 @@ async function procesarPago() {
     }
     
     if (!referencia) {
-        mostrarError('Por favor, ingresa el número de referencia de la transferencia');
+        mostrarError('Por favor, ingresa el número de referencia del pago');
         return;
     }
     
@@ -472,7 +499,10 @@ async function procesarPago() {
     processing.style.display = 'block';
     
     try {
-        const user_id = localStorage.getItem('user_id') || 1;
+        let user_id = localStorage.getItem('user_id');
+        if (!user_id) {
+            user_id = 1;
+        }
         
         // Preparar productos con el formato correcto
         const productosEnvio = cartItems.map(item => ({
@@ -482,12 +512,12 @@ async function procesarPago() {
             quantity: parseInt(item.quantity)
         }));
         
-        const response = await fetch('/proyecto/proceso compra/procesar-pago.php', {
+        const response = await fetch('/proyecto/proceso-compra/procesar-pago.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 user_id: parseInt(user_id),
-                payment_method: 'transferencia',
+                payment_method: 'pago_movil',
                 referencia: referencia,
                 client_type: clientType,
                 items: productosEnvio,
@@ -500,9 +530,19 @@ async function procesarPago() {
         const result = await response.json();
         
         if (result.success) {
-            sessionStorage.setItem('pedido_procesado', JSON.stringify(result));
-            // Incluir clientType en la URL
-            window.location.href = `pedido_confirmado.php?numero=${result.numero_pedido}&total=${totalPagar}&metodo=transferencia&referencia=${encodeURIComponent(referencia)}&usuario_id=${user_id}&clientType=${clientType}`;
+            // Guardar productos en sessionStorage para respaldo
+            sessionStorage.setItem('productos_pedido', JSON.stringify(productosEnvio));
+            
+            // Convertir productos a JSON para pasar por URL
+            const productosJson = encodeURIComponent(JSON.stringify(cartItems.map(item => ({
+                id: item.id,
+                nombre: item.name,
+                precio: parseFloat(item.price),
+                cantidad: parseInt(item.quantity)
+            }))));
+            
+            // Redirigir con todos los parámetros incluyendo clientType
+            window.location.href = `pedido_confirmado.php?numero=${result.numero_pedido}&total=${totalPagar}&metodo=pago_movil&referencia=${encodeURIComponent(referencia)}&usuario_id=${user_id}&productos=${productosJson}&clientType=${clientType}`;
         } else {
             throw new Error(result.message || 'Error al procesar el pago');
         }

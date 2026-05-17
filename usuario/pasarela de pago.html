@@ -724,14 +724,14 @@ async function verificarNoAdmin() {
         // Si es administrador, redirigir al panel
         if (data.is_admin === true || (data.user && data.user.rol === 'admin')) {
             alert('⚠️ Los administradores no pueden realizar compras. Redirigiendo al panel de administración.');
-            window.location.href = '/proyecto/panel admin/panel_admin.php';
+            window.location.href = '/proyecto/admin-panel/panel_admin.php';
             return false;
         }
         
         // Si no está autenticado como cliente, redirigir a login
         if (!data.success || !data.user) {
             alert('Debes iniciar sesión como cliente para realizar una compra.');
-            window.location.href = '/proyecto/interfaz usuario/login.html';
+            window.location.href = '/proyecto/usuario/login.html';
             return false;
         }
         

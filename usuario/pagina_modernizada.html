@@ -1132,16 +1132,16 @@ async function eliminarFotoPerfil() {
 function cerrarSesion() {
     if (confirm('¿Cerrar sesión?')) {
         fetch('/proyecto/usuarios/cerrar_sesion.php', { method: 'POST' })
-            .then(() => window.location.href = '/proyecto/interfaz usuario/login.html')
-            .catch(() => window.location.href = '/proyecto/interfaz usuario/login.html');
+            .then(() => window.location.href = '/proyecto/usuario/login.html')
+            .catch(() => window.location.href = '/proyecto/usuario/login.html');
     }
 }
 
 function eliminarCuenta() {
     if (confirm('⚠️ ¿Estás seguro de que deseas eliminar tu cuenta?\n\nEsta acción es irreversible.')) {
         fetch('/proyecto/usuarios/eliminar_cuenta.php', { method: 'POST' })
-            .then(() => window.location.href = '/proyecto/interfaz usuario/index.html')
-            .catch(() => window.location.href = '/proyecto/interfaz usuario/index.html');
+            .then(() => window.location.href = '/proyecto/usuario/index.html')
+            .catch(() => window.location.href = '/proyecto/usuario/index.html');
     }
 }
 
@@ -1294,7 +1294,7 @@ async function obtenerUsuarioActual() {
             console.log('⚠️ Usuario inactivo');
             showNotification('Tu cuenta está inactiva. Contacta al administrador.', 'error');
             setTimeout(() => {
-                window.location.href = '/proyecto/interfaz usuario/login.html';
+                window.location.href = '/proyecto/usuario/login.html';
             }, 2000);
             return false;
         }
@@ -1319,7 +1319,7 @@ async function obtenerUsuarioActual() {
         if (dropdownMenu && !document.querySelector('.login-guest-item')) {
             const loginItem = document.createElement('a');
             loginItem.className = 'dropdown-item login-guest-item';
-            loginItem.href = '/proyecto/interfaz usuario/login.html';
+            loginItem.href = '/proyecto/usuario/login.html';
             loginItem.innerHTML = '<i class="fas fa-sign-in-alt"></i> Iniciar Sesión';
             dropdownMenu.insertBefore(loginItem, dropdownMenu.firstChild);
         }
@@ -1381,7 +1381,7 @@ function iniciarVerificacionSesionPeriodica() {
                 console.log('⚠️ Sesión expirada');
                 showNotification('Sesión expirada. Por favor inicia sesión nuevamente.', 'warning');
                 setTimeout(() => {
-                    window.location.href = '/proyecto/interfaz usuario/login.html';
+                    window.location.href = '/proyecto/usuario/login.html';
                 }, 2000);
             }
         } catch (error) {
@@ -1750,7 +1750,7 @@ async function addToCart(productId, quantity) {
     
     if (!CURRENT_USER || !CURRENT_USER.id) {
         showNotification('Debes iniciar sesión como cliente', true);
-        setTimeout(() => window.location.href = '/proyecto/interfaz usuario/login.html', 1500);
+        setTimeout(() => window.location.href = '/proyecto/usuario/login.html', 1500);
         return;
     }
     
@@ -2152,7 +2152,7 @@ function setupEventListeners() {
             
             if (!CURRENT_USER || !CURRENT_USER.id) {
                 showNotification('Debes iniciar sesión como cliente', true);
-                setTimeout(() => window.location.href = '/proyecto/interfaz usuario/login.html', 1500);
+                setTimeout(() => window.location.href = '/proyecto/usuario/login.html', 1500);
                 return;
             }
             
