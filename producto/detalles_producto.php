@@ -1,7 +1,11 @@
 <?php
 // informacion_producto.php - Muestra información técnica y estadísticas del producto
 
-require_once '../conexion/conexion.php';
+// Configuración de conexión
+$host = 'localhost';
+$dbname = 'carrito_db';
+$username = 'root';
+$password = '';
 
 // Obtener ID del producto
 $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
@@ -13,7 +17,13 @@ $ventas_recientes = [];
 $productos_similares = [];
 
 try {
-    $pdo = conectarDB();
+    $conn = new mysqli($host, $username, $password, $dbname);
+    
+    if ($conn->connect_error) {
+        throw new Exception("Error de conexión a la base de datos");
+    }
+    
+    $conn->set_charset("utf8");
 
     // 1. INFORMACIÓN BÁSICA DEL PRODUCTO
     $sql = "SELECT 
@@ -35,13 +45,15 @@ try {
             FROM products p 
             WHERE p.id = ?";
     
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([$id]);
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $result = $stmt->get_result();
     
-    if ($stmt->rowCount() === 0) {
+    if ($result->num_rows === 0) {
         $error = '❌ Producto no encontrado en la base de datos';
     } else {
-        $producto = $stmt->fetch(PDO::FETCH_ASSOC);
+        $producto = $result->fetch_assoc();
         
         // 2. ESTADÍSTICAS DE VENTAS DE LA TABLA factura_detalles
         $sql_ventas = "SELECT 
@@ -51,9 +63,11 @@ try {
             FROM factura_detalles fd
             WHERE fd.producto_id = ?";
         
-        $stmt_ventas = $pdo->prepare($sql_ventas);
-        $stmt_ventas->execute([$id]);
-        $estadisticas_ventas = $stmt_ventas->fetch(PDO::FETCH_ASSOC);
+        $stmt_ventas = $conn->prepare($sql_ventas);
+        $stmt_ventas->bind_param("i", $id);
+        $stmt_ventas->execute();
+        $result_ventas = $stmt_ventas->get_result();
+        $estadisticas_ventas = $result_ventas->fetch_assoc();
         
         // 3. VENTAS RECIENTES (si existe la tabla factura_detalles)
         $sql_ventas_recientes = "SELECT 
@@ -71,10 +85,12 @@ try {
             ORDER BY f.fecha_emision DESC
             LIMIT 5";
         
-        $stmt_ventas_recientes = $pdo->prepare($sql_ventas_recientes);
-        $stmt_ventas_recientes->execute([$id]);
+        $stmt_ventas_recientes = $conn->prepare($sql_ventas_recientes);
+        $stmt_ventas_recientes->bind_param("i", $id);
+        $stmt_ventas_recientes->execute();
+        $result_ventas_recientes = $stmt_ventas_recientes->get_result();
         
-        while ($row = $stmt_ventas_recientes->fetch(PDO::FETCH_ASSOC)) {
+        while ($row = $result_ventas_recientes->fetch_assoc()) {
             $ventas_recientes[] = $row;
         }
         
@@ -88,11 +104,13 @@ try {
             WHERE producto_id = ?
             GROUP BY tipo_movimiento";
         
-        $stmt_movimientos = $pdo->prepare($sql_movimientos);
-        $stmt_movimientos->execute([$id]);
+        $stmt_movimientos = $conn->prepare($sql_movimientos);
+        $stmt_movimientos->bind_param("i", $id);
+        $stmt_movimientos->execute();
+        $result_movimientos = $stmt_movimientos->get_result();
         
         $movimientos_inventario = [];
-        while ($row = $stmt_movimientos->fetch(PDO::FETCH_ASSOC)) {
+        while ($row = $result_movimientos->fetch_assoc()) {
             $movimientos_inventario[$row['tipo_movimiento']] = $row;
         }
         
@@ -110,10 +128,12 @@ try {
         ORDER BY stock DESC, name ASC
         LIMIT 5";
         
-        $stmt_sim = $pdo->prepare($sql_similares);
-        $stmt_sim->execute([$producto['categoria'], $id]);
+        $stmt_sim = $conn->prepare($sql_similares);
+        $stmt_sim->bind_param("si", $producto['categoria'], $id);
+        $stmt_sim->execute();
+        $result_sim = $stmt_sim->get_result();
         
-        while ($row = $stmt_sim->fetch(PDO::FETCH_ASSOC)) {
+        while ($row = $result_sim->fetch_assoc()) {
             $productos_similares[] = $row;
         }
         
@@ -157,7 +177,10 @@ try {
     $error = 'Error en el sistema: ' . $e->getMessage();
 }
 
-
+// Cerrar conexión
+if (isset($conn)) {
+    $conn->close();
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -583,7 +606,7 @@ try {
             <div class="error-container">
                 <h2><?php echo htmlspecialchars($error); ?></h2>
                 <p>ID de producto: <?php echo $id; ?></p>
-                <a href="/proyecto/admin-panel/panel_admin.php" class="btn-volver">
+                <a href="/proyecto/panel%20admin/panel_admin.php" class="btn-volver">
                     ← Volver al Panel de Administración
                 </a>
             </div>
@@ -593,8 +616,8 @@ try {
             <div class="header">
                 <h1>📊 <strong>INFORMACIÓN TÉCNICA</strong> DEL PRODUCTO</h1>
                 <div class="header-actions">
-                    <a href="/proyecto/admin-panel/panel_admin.html" class="btn-volver">
-                        ← Volver al admin-panel
+                    <a href="/proyecto/panel%20admin/panel_admin.html" class="btn-volver">
+                        ← Volver al Panel Admin
                     </a>
                     <div class="badge">ID: <?php echo $producto['id']; ?> | <?php echo date('d/m/Y H:i'); ?></div>
                 </div>

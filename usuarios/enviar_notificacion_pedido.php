@@ -10,7 +10,11 @@ use PHPMailer\PHPMailer\Exception;
 require_once  'Exception.php';
 require_once  'PHPMailer.php';
 require_once  'SMTP.php';
-require_once '../conexion/conexion.php';
+
+$host = 'localhost';
+$dbname = 'carrito_db';
+$username = 'root';
+$password = '';
 
 if (!isset($_SESSION['user_id'])) {
     echo json_encode(['success' => false, 'message' => 'No autorizado']);
@@ -18,7 +22,8 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 try {
-    $pdo = conectarDB();
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
     $data = json_decode(file_get_contents('php://input'), true);
     $pedido_id = $data['pedido_id'] ?? 0;

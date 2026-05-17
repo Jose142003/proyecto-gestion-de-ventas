@@ -10,10 +10,14 @@ header('Cache-Control: no-cache, must-revalidate');
 error_log("=== verificar_sesion_cliente.php - INICIO ===");
 
 // ========== CONEXIÓN A BASE DE DATOS ==========
-require_once '../conexion/conexion.php';
+$host = 'localhost';
+$dbname = 'carrito_db';
+$username = 'root';
+$password = '';
 
 try {
-    $pdo = conectarDB();
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
     error_log("Error de conexión: " . $e->getMessage());
     echo json_encode([
@@ -107,7 +111,7 @@ if ($tabla_origen === 'users' || ($tabla_origen === null && $user_rol === 'clien
             'is_authenticated' => false,
             'role' => 'invalid',
             'message' => 'Usuario no válido',
-            'redirect' => '/proyecto/usuario/login.html'
+            'redirect' => '/proyecto/interfaz usuario/login.html'
         ]);
         exit;
     }
@@ -156,7 +160,7 @@ echo json_encode([
     'is_authenticated' => false,
     'role' => 'invalid',
     'message' => 'Sesión inválida',
-    'redirect' => '/proyecto/usuario/login.html'
+    'redirect' => '/proyecto/interfaz usuario/login.html'
 ]);
 exit;
 ?>

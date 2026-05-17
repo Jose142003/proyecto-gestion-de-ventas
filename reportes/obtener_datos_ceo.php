@@ -9,10 +9,14 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-require_once '../conexion/conexion.php';
+$host = 'localhost';
+$dbname = 'carrito_db';
+$username = 'root';
+$password = '';
 
 try {
-    $pdo = conectarDB();
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
     // Deshabilitar ONLY_FULL_GROUP_BY temporalmente para esta conexión
     $pdo->exec("SET SESSION sql_mode = ''");

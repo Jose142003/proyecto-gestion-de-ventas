@@ -8,7 +8,7 @@ session_start();
 
 // Verificar autenticación
 if (!isset($_SESSION['usuario_id']) && !isset($_SESSION['user_id'])) {
-    header('Location: /proyecto/usuario/login.html');
+    header('Location: /proyecto/interfaz usuario/login.html');
     exit;
 }
 
@@ -21,10 +21,15 @@ if (!in_array($usuario_rol, ['admin', 'superadmin'])) {
     die('Acceso denegado. No tiene permisos para editar proveedores.');
 }
 
-require_once dirname(__DIR__) . '/conexion/conexion.php';
+// Conexión a la base de datos
+$host = 'localhost';
+$dbname = 'carrito_db';
+$username = 'root';
+$password = '';
 
 try {
-    $pdo = conectarDB();
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
     die('Error de conexión: ' . $e->getMessage());
 }
@@ -37,7 +42,7 @@ $proveedor = null;
 $id = isset($_GET['id']) ? (int)$_GET['id'] : (isset($_POST['id']) ? (int)$_POST['id'] : 0);
 
 if ($id <= 0) {
-    header('Location: /proyecto/admin-panel/panel_admin.html?error=ID no válido');
+    header('Location: /proyecto/panel admin/panel_admin.html?error=ID no válido');
     exit;
 }
 
@@ -108,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
 
             // Redirigir al panel_admin.html con mensaje de éxito
-            header('Location: /proyecto/admin-panel/panel_admin.html?mensaje=Proveedor actualizado correctamente&tipo=success');
+            header('Location: /proyecto/panel admin/panel_admin.html?mensaje=Proveedor actualizado correctamente&tipo=success');
             exit;
 
         } catch (PDOException $e) {
@@ -129,7 +134,7 @@ if (!$proveedor) {
         $proveedor = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$proveedor) {
-            header('Location: /proyecto/admin-panel/panel_admin.html?error=Proveedor no encontrado');
+            header('Location: /proyecto/panel admin/panel_admin.html?error=Proveedor no encontrado');
             exit;
         }
     } catch (PDOException $e) {
@@ -437,7 +442,7 @@ if (!$proveedor) {
                 </div>
 
                 <div class="form-actions">
-                    <a href="/proyecto/admin-panel/panel_admin.html" class="btn btn-back">
+                    <a href="/proyecto/panel admin/panel_admin.html" class="btn btn-back">
                         <i class="fas fa-arrow-left"></i> Volver al Panel
                     </a>
                     <button type="submit" class="btn btn-primary">

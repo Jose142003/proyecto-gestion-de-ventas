@@ -1,12 +1,11 @@
 <?php
 session_start();
 header('Content-Type: application/json');
-error_reporting(0);
+error_reporting(E_ALL);
 ini_set('display_errors', 0);
 
 // Establecer zona horaria de Venezuela
 date_default_timezone_set('America/Caracas');
-require_once '../conexion/conexion.php';
 
 // ====================================================================
 // VERIFICAR AUTENTICACIÓN
@@ -34,17 +33,24 @@ if (!$usuario_autenticado) {
     exit;
 }
 
-// Configuración de la base de datos - usando conexión centralizada
-try {
-    $pdo = conectarDB();
-} catch (PDOException $e) {
+// Configuración de la base de datos
+$host = 'localhost';
+$user = 'root';
+$password = '';
+$database = 'carrito_db';
+
+$conn = new mysqli($host, $user, $password, $database);
+
+if ($conn->connect_error) {
     echo json_encode([
         'success' => false, 
-        'message' => 'Error de conexión: ' . $e->getMessage(), 
+        'message' => 'Error de conexión: ' . $conn->connect_error, 
         'facturas' => []
     ]);
     exit;
 }
+
+$conn->set_charset("utf8mb4");
 
 // Obtener facturas con toda la información necesaria - INCLUYENDO PEDIDOS RELACIONADOS
 $sql = "SELECT f.*, 
@@ -65,14 +71,15 @@ $sql = "SELECT f.*,
         LEFT JOIN users u ON f.usuario_id = u.id
         ORDER BY f.id DESC";
 
-try {
-    $result = $pdo->query($sql);
-} catch (PDOException $e) {
+$result = $conn->query($sql);
+
+if (!$result) {
     echo json_encode([
         'success' => false,
-        'message' => 'Error en consulta: ' . $e->getMessage(),
+        'message' => 'Error en consulta: ' . $conn->error,
         'facturas' => []
     ]);
+    $conn->close();
     exit;
 }
 
@@ -130,8 +137,8 @@ function detectarMetodoPago($row) {
     return $metodo_detectado;
 }
 
-if ($result->rowCount() > 0) {
-    while ($row = $result->fetch()) {
+if ($result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
         // Detectar el método de pago usando la función mejorada
         $metodo_detectado = detectarMetodoPago($row);
         
@@ -189,7 +196,7 @@ if ($result->rowCount() > 0) {
     }
 }
 
-$pdo = null;
+$conn->close();
 
 echo json_encode([
     'success' => true,

@@ -1,7 +1,7 @@
 <?php
 session_start();
 if (!isset($_SESSION['user_id'])) {
-    header('Location: ../usuario/login.html');
+    header('Location: ../interfaz usuario/login.html');
     exit;
 }
 ?>
@@ -567,7 +567,7 @@ if (!isset($_SESSION['user_id'])) {
             <a href="nueva_compra.php" class="btn-nueva">
                 <i class="fas fa-plus"></i> Nueva Compra
             </a>
-            <a href="/proyecto/admin-panel/panel_admin.php" class="btn-volver">
+            <a href="/proyecto/panel admin/panel_admin.php" class="btn-volver">
                 <i class="fas fa-arrow-left"></i> Volver al Panel
             </a>
         </div>

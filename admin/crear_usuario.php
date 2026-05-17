@@ -30,10 +30,14 @@ if (empty($input['nombre']) || empty($input['email']) || empty($input['password'
     exit;
 }
 
-require_once '../conexion/conexion.php';
+$host = 'localhost';
+$dbname = 'carrito_db';
+$username = 'root';
+$password = '';
 
 try {
-    $pdo = conectarDB();
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
     // Verificar si el email ya existe
     $checkSql = "SELECT id FROM users WHERE correo = :email";

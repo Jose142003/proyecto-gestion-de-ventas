@@ -169,7 +169,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 echo json_encode([
                     "success" => true, 
                     "message" => "Administrador registrado exitosamente",
-                    "redirect_url" => "/proyecto/admin-panel/panel_admin.php"
+                    "redirect_url" => "/proyecto/panel admin/panel_admin.php"
                 ]);
             } else {
                 echo json_encode(["success" => false, "message" => "Error al registrar el administrador"]);
@@ -262,7 +262,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 echo json_encode([
                     "success" => true, 
                     "message" => "Usuario registrado exitosamente",
-                    "redirect_url" => "/proyecto/usuario/pagina_modernizada.html"
+                    "redirect_url" => "/proyecto/interfaz usuario/pagina_modernizada.html"
                 ]);
             } else {
                 echo json_encode(["success" => false, "message" => "Error al registrar el usuario"]);

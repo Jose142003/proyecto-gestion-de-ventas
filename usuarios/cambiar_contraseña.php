@@ -2,8 +2,8 @@
 session_start();
 header('Content-Type: application/json');
 
-error_reporting(0);
-ini_set('display_errors', 0);
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 ini_set('log_errors', 1);
 
 require_once dirname(__DIR__) . '/conexion/conexion.php';

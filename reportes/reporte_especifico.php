@@ -1,13 +1,17 @@
 <?php
 session_start();
 header('Content-Type: application/json');
-error_reporting(0);
+error_reporting(E_ALL);
 ini_set('display_errors', 0);
 
-require_once '../conexion/conexion.php';
-
 try {
-    $pdo = conectarDB();
+    $host = 'localhost';
+    $dbname = 'carrito_db';
+    $username = 'root';
+    $password = '';
+    
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
     if (!isset($_SESSION['user_id'])) {
         echo json_encode(['success' => false, 'message' => 'No autorizado']);

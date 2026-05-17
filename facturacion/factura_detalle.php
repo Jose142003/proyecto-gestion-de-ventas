@@ -1,8 +1,17 @@
 <?php
 session_start();
-require_once '../conexion/conexion.php';
 
-$pdo = conectarDB();
+$host = 'localhost';
+$dbname = 'carrito_db';
+$username = 'root';
+$password = '';
+
+try {
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    die("Error de conexión: " . $e->getMessage());
+}
 
 // Obtener ID de factura
 $invoice_id = $_GET['invoice_id'] ?? 0;
@@ -149,7 +158,7 @@ try {
                 <button class="btn btn-print" onclick="window.print()">
                     <i class="fas fa-print"></i> Imprimir Factura
                 </button>
-                <a href="/proyecto/usuario/pagina_modernizada.html" class="btn btn-home">
+                <a href="/proyecto/interfaz usuario/pagina_modernizada.html" class="btn btn-home">
                     <i class="fas fa-home"></i> Volver al Inicio
                 </a>
             </div>

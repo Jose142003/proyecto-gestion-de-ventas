@@ -3,33 +3,38 @@
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 
-require_once dirname(__DIR__) . '/conexion/conexion.php';
+$servername = "localhost";
+$username = "root";
+$password = "";
+$dbname = "carrito_db";
 
-try {
-    $pdo = conectarDB();
-} catch (Exception $e) {
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+if ($conn->connect_error) {
     echo json_encode([
         'success' => false,
-        'message' => 'Error de conexión: ' . $e->getMessage()
+        'message' => 'Error de conexión: ' . $conn->connect_error
     ]);
     exit();
 }
 
 // Obtener todos los productos con stock
 $sql = "SELECT id, nombre, precio, descripcion, imagen, categoria, stock FROM productos";
-$result = $pdo->query($sql);
+$result = $conn->query($sql);
 
 $productos = [];
-while ($row = $result->fetch()) {
-    $productos[] = [
-        'id' => $row['id'],
-        'name' => $row['nombre'],
-        'price' => floatval($row['precio']),
-        'description' => $row['descripcion'] ?? '',
-        'image' => $row['imagen'] ?? 'https://via.placeholder.com/300x300?text=Sin+imagen',
-        'category' => $row['categoria'] ?? 'General',
-        'stock' => intval($row['stock'])
-    ];
+if ($result && $result->num_rows > 0) {
+    while($row = $result->fetch_assoc()) {
+        $productos[] = [
+            'id' => $row['id'],
+            'name' => $row['nombre'],
+            'price' => floatval($row['precio']),
+            'description' => $row['descripcion'] ?? '',
+            'image' => $row['imagen'] ?? 'https://via.placeholder.com/300x300?text=Sin+imagen',
+            'category' => $row['categoria'] ?? 'General',
+            'stock' => intval($row['stock'])
+        ];
+    }
 }
 
 echo json_encode([
@@ -37,4 +42,6 @@ echo json_encode([
     'products' => $productos,
     'total' => count($productos)
 ]);
+
+$conn->close();
 ?>

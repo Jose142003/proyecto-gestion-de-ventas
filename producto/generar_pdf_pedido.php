@@ -2,7 +2,7 @@
 session_start();
 
 if (!isset($_SESSION['user_id']) && !isset($_SESSION['usuario_id'])) {
-    header('Location: /proyecto/usuario/login.html');
+    header('Location: /proyecto/interfaz usuario/login.html');
     exit;
 }
 
@@ -14,8 +14,16 @@ if ($factura_id <= 0) {
 
 require_once '../conexion/conexion.php';
 
+// Configuración de la base de datos
+$host = 'localhost';
+$dbname = 'carrito_db';
+$username = 'root';
+$password = '';
+
 try {
-    $pdo = conectarDB();
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
     
     // Obtener información de la factura
     $stmt = $pdo->prepare("

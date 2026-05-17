@@ -2,10 +2,15 @@
 session_start();
 header('Content-Type: application/json');
 
-require_once '../conexion/conexion.php';
+// Configuración
+$host = 'localhost';
+$dbname = 'carrito_db';
+$username = 'root';
+$password = '';
 
 try {
-    $pdo = conectarDB();
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
     // Obtener datos
     $input = json_decode(file_get_contents('php://input'), true);

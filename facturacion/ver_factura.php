@@ -1,12 +1,19 @@
 <?php
 session_start();
-require_once '../conexion/conexion.php';
 
 // Establecer zona horaria de Venezuela
 date_default_timezone_set('America/Caracas');
 
+// Configuración de la base de datos
+$host = 'localhost';
+$dbname = 'carrito_db';
+$username = 'root';
+$password = '';
+
 try {
-    $pdo = conectarDB();
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
     $pdo->exec("SET time_zone = '-04:00'");
 } catch (PDOException $e) {
     die("Error de conexión: " . htmlspecialchars($e->getMessage()));

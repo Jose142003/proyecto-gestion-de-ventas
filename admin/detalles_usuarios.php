@@ -9,8 +9,20 @@ if ($id === 0) {
     exit();
 }
 
+// Conexión a la base de datos
+$host = 'localhost';
+$dbname = 'carrito_db';
+$username = 'root';
+$password = '';
+
 try {
-    $pdo = conectarDB();
+    $conn = new mysqli($host, $username, $password, $dbname);
+    
+    if ($conn->connect_error) {
+        throw new Exception("Error de conexión a la base de datos");
+    }
+    
+    $conn->set_charset("utf8");
 
     // Obtener datos del usuario
     $sql = "SELECT 
@@ -27,14 +39,17 @@ try {
             FROM users 
             WHERE id = ?";
     
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([$id]);
-    $user = $stmt->fetch();
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $result = $stmt->get_result();
     
-    if (!$user) {
+    if ($result->num_rows === 0) {
         echo "<div class='alert alert-warning'>Usuario no encontrado</div>";
         exit();
     }
+    
+    $user = $result->fetch_assoc();
     
     // Obtener información de administrador si existe
     $admin_sql = "SELECT 
@@ -45,21 +60,29 @@ try {
                  FROM admin_users 
                  WHERE correo = ?";
     
-    $admin_stmt = $pdo->prepare($admin_sql);
-    $admin_stmt->execute([$user['email']]);
-    $roles_admin = $admin_stmt->fetchAll();
+    $admin_stmt = $conn->prepare($admin_sql);
+    $admin_stmt->bind_param("s", $user['email']);
+    $admin_stmt->execute();
+    $admin_result = $admin_stmt->get_result();
+    
+    $roles_admin = [];
+    while ($admin_row = $admin_result->fetch_assoc()) {
+        $roles_admin[] = $admin_row;
+    }
     
     // Obtener último login si existe
     $ultimo_acceso = 'No disponible';
     try {
         $check_sql = "SHOW COLUMNS FROM users LIKE 'last_login'";
-        $check_result = $pdo->query($check_sql);
+        $check_result = $conn->query($check_sql);
         
-        if ($check_result && $check_result->rowCount() > 0) {
+        if ($check_result && $check_result->num_rows > 0) {
             $last_login_sql = "SELECT last_login FROM users WHERE id = ?";
-            $last_login_stmt = $pdo->prepare($last_login_sql);
-            $last_login_stmt->execute([$id]);
-            $last_login_row = $last_login_stmt->fetch();
+            $last_login_stmt = $conn->prepare($last_login_sql);
+            $last_login_stmt->bind_param("i", $id);
+            $last_login_stmt->execute();
+            $last_login_result = $last_login_stmt->get_result();
+            $last_login_row = $last_login_result->fetch_assoc();
             
             if ($last_login_row && $last_login_row['last_login']) {
                 $ultimo_acceso = date('d/m/Y H:i:s', strtotime($last_login_row['last_login']));
@@ -72,6 +95,10 @@ try {
 } catch (Exception $e) {
     echo "<div class='alert alert-danger'>Error al obtener detalles: " . $e->getMessage() . "</div>";
     exit();
+} finally {
+    if (isset($conn)) {
+        $conn->close();
+    }
 }
 ?>
 

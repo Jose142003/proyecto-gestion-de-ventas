@@ -2,14 +2,17 @@
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 
-require_once dirname(__DIR__) . '/conexion/conexion.php';
+$servername = "localhost";
+$username = "root";
+$password = "";
+$dbname = "carrito_db";
 
-try {
-    $pdo = conectarDB();
-} catch (Exception $e) {
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+if ($conn->connect_error) {
     echo json_encode([
         'success' => false,
-        'message' => 'Error de conexión: ' . $e->getMessage()
+        'message' => 'Error de conexión: ' . $conn->connect_error
     ]);
     exit();
 }
@@ -29,25 +32,31 @@ $sql = "SELECT
         LEFT JOIN usuarios u ON hs.usuario_id = u.id
         WHERE 1=1";
 
-$params = [];
-
 if ($fecha) {
     $sql .= " AND DATE(hs.fecha) = ?";
-    $params[] = $fecha;
 }
 
 if ($tipo) {
     $sql .= " AND hs.tipo = ?";
-    $params[] = $tipo;
 }
 
 $sql .= " ORDER BY hs.fecha DESC LIMIT 100";
 
-$stmt = $pdo->prepare($sql);
-$stmt->execute($params);
+$stmt = $conn->prepare($sql);
+
+if ($fecha && $tipo) {
+    $stmt->bind_param("ss", $fecha, $tipo);
+} elseif ($fecha) {
+    $stmt->bind_param("s", $fecha);
+} elseif ($tipo) {
+    $stmt->bind_param("s", $tipo);
+}
+
+$stmt->execute();
+$result = $stmt->get_result();
 
 $historial = [];
-while ($row = $stmt->fetch()) {
+while ($row = $result->fetch_assoc()) {
     // Calcular stock nuevo
     $row['stock_nuevo'] = $row['stock_actual'];
     $historial[] = $row;
@@ -58,4 +67,7 @@ echo json_encode([
     'historial' => $historial,
     'total' => count($historial)
 ]);
+
+$stmt->close();
+$conn->close();
 ?>

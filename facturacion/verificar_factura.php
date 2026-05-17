@@ -1,7 +1,6 @@
 <?php
 // verificar_factura.php - Verificar si ya se generó factura para un pedido
 session_start();
-require_once '../conexion/conexion.php';
 
 $pedido_id = $_GET['pedido_id'] ?? null;
 
@@ -10,8 +9,15 @@ if (!$pedido_id) {
     exit;
 }
 
+// Configuración de la base de datos
+$host = 'localhost';
+$dbname = 'carrito_db';
+$username = 'root';
+$password = '';
+
 try {
-    $pdo = conectarDB();
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
     $stmt = $pdo->prepare("SELECT id FROM facturas WHERE pedido_id = ?");
     $stmt->execute([$pedido_id]);
