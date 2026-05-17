@@ -2,26 +2,14 @@
 require_once '../conexion/conexion.php';
 header('Content-Type: application/json');
 
-// Conexión a la base de datos
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root';
-$password = ''; // Cambia esto según tu configuración
-
 try {
-    $conn = new mysqli($host, $username, $password, $dbname);
-    
-    if ($conn->connect_error) {
-        throw new Exception("Error de conexión a la base de datos: " . $conn->connect_error);
-    }
-    
-    $conn->set_charset("utf8");
+    $pdo = conectarDB();
     
     // Verificar qué columnas tiene la tabla products
     $check_sql = "SHOW COLUMNS FROM products";
-    $check_result = $conn->query($check_sql);
+    $check_result = $pdo->query($check_sql);
     $columns = [];
-    while ($row = $check_result->fetch_assoc()) {
+    while ($row = $check_result->fetch()) {
         $columns[] = $row['Field'];
     }
     
@@ -33,11 +21,11 @@ try {
     $inventory_exists = false;
     $product_stats_exists = false;
     
-    $table_check = $conn->query("SHOW TABLES LIKE 'inventory'");
-    $inventory_exists = $table_check->num_rows > 0;
+    $table_check = $pdo->query("SHOW TABLES LIKE 'inventory'");
+    $inventory_exists = $table_check->rowCount() > 0;
     
-    $table_check = $conn->query("SHOW TABLES LIKE 'product_stats'");
-    $product_stats_exists = $table_check->num_rows > 0;
+    $table_check = $pdo->query("SHOW TABLES LIKE 'product_stats'");
+    $product_stats_exists = $table_check->rowCount() > 0;
     
     // Construir la consulta principal según las tablas existentes
     if (!$inventory_exists && !$product_stats_exists) {
@@ -156,11 +144,7 @@ try {
                     p.name";
     }
     
-    $result = $conn->query($sql);
-    
-    if (!$result) {
-        throw new Exception("Error en la consulta: " . $conn->error);
-    }
+    $result = $pdo->query($sql);
     
     $inventario = [];
     $total_valor_inventario = 0;
@@ -170,7 +154,7 @@ try {
     $stock_medio = 0;
     $stock_optimo = 0;
     
-    while ($row = $result->fetch_assoc()) {
+    while ($row = $result->fetch()) {
         $producto = [
             'id' => $row['id'],
             'producto_nombre' => $row['producto_nombre'],
@@ -237,9 +221,9 @@ try {
                       GROUP BY p.category
                       ORDER BY valor_total DESC";
     
-    $categorias_result = $conn->query($categorias_sql);
+    $categorias_result = $pdo->query($categorias_sql);
     $estadisticas_categorias = [];
-    while ($row = $categorias_result->fetch_assoc()) {
+    while ($row = $categorias_result->fetch()) {
         $estadisticas_categorias[] = $row;
     }
     
@@ -266,9 +250,5 @@ try {
         'message' => 'Error: ' . $e->getMessage(),
         'sugerencia' => 'Verifica que la tabla products exista en la base de datos.'
     ], JSON_UNESCAPED_UNICODE);
-} finally {
-    if (isset($conn)) {
-        $conn->close();
-    }
 }
 ?>

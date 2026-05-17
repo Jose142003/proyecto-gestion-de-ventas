@@ -11,17 +11,10 @@ header('Expires: 0');
 error_reporting(0);
 ini_set('display_errors', 0);
 
-// Configuración de la base de datos
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root';
-$password = '';
+require_once '../conexion/conexion.php';
 
 try {
-    // Conexión PDO
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+    $pdo = conectarDB();
     
     // Verificar y crear columna 'active' si no existe
     $check_column = $pdo->query("SHOW COLUMNS FROM products LIKE 'active'");
@@ -70,7 +63,7 @@ try {
     
     $stmt = $pdo->prepare($sql);
     $stmt->execute();
-    $productos = $stmt->fetchAll();
+    $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     // Normalizar nombres de campos para consistencia con pagina_modernizada
     $productos_normalizados = [];

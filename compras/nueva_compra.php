@@ -1,7 +1,7 @@
 <?php
 session_start();
 if (!isset($_SESSION['user_id'])) {
-    header('Location: ../interfaz usuario/login.html');
+    header('Location: ../usuario/login.html');
     exit;
 }
 ?>
@@ -422,7 +422,7 @@ if (!isset($_SESSION['user_id'])) {
         </div>
         
         <div class="btn-group">
-            <button type="button" class="btn-secondary" onclick="window.location.href='../panel admin/panel_admin.php'">
+            <button type="button" class="btn-secondary" onclick="window.location.href='../admin-panel/panel_admin.php'">
                 <i class="fas fa-arrow-left"></i> Cancelar
             </button>
             <button type="button" id="limpiarBtn" class="btn-warning">
@@ -764,7 +764,7 @@ if (!isset($_SESSION['user_id'])) {
             if (result.success) {
                 showSuccess('✓ Compra guardada correctamente. Stock actualizado.');
                 setTimeout(() => {
-                    window.location.href = '/proyecto/panel admin/panel_admin.php';
+                    window.location.href = '/proyecto/admin-panel/panel_admin.php';
                 }, 1500);
             } else {
                 showError('Error: ' + (result.message || 'Error desconocido'));

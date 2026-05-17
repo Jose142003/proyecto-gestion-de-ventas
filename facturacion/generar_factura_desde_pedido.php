@@ -1,18 +1,13 @@
 <?php
 // generar_factura_desde_pedido.php
 session_start();
+require_once '../conexion/conexion.php';
 
 // Verificar si es admin
 if (!isset($_SESSION['user_rol']) || $_SESSION['user_rol'] !== 'admin') {
     echo json_encode(['success' => false, 'message' => 'No autorizado']);
     exit;
 }
-
-// Configuración de la base de datos
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root';
-$password = '';
 
 // Obtener datos del POST
 $data = json_decode(file_get_contents('php://input'), true);
@@ -24,8 +19,7 @@ if (!$pedido_id) {
 }
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = conectarDB();
     
     $pdo->beginTransaction();
     

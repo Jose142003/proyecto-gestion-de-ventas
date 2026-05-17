@@ -13,7 +13,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     echo json_encode([
         'success' => false,
         'message' => 'No hay sesión activa',
-        'redirect' => '/proyecto/interfaz usuario/login.html'
+        'redirect' => '/proyecto/usuario/login.html'
     ]);
     exit;
 }
@@ -36,13 +36,13 @@ if ($tabla_origen === 'admin_users' && isset($_SESSION['es_admin']) && $_SESSION
     exit;
 }
 
-// CASO 2: Es cliente (NO debe acceder al panel admin)
+// CASO 2: Es cliente (NO debe acceder al admin-panel)
 if ($tabla_origen === 'users') {
-    error_log("Usuario cliente detectado - NO puede acceder al panel admin");
+    error_log("Usuario cliente detectado - NO puede acceder al admin-panel");
     echo json_encode([
         'success' => false,
         'message' => 'Área restringida a administradores',
-        'redirect' => '/proyecto/interfaz usuario/pagina_modernizada.html'
+        'redirect' => '/proyecto/usuario/pagina_modernizada.html'
     ]);
     exit;
 }
@@ -67,17 +67,17 @@ if ($tabla_origen === null && isset($_SESSION['user_id'])) {
         echo json_encode([
             'success' => false,
             'message' => 'Área restringida a administradores',
-            'redirect' => '/proyecto/interfaz usuario/pagina_modernizada.html'
+            'redirect' => '/proyecto/usuario/pagina_modernizada.html'
         ]);
         exit;
     }
 }
 
 // CASO 4: Sin acceso
-error_log("Acceso denegado al panel admin");
+error_log("Acceso denegado al admin-panel");
 echo json_encode([
     'success' => false,
     'message' => 'No tienes permisos de administrador',
-    'redirect' => '/proyecto/interfaz usuario/login.html'
+    'redirect' => '/proyecto/usuario/login.html'
 ]);
 ?>

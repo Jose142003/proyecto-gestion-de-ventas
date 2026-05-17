@@ -7,9 +7,10 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
+require_once dirname(__DIR__) . '/conexion/conexion.php';
+
 try {
-    $pdo = new PDO('mysql:host=localhost;dbname=carrito_db;charset=utf8', 'root', '');
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = conectarDB();
     
     // Parámetros de paginación y filtros
     $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;

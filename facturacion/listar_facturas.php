@@ -5,7 +5,7 @@ require_once '../conexion/conexion.php';
 
 // Verificar autenticación
 if (!isset($_SESSION['user_id'])) {
-    header('Location: /proyecto/interfaz usuario/login.html');
+    header('Location: /proyecto/usuario/login.html');
     exit;
 }
 
@@ -170,7 +170,7 @@ if (!in_array($rol, $roles_permitidos)) {
             </div>
             
             <div>
-                <a href="/proyecto/panel_admin/panel_admin.php" class="btn btn-primary">🏠 Ir al Panel Admin</a>
+                <a href="/proyecto/admin-panel/panel_admin.php" class="btn btn-primary">🏠 Ir al admin-panel</a>
                 <a href="javascript:history.back()" class="btn btn-secondary">← Volver</a>
             </div>
         </div>
@@ -559,7 +559,7 @@ if (!in_array($rol, $roles_permitidos)) {
                 <div class="user-role"><i class="fas fa-user-shield"></i> Rol: <?php echo htmlspecialchars($rol); ?></div>
             </div>
             <div style="display: flex; gap: 10px;">
-                <a href="/proyecto/panel admin/panel_admin.php" class="btn-volver"><i class="fas fa-arrow-left"></i> Panel Admin</a>
+                <a href="/proyecto/admin-panel/panel_admin.php" class="btn-volver"><i class="fas fa-arrow-left"></i> admin-panel</a>
                 <?php if (in_array($rol, ['superadmin', 'admin', 'facturador'])): ?>
                     <a href="/proyecto/facturacion/nueva_factura.php" class="btn-nueva"><i class="fas fa-plus"></i> Nueva Factura</a>
                 <?php endif; ?>

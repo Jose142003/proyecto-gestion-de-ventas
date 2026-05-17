@@ -1,6 +1,7 @@
 <?php
 session_start();
 header('Content-Type: application/json');
+require_once '../conexion/conexion.php';
 
 // Verificar autenticación
 if (!isset($_SESSION['user_id']) && !isset($_SESSION['usuario_id'])) {
@@ -18,14 +19,8 @@ if (!isset($data['pedidos']) || empty($data['pedidos'])) {
 
 $pedidos_ids = $data['pedidos'];
 
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root';
-$password = '';
-
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = conectarDB();
     
     $anio = date('Y');
     $facturados = [];

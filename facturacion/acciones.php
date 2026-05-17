@@ -1,18 +1,12 @@
 <?php
 // acciones.php - Manejar acciones de facturación
 session_start();
-
-// Configuración de la base de datos
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root';
-$password = '';
+require_once '../conexion/conexion.php';
 
 header('Content-Type: application/json');
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = conectarDB();
     
     // Verificar permisos
     if (!isset($_SESSION['user_id'])) {

@@ -1,19 +1,8 @@
 <?php
 session_start();
+require_once '../conexion/conexion.php';
 
-// Configuración de la base de datos
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root';
-$password = '';
-
-try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-    die("Error de conexión a la base de datos: " . $e->getMessage());
-}
+$pdo = conectarDB();
 
 // Obtener parámetros de fechas (mes actual por defecto)
 $mes_actual = date('m');
@@ -681,7 +670,7 @@ $nombre_mes = $meses[$mes] ?? 'Mes';
 </head>
 <body>
     <div class="container">
-        <a href="/proyecto/panel admin/panel_admin.html" class="back-button">
+        <a href="/proyecto/admin-panel/panel_admin.html" class="back-button">
             <i class="fas fa-arrow-left"></i> Volver al Panel
         </a>
         

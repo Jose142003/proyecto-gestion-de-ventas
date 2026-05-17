@@ -1,11 +1,7 @@
 <?php
 // editar_producto.php - Formulario para editar un producto
 
-// Configuración de conexión
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root';
-$password = '';
+require_once '../conexion/conexion.php';
 
 // Obtener ID del producto
 $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
@@ -56,7 +52,7 @@ if ($id === 0) {
             <h1>ID de Producto no Válido</h1>
             <p>El ID proporcionado no es válido o no se especificó.</p>
             <a href="productos.php" class="btn">Ver Productos</a>
-            <a href="/proyecto/panel%20admin/panel_admin.php" class="btn">Panel Admin</a>
+            <a href="/proyecto/admin-panel/panel_admin.php" class="btn">admin-panel</a>
         </div>
     </body>
     </html>';
@@ -73,28 +69,22 @@ $monedas = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'MXN'];
 // Procesar formulario cuando se envía
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
-        $conn = new mysqli($host, $username, $password, $dbname);
-        
-        if ($conn->connect_error) {
-            throw new Exception("Error de conexión a la base de datos");
-        }
-        
-        $conn->set_charset("utf8");
+        $pdo = conectarDB();
         
         // Obtener y sanitizar datos del formulario
-        $nombre = $conn->real_escape_string($_POST['nombre']);
-        $sku = $conn->real_escape_string($_POST['sku']);
-        $descripcion = $conn->real_escape_string($_POST['descripcion']);
+        $nombre = $_POST['nombre'];
+        $sku = $_POST['sku'];
+        $descripcion = $_POST['descripcion'];
         $precio = floatval($_POST['precio']);
         $stock = intval($_POST['stock']);
-        $categoria = $conn->real_escape_string($_POST['categoria']);
-        $imagen = $conn->real_escape_string($_POST['imagen']);
+        $categoria = $_POST['categoria'];
+        $imagen = $_POST['imagen'];
         $rating = floatval($_POST['rating']);
-        $specs = $conn->real_escape_string($_POST['specs']);
+        $specs = $_POST['specs'];
         $peso = floatval($_POST['peso']);
         // SOLUCIÓN: Truncar dimensiones a 100 caracteres máximo (VARCHAR(100) en BD)
-        $dimensiones = substr($conn->real_escape_string($_POST['dimensiones']), 0, 100);
-        $moneda = $conn->real_escape_string($_POST['moneda']);
+        $dimensiones = substr($_POST['dimensiones'], 0, 100);
+        $moneda = $_POST['moneda'];
         $destacado = isset($_POST['destacado']) ? 1 : 0;
         
         // Validaciones básicas
@@ -119,23 +109,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     updated_at = NOW()
                     WHERE id = ?";
             
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("sssdisssdsssii", 
+            $stmt = $pdo->prepare($sql);
+            
+            if ($stmt->execute([
                 $nombre, $sku, $descripcion, $precio, $stock, $categoria,
                 $imagen, $rating, $specs, $peso, $dimensiones, $moneda,
                 $destacado, $id
-            );
-            
-            if ($stmt->execute()) {
+            ])) {
                 $success = 'Producto actualizado correctamente';
             } else {
-                $error = 'Error al actualizar el producto: ' . $stmt->error;
+                $errorInfo = $stmt->errorInfo();
+                $error = 'Error al actualizar el producto: ' . ($errorInfo[2] ?? 'Error desconocido');
             }
-            
-            $stmt->close();
         }
-        
-        $conn->close();
         
     } catch (Exception $e) {
         $error = 'Error: ' . $e->getMessage();
@@ -144,27 +130,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Obtener datos actuales del producto
 try {
-    $conn = new mysqli($host, $username, $password, $dbname);
-    
-    if ($conn->connect_error) {
-        throw new Exception("Error de conexión a la base de datos");
-    }
-    
-    $conn->set_charset("utf8");
+    $pdo = conectarDB();
 
     $sql = "SELECT * FROM products WHERE id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $id);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$id]);
     
-    if ($result->num_rows === 0) {
+    if ($stmt->rowCount() === 0) {
         $error = 'Producto no encontrado';
     } else {
-        $producto = $result->fetch_assoc();
+        $producto = $stmt->fetch(PDO::FETCH_ASSOC);
     }
-    
-    $conn->close();
     
 } catch (Exception $e) {
     $error = 'Error al obtener el producto: ' . $e->getMessage();
@@ -215,7 +191,7 @@ if ($error && !$producto) {
         <div class="error-container">
             <div class="error-icon">❌</div>
             <h1>' . htmlspecialchars($error) . '</h1>
-            <a href="/proyecto/panel admin/panel_admin.html" class="btn">Ver Productos</a>
+            <a href="/proyecto/admin-panel/panel_admin.html" class="btn">Ver Productos</a>
             <a href="detalles_producto.php?id=' . $id . '" class="btn">Volver a Detalles</a>
         </div>
     </body>
@@ -430,7 +406,7 @@ if ($error && !$producto) {
                 <a href="detalles_producto.php?id=<?php echo $id; ?>" class="btn btn-secondary">
                     ← Volver a Detalles
                 </a>
-                <a href="/proyecto/panel admin/panel_admin.html" class="btn btn-secondary">
+                <a href="/proyecto/admin-panel/panel_admin.html" class="btn btn-secondary">
                     📋 Ver Todos los Productos
                 </a>
             </div>

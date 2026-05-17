@@ -20,14 +20,10 @@ if (!$data || empty($data['id'])) {
 
 $id = intval($data['id']);
 
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root';
-$password = '';
+require_once dirname(__DIR__) . '/conexion/conexion.php';
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = conectarDB();
 
     $stmt = $pdo->prepare("SELECT ruta_archivo, nombre_archivo FROM backups WHERE id = ?");
     $stmt->execute([$id]);

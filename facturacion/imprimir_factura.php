@@ -8,11 +8,10 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-// CONEXIÓN A LA BASE DE DATOS
+require_once '../conexion/conexion.php';
+
 try {
-    $pdo = new PDO('mysql:host=localhost;dbname=carrito_db;charset=utf8mb4', 'root', '');
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+    $pdo = conectarDB();
 } catch(PDOException $e) {
     die("Error de conexión a la base de datos: " . $e->getMessage());
 }
@@ -750,7 +749,7 @@ $empresa = [
             <span>←</span> Volver Atrás
         </button>
         
-        <a href="/proyecto/panel admin/panel_admin.html" class="btn">
+        <a href="/proyecto/admin-panel/panel_admin.html" class="btn">
             <span>🏠</span> Ir al Dashboard
         </a>
         

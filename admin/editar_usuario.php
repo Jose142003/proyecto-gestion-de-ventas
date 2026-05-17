@@ -9,53 +9,37 @@ if ($id === 0) {
     exit();
 }
 
-// Conexión a la base de datos
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root';
-$password = '';
-
 $mensaje = '';
 $tipo_mensaje = ''; // success, error, warning
 
 // Procesar formulario si se envió
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
-        $conn = new mysqli($host, $username, $password, $dbname);
-        
-        if ($conn->connect_error) {
-            throw new Exception("Error de conexión a la base de datos");
-        }
-        
-        $conn->set_charset("utf8");
+        $pdo = conectarDB();
         
         // Obtener datos del formulario
-        $nombre = $conn->real_escape_string($_POST['nombre']);
-        $correo = $conn->real_escape_string($_POST['correo']);
-        $telefono = $conn->real_escape_string($_POST['telefono']);
-        $cedula = $conn->real_escape_string($_POST['cedula']);
-        $rol = $conn->real_escape_string($_POST['rol']);
+        $nombre = $_POST['nombre'];
+        $correo = $_POST['correo'];
+        $telefono = $_POST['telefono'];
+        $cedula = $_POST['cedula'];
+        $rol = $_POST['rol'];
         $is_active = isset($_POST['is_active']) ? 1 : 0;
         
         // Verificar si el correo ya existe en otro usuario
         $check_sql = "SELECT id FROM users WHERE correo = ? AND id != ?";
-        $check_stmt = $conn->prepare($check_sql);
-        $check_stmt->bind_param("si", $correo, $id);
-        $check_stmt->execute();
-        $check_result = $check_stmt->get_result();
+        $check_stmt = $pdo->prepare($check_sql);
+        $check_stmt->execute([$correo, $id]);
         
-        if ($check_result->num_rows > 0) {
+        if ($check_stmt->fetch()) {
             throw new Exception("El correo electrónico ya está registrado por otro usuario");
         }
         
         // Verificar si la cédula ya existe en otro usuario
         $check_cedula_sql = "SELECT id FROM users WHERE cedula = ? AND id != ?";
-        $check_cedula_stmt = $conn->prepare($check_cedula_sql);
-        $check_cedula_stmt->bind_param("si", $cedula, $id);
-        $check_cedula_stmt->execute();
-        $check_cedula_result = $check_cedula_stmt->get_result();
+        $check_cedula_stmt = $pdo->prepare($check_cedula_sql);
+        $check_cedula_stmt->execute([$cedula, $id]);
         
-        if ($check_cedula_result->num_rows > 0) {
+        if ($check_cedula_stmt->fetch()) {
             throw new Exception("La cédula ya está registrada por otro usuario");
         }
         
@@ -69,17 +53,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                       is_active = ?
                       WHERE id = ?";
         
-        $update_stmt = $conn->prepare($update_sql);
-        $update_stmt->bind_param("sssssii", $nombre, $correo, $telefono, $cedula, $rol, $is_active, $id);
+        $update_stmt = $pdo->prepare($update_sql);
         
-        if ($update_stmt->execute()) {
+        if ($update_stmt->execute([$nombre, $correo, $telefono, $cedula, $rol, $is_active, $id])) {
             $mensaje = "Usuario actualizado correctamente";
             $tipo_mensaje = "success";
         } else {
-            throw new Exception("Error al actualizar el usuario: " . $conn->error);
+            throw new Exception("Error al actualizar el usuario");
         }
-        
-        $conn->close();
         
     } catch (Exception $e) {
         $mensaje = $e->getMessage();
@@ -88,13 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 try {
-    $conn = new mysqli($host, $username, $password, $dbname);
-    
-    if ($conn->connect_error) {
-        throw new Exception("Error de conexión a la base de datos");
-    }
-    
-    $conn->set_charset("utf8");
+    $pdo = conectarDB();
 
     // Obtener datos del usuario
     $sql = "SELECT 
@@ -110,25 +85,18 @@ try {
             FROM users 
             WHERE id = ?";
     
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $id);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$id]);
+    $user = $stmt->fetch();
     
-    if ($result->num_rows === 0) {
+    if (!$user) {
         echo "<div class='alert alert-warning'>Usuario no encontrado</div>";
         exit();
     }
     
-    $user = $result->fetch_assoc();
-    
 } catch (Exception $e) {
     echo "<div class='alert alert-danger'>Error al obtener detalles: " . $e->getMessage() . "</div>";
     exit();
-} finally {
-    if (isset($conn)) {
-        $conn->close();
-    }
 }
 ?>
 
@@ -578,7 +546,7 @@ try {
                 </div>
                 
                 <div class="actions">
-                    <a href="/proyecto/panel admin/panel_admin.html?id=<?php echo $user['id']; ?>" class="btn btn-back">
+                    <a href="/proyecto/admin-panel/panel_admin.html?id=<?php echo $user['id']; ?>" class="btn btn-back">
                         <i class="fas fa-arrow-left"></i> Cancelar
                     </a>
                     

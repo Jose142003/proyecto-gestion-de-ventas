@@ -10,19 +10,12 @@ ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 ini_set('error_log', __DIR__ . '/error_log.txt');
 
-// Configuración de la base de datos
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root';
-$password = '';
+require_once '../conexion/conexion.php';
 
 try {
-    // Conexión PDO
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+    $pdo = conectarDB();
     
-    error_log("Conexión exitosa a la base de datos: $dbname");
+    error_log("Conexión exitosa a la base de datos");
     
     // ==============================================
     // VERIFICAR Y CREAR COLUMNA 'active' SI NO EXISTE
@@ -87,7 +80,7 @@ try {
     
     $stmt = $pdo->prepare($sql);
     $stmt->execute();
-    $productos = $stmt->fetchAll();
+    $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     // Normalizar nombres de campos para consistencia
     foreach ($productos as &$producto) {

@@ -10,18 +10,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-// Configuración de la base de datos
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "carrito_db";
+require_once dirname(__DIR__) . '/conexion/conexion.php';
 
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-if ($conn->connect_error) {
+try {
+    $pdo = conectarDB();
+} catch (Exception $e) {
     echo json_encode([
         'success' => false,
-        'message' => 'Error de conexión: ' . $conn->connect_error
+        'message' => 'Error de conexión: ' . $e->getMessage()
     ]);
     exit();
 }
@@ -41,21 +37,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $cantidad = intval($input['cantidad']);
     $usuario_id = isset($input['usuario_id']) ? intval($input['usuario_id']) : null;
     
-    $conn->begin_transaction();
+    $pdo->beginTransaction();
     
     try {
         // Verificar stock disponible
         $sql = "SELECT stock, nombre FROM productos WHERE id = ? FOR UPDATE";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("i", $producto_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$producto_id]);
+        $producto = $stmt->fetch();
         
-        if ($result->num_rows === 0) {
+        if (!$producto) {
             throw new Exception("Producto no encontrado");
         }
-        
-        $producto = $result->fetch_assoc();
         
         if ($producto['stock'] < $cantidad) {
             throw new Exception("Stock insuficiente. Disponible: " . $producto['stock'] . " unidades");
@@ -63,10 +56,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // Actualizar stock
         $sql_update = "UPDATE productos SET stock = stock - ? WHERE id = ?";
-        $stmt_update = $conn->prepare($sql_update);
-        $stmt_update->bind_param("ii", $cantidad, $producto_id);
+        $stmt_update = $pdo->prepare($sql_update);
         
-        if (!$stmt_update->execute()) {
+        if (!$stmt_update->execute([$cantidad, $producto_id])) {
             throw new Exception("Error al actualizar stock");
         }
         
@@ -74,21 +66,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($usuario_id) {
             $sql_historial = "INSERT INTO historial_stock (producto_id, usuario_id, cantidad, tipo, fecha) 
                               VALUES (?, ?, ?, 'venta', NOW())";
-            $stmt_historial = $conn->prepare($sql_historial);
-            $stmt_historial->bind_param("iii", $producto_id, $usuario_id, $cantidad);
-            $stmt_historial->execute();
-            $stmt_historial->close();
+            $stmt_historial = $pdo->prepare($sql_historial);
+            $stmt_historial->execute([$producto_id, $usuario_id, $cantidad]);
         }
         
         // Verificar si queda stock bajo después de la venta
         $sql_check = "SELECT stock FROM productos WHERE id = ?";
-        $stmt_check = $conn->prepare($sql_check);
-        $stmt_check->bind_param("i", $producto_id);
-        $stmt_check->execute();
-        $result_check = $stmt_check->get_result();
-        $nuevo_stock = $result_check->fetch_assoc()['stock'];
+        $stmt_check = $pdo->prepare($sql_check);
+        $stmt_check->execute([$producto_id]);
+        $nuevo_stock = $stmt_check->fetchColumn();
         
-        $conn->commit();
+        $pdo->commit();
         
         echo json_encode([
             'success' => true,
@@ -105,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ]);
         
     } catch (Exception $e) {
-        $conn->rollback();
+        $pdo->rollBack();
         
         echo json_encode([
             'success' => false,
@@ -113,15 +101,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ]);
     }
     
-    $stmt->close();
-    if (isset($stmt_update)) $stmt_update->close();
-    
 } else {
     echo json_encode([
         'success' => false,
         'message' => 'Método no permitido'
     ]);
 }
-
-$conn->close();
 ?>
