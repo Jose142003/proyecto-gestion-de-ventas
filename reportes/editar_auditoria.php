@@ -1,6 +1,7 @@
 <?php
 session_start();
 header('Content-Type: application/json');
+require_once '../conexion/conexion.php';
 
 if (!isset($_SESSION['user_id']) && !isset($_SESSION['usuario_id'])) {
     echo json_encode(['success' => false, 'message' => 'No autorizado']);
@@ -31,14 +32,8 @@ if (empty($nueva_descripcion)) {
     exit;
 }
 
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root';
-$password = '';
-
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = conectarDB();
     
     $stmt = $pdo->prepare("SELECT descripcion, edit_count, edit_history FROM auditoria_logs WHERE id = :id");
     $stmt->execute([':id' => $id]);

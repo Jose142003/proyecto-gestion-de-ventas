@@ -14,15 +14,10 @@ ini_set('session.use_only_cookies', 1);
 ini_set('session.cookie_secure', 0);
 ini_set('session.cookie_samesite', 'Lax');
 
-// Conexión directa a la base de datos
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root';
-$password = '';
+require_once '../conexion/conexion.php';
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = conectarDB();
 } catch (PDOException $e) {
     echo json_encode(["success" => false, "message" => "Error de conexión a la base de datos"]);
     exit;
@@ -198,8 +193,8 @@ try {
     
     // Redirección
     $redirect_url = ($tabla_origen === 'admin_users')
-        ? '/proyecto/panel admin/panel_admin.php'
-        : '/proyecto/interfaz usuario/pagina_modernizada.html';
+        ? '/proyecto/admin-panel/panel_admin.php'
+        : '/proyecto/usuario/pagina_modernizada.html';
     
     echo json_encode([
         "success" => true,

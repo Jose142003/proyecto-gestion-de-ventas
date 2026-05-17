@@ -13,14 +13,10 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 }
 
 $id = intval($_GET['id']);
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root';
-$password = '';
+require_once '../conexion/conexion.php';
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = conectarDB();
     
     $sql = "SELECT 
                 id,
