@@ -1,4 +1,5 @@
 <?php
+require_once '../conexion/conexion.php';
 // guardar_pedido.php
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -27,16 +28,9 @@ if (!$input) {
     exit();
 }
 
-// Configuración de la base de datos
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root'; // Cambiar según tu configuración
-$password = ''; // Cambiar según tu configuración
-
 try {
     // Conectar a la base de datos
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = conectarDB();
     
     // Iniciar transacción
     $pdo->beginTransaction();

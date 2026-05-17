@@ -1,11 +1,7 @@
 <?php
 // ver_pedido.php - Visualización detallada de pedido (con datos del cliente desde users)
 session_start();
-
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root';
-$password = '';
+require_once '../conexion/conexion.php';
 
 if (!isset($_SESSION['user_id'])) {
     header('Location: /proyecto/usuario/login.html');
@@ -19,8 +15,7 @@ if ($pedido_id <= 0) {
 }
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = conectarDB();
     
     $user_id = $_SESSION['user_id'];
     $es_admin = false;

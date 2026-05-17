@@ -91,29 +91,18 @@ if (!$usuario_id && $usuario_id_url > 0) {
 // ============================================================================
 // 4. CONEXIÓN A LA BASE DE DATOS
 // ============================================================================
-$host = 'localhost';
-$user = 'root';
-$password = '';
-$database = 'carrito_db';
+require_once '../conexion/conexion.php';
 
-$conn = mysqli_connect($host, $user, $password, $database);
-if (!$conn) {
-    die("Error de conexión: " . mysqli_connect_error());
-}
-mysqli_set_charset($conn, "utf8mb4");
+$pdo = conectarDB();
 
 // ============================================================================
 // 5. OBTENER DATOS DEL USUARIO DESDE LA BD
 // ============================================================================
 if ($usuario_id) {
     // Primero buscar en tabla users (clientes)
-    $query_user = "SELECT id, nombre, correo, telefono, cedula FROM users WHERE id = ?";
-    $stmt_user = mysqli_prepare($conn, $query_user);
-    mysqli_stmt_bind_param($stmt_user, 'i', $usuario_id);
-    mysqli_stmt_execute($stmt_user);
-    $result_user = mysqli_stmt_get_result($stmt_user);
-    $user_data = mysqli_fetch_assoc($result_user);
-    mysqli_stmt_close($stmt_user);
+    $stmt_user = $pdo->prepare("SELECT id, nombre, correo, telefono, cedula FROM users WHERE id = ?");
+    $stmt_user->execute([$usuario_id]);
+    $user_data = $stmt_user->fetch(PDO::FETCH_ASSOC);
     
     if ($user_data) {
         $usuario_nombre = $user_data['nombre'];
@@ -122,13 +111,9 @@ if ($usuario_id) {
         $usuario_cedula = $user_data['cedula'];
     } else {
         // Si no está en users, buscar en admin_users (caso admin comprando)
-        $query_admin = "SELECT id, nombre, correo FROM admin_users WHERE id = ?";
-        $stmt_admin = mysqli_prepare($conn, $query_admin);
-        mysqli_stmt_bind_param($stmt_admin, 'i', $usuario_id);
-        mysqli_stmt_execute($stmt_admin);
-        $result_admin = mysqli_stmt_get_result($stmt_admin);
-        $admin_data = mysqli_fetch_assoc($result_admin);
-        mysqli_stmt_close($stmt_admin);
+        $stmt_admin = $pdo->prepare("SELECT id, nombre, correo FROM admin_users WHERE id = ?");
+        $stmt_admin->execute([$usuario_id]);
+        $admin_data = $stmt_admin->fetch(PDO::FETCH_ASSOC);
         
         if ($admin_data) {
             $usuario_nombre = $admin_data['nombre'];
@@ -165,27 +150,19 @@ if ($metodo_original === 'mixto' || $metodo_original === 'mixed' || $metodo_orig
 $cliente_id = null;
 
 if (!empty($usuario_cedula)) {
-    $query_cliente = "SELECT id FROM clientes WHERE documento = ?";
-    $stmt_cliente = mysqli_prepare($conn, $query_cliente);
-    mysqli_stmt_bind_param($stmt_cliente, 's', $usuario_cedula);
-    mysqli_stmt_execute($stmt_cliente);
-    $result_cliente = mysqli_stmt_get_result($stmt_cliente);
-    $cliente_existente = mysqli_fetch_assoc($result_cliente);
-    mysqli_stmt_close($stmt_cliente);
+    $stmt_cliente = $pdo->prepare("SELECT id FROM clientes WHERE documento = ?");
+    $stmt_cliente->execute([$usuario_cedula]);
+    $cliente_existente = $stmt_cliente->fetch(PDO::FETCH_ASSOC);
     
     if ($cliente_existente) {
         $cliente_id = $cliente_existente['id'];
     } else {
-        $insert_cliente = "INSERT INTO clientes (tipo_documento, documento, nombre, email, telefono, estado) 
-                          VALUES ('cedula', ?, ?, ?, ?, 'activo')";
-        $stmt_insert = mysqli_prepare($conn, $insert_cliente);
         $nombre_cliente = !empty($usuario_nombre) ? $usuario_nombre : '';
         $email_cliente = !empty($usuario_correo) ? $usuario_correo : '';
         $telefono_cliente = !empty($usuario_telefono) ? $usuario_telefono : '';
-        mysqli_stmt_bind_param($stmt_insert, 'sssss', $usuario_cedula, $nombre_cliente, $email_cliente, $telefono_cliente);
-        mysqli_stmt_execute($stmt_insert);
-        $cliente_id = mysqli_insert_id($conn);
-        mysqli_stmt_close($stmt_insert);
+        $stmt_insert = $pdo->prepare("INSERT INTO clientes (tipo_documento, documento, nombre, email, telefono, estado) VALUES ('cedula', ?, ?, ?, ?, 'activo')");
+        $stmt_insert->execute([$usuario_cedula, $nombre_cliente, $email_cliente, $telefono_cliente]);
+        $cliente_id = $pdo->lastInsertId();
     }
 }
 
@@ -195,13 +172,9 @@ if (!$cliente_id) {
     $email_cliente = !empty($usuario_correo) ? $usuario_correo : 'cliente' . ($usuario_id ?? '0') . '@email.com';
     $telefono_cliente = !empty($usuario_telefono) ? $usuario_telefono : '';
     
-    $insert_cliente = "INSERT INTO clientes (tipo_documento, documento, nombre, email, telefono, estado) 
-                      VALUES ('cedula', ?, ?, ?, ?, 'activo')";
-    $stmt_insert = mysqli_prepare($conn, $insert_cliente);
-    mysqli_stmt_bind_param($stmt_insert, 'sssss', $doc_generico, $nombre_cliente, $email_cliente, $telefono_cliente);
-    mysqli_stmt_execute($stmt_insert);
-    $cliente_id = mysqli_insert_id($conn);
-    mysqli_stmt_close($stmt_insert);
+    $stmt_insert = $pdo->prepare("INSERT INTO clientes (tipo_documento, documento, nombre, email, telefono, estado) VALUES ('cedula', ?, ?, ?, ?, 'activo')");
+    $stmt_insert->execute([$doc_generico, $nombre_cliente, $email_cliente, $telefono_cliente]);
+    $cliente_id = $pdo->lastInsertId();
 }
 
 // ============================================================================
@@ -210,13 +183,9 @@ if (!$cliente_id) {
 $pedido_id = null;
 
 if ($numero_pedido) {
-    $query = "SELECT id FROM pedidos WHERE numero_pedido = ?";
-    $stmt = mysqli_prepare($conn, $query);
-    mysqli_stmt_bind_param($stmt, 's', $numero_pedido);
-    mysqli_stmt_execute($stmt);
-    $result = mysqli_stmt_get_result($stmt);
-    $pedido = mysqli_fetch_assoc($result);
-    mysqli_stmt_close($stmt);
+    $stmt = $pdo->prepare("SELECT id FROM pedidos WHERE numero_pedido = ?");
+    $stmt->execute([$numero_pedido]);
+    $pedido = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if ($pedido) {
         $pedido_id = $pedido['id'];
@@ -238,24 +207,20 @@ if (!$pedido_id && !empty($productosDesdeURL)) {
     if (empty($numero_pedido)) {
         $anio = date('Y');
         $prefijo = "PED-{$anio}-";
-        $seq_query = "SELECT MAX(CAST(SUBSTRING(numero_pedido, LOCATE('-', numero_pedido, 5) + 1) AS UNSIGNED)) as max_num 
-                      FROM pedidos WHERE numero_pedido LIKE '{$prefijo}%'";
-        $seq_result = mysqli_query($conn, $seq_query);
-        $seq_row = mysqli_fetch_assoc($seq_result);
+        $stmt_seq = $pdo->prepare("SELECT MAX(CAST(SUBSTRING(numero_pedido, LOCATE('-', numero_pedido, 5) + 1) AS UNSIGNED)) as max_num FROM pedidos WHERE numero_pedido LIKE ?");
+        $stmt_seq->execute([$prefijo . '%']);
+        $seq_row = $stmt_seq->fetch(PDO::FETCH_ASSOC);
         $siguiente = ($seq_row['max_num'] ?? 0) + 1;
         $numero_pedido = $prefijo . str_pad($siguiente, 6, '0', STR_PAD_LEFT);
     }
     
     $subtotal_calc = $total / 1.16;
     $iva_calc = $total - $subtotal_calc;
-    
-    $insert_query = "INSERT INTO pedidos (usuario_id, cliente_id, numero_pedido, subtotal, iva, total, estado, metodo_pago, referencia_pago, observaciones, created_at) 
-                     VALUES (?, ?, ?, ?, ?, ?, 'pendiente', ?, ?, ?, NOW())";
-    $stmt_insert = mysqli_prepare($conn, $insert_query);
     $observaciones = "Pedido por {$metodo_normalizado}" . ($referencia ? " - Ref: {$referencia}" : "");
     $referencia_null = $referencia ?: null;
     
-    mysqli_stmt_bind_param($stmt_insert, 'iisddssss', 
+    $stmt_insert = $pdo->prepare("INSERT INTO pedidos (usuario_id, cliente_id, numero_pedido, subtotal, iva, total, estado, metodo_pago, referencia_pago, observaciones, created_at) VALUES (?, ?, ?, ?, ?, ?, 'pendiente', ?, ?, ?, NOW())");
+    $stmt_insert->execute([
         $usuario_id,
         $cliente_id,
         $numero_pedido,
@@ -265,15 +230,11 @@ if (!$pedido_id && !empty($productosDesdeURL)) {
         $metodo_normalizado,
         $referencia_null,
         $observaciones
-    );
-    mysqli_stmt_execute($stmt_insert);
-    $pedido_id = mysqli_insert_id($conn);
-    mysqli_stmt_close($stmt_insert);
+    ]);
+    $pedido_id = $pdo->lastInsertId();
     
     if ($pedido_id) {
-        $insert_detalle = "INSERT INTO pedido_detalles (pedido_id, producto_id, cantidad, precio_unitario, subtotal, producto_nombre) 
-                          VALUES (?, ?, ?, ?, ?, ?)";
-        $stmt_detalle = mysqli_prepare($conn, $insert_detalle);
+        $stmt_detalle = $pdo->prepare("INSERT INTO pedido_detalles (pedido_id, producto_id, cantidad, precio_unitario, subtotal, producto_nombre) VALUES (?, ?, ?, ?, ?, ?)");
         
         foreach ($productosDesdeURL as $item) {
             $producto_id = $item['id'] ?? 0;
@@ -282,24 +243,16 @@ if (!$pedido_id && !empty($productosDesdeURL)) {
             $subtotal_item = $precio * $cantidad;
             $nombre = $item['nombre'] ?? $item['name'] ?? 'Producto';
             
-            mysqli_stmt_bind_param($stmt_detalle, 'iiidds', $pedido_id, $producto_id, $cantidad, $precio, $subtotal_item, $nombre);
-            mysqli_stmt_execute($stmt_detalle);
+            $stmt_detalle->execute([$pedido_id, $producto_id, $cantidad, $precio, $subtotal_item, $nombre]);
             
             if ($producto_id > 0) {
-                $stock_query = "UPDATE products SET stock = stock - ? WHERE id = ?";
-                $stmt_stock = mysqli_prepare($conn, $stock_query);
-                mysqli_stmt_bind_param($stmt_stock, 'ii', $cantidad, $producto_id);
-                mysqli_stmt_execute($stmt_stock);
-                mysqli_stmt_close($stmt_stock);
+                $stmt_stock = $pdo->prepare("UPDATE products SET stock = stock - ? WHERE id = ?");
+                $stmt_stock->execute([$cantidad, $producto_id]);
             }
         }
-        mysqli_stmt_close($stmt_detalle);
         
-        $clear_cart = "DELETE FROM cart_items WHERE user_id = ?";
-        $stmt_clear = mysqli_prepare($conn, $clear_cart);
-        mysqli_stmt_bind_param($stmt_clear, 'i', $usuario_id);
-        mysqli_stmt_execute($stmt_clear);
-        mysqli_stmt_close($stmt_clear);
+        $stmt_clear = $pdo->prepare("DELETE FROM cart_items WHERE user_id = ?");
+        $stmt_clear->execute([$usuario_id]);
     }
 }
 
@@ -310,37 +263,14 @@ $pedido_data = null;
 $productos = [];
 
 if ($pedido_id) {
-    $query = "SELECT p.*, 
-              c.nombre as cliente_nombre, c.email as cliente_email, c.telefono as cliente_telefono
-              FROM pedidos p
-              LEFT JOIN clientes c ON p.cliente_id = c.id
-              WHERE p.id = ?";
-    $stmt = mysqli_prepare($conn, $query);
-    mysqli_stmt_bind_param($stmt, 'i', $pedido_id);
-    mysqli_stmt_execute($stmt);
-    $result = mysqli_stmt_get_result($stmt);
-    $pedido_data = mysqli_fetch_assoc($result);
-    mysqli_stmt_close($stmt);
+    $stmt = $pdo->prepare("SELECT p.*, c.nombre as cliente_nombre, c.email as cliente_email, c.telefono as cliente_telefono FROM pedidos p LEFT JOIN clientes c ON p.cliente_id = c.id WHERE p.id = ?");
+    $stmt->execute([$pedido_id]);
+    $pedido_data = $stmt->fetch(PDO::FETCH_ASSOC);
     
-    $detalles_query = "SELECT 
-        pd.cantidad, pd.precio_unitario, pd.subtotal, pd.producto_nombre,
-        p.name as product_name
-    FROM pedido_detalles pd
-    LEFT JOIN products p ON pd.producto_id = p.id
-    WHERE pd.pedido_id = ?";
-    
-    $detalles_stmt = mysqli_prepare($conn, $detalles_query);
-    mysqli_stmt_bind_param($detalles_stmt, 'i', $pedido_id);
-    mysqli_stmt_execute($detalles_stmt);
-    $detalles_result = mysqli_stmt_get_result($detalles_stmt);
-    
-    while ($detalle = mysqli_fetch_assoc($detalles_result)) {
-        $productos[] = $detalle;
-    }
-    mysqli_stmt_close($detalles_stmt);
+    $detalles_stmt = $pdo->prepare("SELECT pd.cantidad, pd.precio_unitario, pd.subtotal, pd.producto_nombre, p.name as product_name FROM pedido_detalles pd LEFT JOIN products p ON pd.producto_id = p.id WHERE pd.pedido_id = ?");
+    $detalles_stmt->execute([$pedido_id]);
+    $productos = $detalles_stmt->fetchAll(PDO::FETCH_ASSOC);
 }
-
-mysqli_close($conn);
 
 // ============================================================================
 // 12. CALCULAR TOTAL A MOSTRAR

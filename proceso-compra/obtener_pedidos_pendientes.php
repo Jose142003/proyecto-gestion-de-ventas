@@ -1,21 +1,13 @@
 <?php
 // /proyecto/proceso-compra/obtener_todos_los_pedidos.php
 session_start();
+require_once '../conexion/conexion.php';
 header('Content-Type: application/json');
 error_reporting(0);
 ini_set('display_errors', 0);
 
 try {
-    $host = 'localhost';
-    $user = 'root';
-    $password = '';
-    $database = 'carrito_db';
-    
-    $conn = mysqli_connect($host, $user, $password, $database);
-    if (!$conn) {
-        throw new Exception('Error de conexión: ' . mysqli_connect_error());
-    }
-    mysqli_set_charset($conn, "utf8mb4");
+    $pdo = conectarDB();
     
     // Parámetros de filtro
     $estado = isset($_GET['estado']) ? $_GET['estado'] : '';
@@ -45,24 +37,20 @@ try {
               WHERE 1=1";
     
     $params = [];
-    $types = "";
     
     if (!empty($estado) && $estado !== 'todos') {
         $query .= " AND p.estado = ?";
         $params[] = $estado;
-        $types .= "s";
     }
     
     if (!empty($desde)) {
         $query .= " AND DATE(p.created_at) >= ?";
         $params[] = $desde;
-        $types .= "s";
     }
     
     if (!empty($hasta)) {
         $query .= " AND DATE(p.created_at) <= ?";
         $params[] = $hasta;
-        $types .= "s";
     }
     
     if (!empty($cliente)) {
@@ -70,20 +58,20 @@ try {
         $like = "%{$cliente}%";
         $params[] = $like;
         $params[] = $like;
-        $types .= "ss";
     }
     
     $query .= " ORDER BY p.created_at DESC";
     
-    $stmt = mysqli_prepare($conn, $query);
+    $stmt = $pdo->prepare($query);
     if (!empty($params)) {
-        mysqli_stmt_bind_param($stmt, $types, ...$params);
+        $stmt->execute($params);
+    } else {
+        $stmt->execute();
     }
-    mysqli_stmt_execute($stmt);
-    $result = mysqli_stmt_get_result($stmt);
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     $pedidos = [];
-    while ($row = mysqli_fetch_assoc($result)) {
+    foreach ($rows as $row) {
         // Obtener productos del pedido
         $detalle_query = "SELECT 
                             pd.producto_id,
@@ -95,13 +83,12 @@ try {
                           FROM pedido_detalles pd
                           LEFT JOIN products p ON pd.producto_id = p.id
                           WHERE pd.pedido_id = ?";
-        $detalle_stmt = mysqli_prepare($conn, $detalle_query);
-        mysqli_stmt_bind_param($detalle_stmt, 'i', $row['id']);
-        mysqli_stmt_execute($detalle_stmt);
-        $detalle_result = mysqli_stmt_get_result($detalle_stmt);
+        $detalle_stmt = $pdo->prepare($detalle_query);
+        $detalle_stmt->execute([$row['id']]);
+        $detalle_rows = $detalle_stmt->fetchAll(PDO::FETCH_ASSOC);
         
         $productos = [];
-        while ($detalle = mysqli_fetch_assoc($detalle_result)) {
+        foreach ($detalle_rows as $detalle) {
             $productos[] = [
                 'producto_id' => $detalle['producto_id'],
                 'nombre' => $detalle['producto_nombre'] ?: $detalle['nombre_producto'],
@@ -110,7 +97,6 @@ try {
                 'subtotal' => floatval($detalle['subtotal'])
             ];
         }
-        mysqli_stmt_close($detalle_stmt);
         
         // Detectar si es pago mixto
         $es_mixto = false;
@@ -149,8 +135,6 @@ try {
             'monto_efectivo' => $monto_efectivo
         ];
     }
-    
-    mysqli_close($conn);
     
     echo json_encode([
         'success' => true,

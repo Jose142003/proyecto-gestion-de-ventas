@@ -44,14 +44,10 @@ if (!in_array(strtolower($user_rol), $roles_admin)) {
 }
 
 // 5. Verificar en base de datos que el admin existe y está activo
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root';
-$password = '';
+require_once '../conexion/conexion.php';
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = conectarDB();
     
     $user_id = $_SESSION['user_id'];
     
