@@ -1,0 +1,14 @@
+/vendor/
+/node_modules/
+.DS_Store
+Thumbs.db
+*.log
+/logs/*
+!/logs/.gitkeep
+/coverage/
+.env.local
+.phpunit.cache/
+.phpunit.result.cache
+proceso-compra/uploads/
+backups/*.sql
+*.sql.gz
