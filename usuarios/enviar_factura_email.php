@@ -11,19 +11,8 @@ use PHPMailer\PHPMailer\Exception;
 
 header('Content-Type: application/json');
 
-// Configuración de la base de datos
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root';
-$password = '';
-
-try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (PDOException $e) {
-    echo json_encode(['success' => false, 'message' => 'Error de conexión a la base de datos: ' . $e->getMessage()]);
-    exit;
-}
+require_once __DIR__ . '/../conexion/conexion.php';
+$pdo = conectarDB();
 
 // Obtener datos del POST
 $input = file_get_contents('php://input');
@@ -130,10 +119,10 @@ try {
 
 } catch (Exception $e) {
     error_log("Error general: " . $e->getMessage());
-    echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+    echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
 } catch (PDOException $e) {
     error_log("Error en la base de datos: " . $e->getMessage());
-    echo json_encode(['success' => false, 'message' => 'Error en la base de datos: ' . $e->getMessage()]);
+    echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
 }
 
 /**

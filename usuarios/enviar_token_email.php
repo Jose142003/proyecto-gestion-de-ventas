@@ -1,5 +1,6 @@
 <?php
 // enviar_token_email.php - VERSIÓN CORREGIDA
+require_once __DIR__ . '/../config/database.php';
 require_once 'PHPMailer.php';
 require_once 'SMTP.php';
 require_once 'Exception.php';
@@ -14,15 +15,14 @@ function enviarTokenEmail($email, $nombre, $pin) {
     try {
         // Configuración del servidor SMTP
         $mail->isSMTP();
-        $mail->Host       = 'smtp.gmail.com';
-        $mail->Port       = 587;
+        $mail->Host       = SMTP_HOST;
+        $mail->Port       = SMTP_PORT;
         $mail->SMTPAuth   = true;
-        $mail->Username   = 'jose14chacon2003@gmail.com';
-        $mail->Password   = 'bzwusevvegbuqozg';
+        $mail->Username   = SMTP_USER;
+        $mail->Password   = SMTP_PASS;
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->CharSet    = 'UTF-8';
         
-        // ✅ IMPORTANTE: Opciones SSL para evitar problemas de certificados
         $mail->SMTPOptions = array(
             'ssl' => array(
                 'verify_peer' => false,
@@ -31,11 +31,10 @@ function enviarTokenEmail($email, $nombre, $pin) {
             )
         );
         
-        // ✅ Para depuración (cambiar a 0 en producción)
         $mail->SMTPDebug = 0;
 
         // Destinatarios
-        $mail->setFrom('jose14chacon2003@gmail.com', 'PIC Sistema Web');
+        $mail->setFrom(SMTP_FROM_EMAIL, 'PIC Sistema Web');
         $mail->addAddress($email, $nombre);
 
         // Contenido del correo

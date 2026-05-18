@@ -10,8 +10,7 @@ if (!isset($_SESSION['user_id']) && !isset($_SESSION['usuario_id'])) {
 require_once '../conexion/conexion.php';
 
 try {
-    $database = new Database();
-    $db = $database->getConnection();
+    $db = conectarDB();
     
     $fecha_desde = $_GET['fecha_desde'] ?? null;
     $fecha_hasta = $_GET['fecha_hasta'] ?? null;

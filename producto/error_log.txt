@@ -1,7 +1,7 @@
-[15-May-2026 13:04:35 UTC] Conexión exitosa a la base de datos: carrito_db
-[15-May-2026 13:04:35 UTC] Filtros - incluir_ocultos: 1, solo_ocultos: , solo_visibles: 
-[15-May-2026 13:04:35 UTC] Mostrando TODOS los productos (incluyendo ocultos)
-[15-May-2026 13:04:35 UTC] Ejecutando consulta SQL: SELECT 
+[17-May-2026 12:53:47 UTC] Conexión exitosa a la base de datos: carrito_db
+[17-May-2026 12:53:47 UTC] Filtros - incluir_ocultos: 1, solo_ocultos: , solo_visibles: 
+[17-May-2026 12:53:47 UTC] Mostrando TODOS los productos (incluyendo ocultos)
+[17-May-2026 12:53:47 UTC] Ejecutando consulta SQL: SELECT 
                 id,
                 sku,
                 name,
@@ -21,5 +21,255 @@
                 created_at
             FROM products 
             WHERE 1=1 ORDER BY id ASC
-[15-May-2026 13:04:35 UTC] Productos encontrados: 81
-[15-May-2026 13:04:35 UTC] Primer producto: {"id":1,"sku":"PROD-0001","name":"Sensor inductivo prt12-4dp","price":"150.00","image_url":"https:\/\/http2.mlstatic.com\/D_Q_NP_2X_907785-MLV42256115993_062020-E.webp","description":"Sensores Autonics Inductivos...","category":"Sensores","rating":"4.5","views_count":0,"specs":"","stock":45,"is_featured":1,"weight":"0.00","dimensions":null,"currency":"Bs","active":1,"created_at":"2026-04-29 13:58:02","nombre":"Sensor inductivo prt12-4dp","categoria":"Sensores","precio":"150.00","activo":1}
+[17-May-2026 12:53:47 UTC] Productos encontrados: 81
+[17-May-2026 12:53:47 UTC] Primer producto: {"id":1,"sku":"PROD-0001","name":"Sensor inductivo prt12-4dp","price":"150.00","image_url":"https:\/\/http2.mlstatic.com\/D_Q_NP_2X_907785-MLV42256115993_062020-E.webp","description":"Sensores Autonics Inductivos...","category":"Sensores","rating":"4.5","views_count":0,"specs":"","stock":45,"is_featured":1,"weight":"0.00","dimensions":null,"currency":"Bs","active":1,"created_at":"2026-04-29 13:58:02","nombre":"Sensor inductivo prt12-4dp","categoria":"Sensores","precio":"150.00","activo":1}
+[18-May-2026 12:37:07 UTC] Conexión exitosa a la base de datos: 
+[18-May-2026 12:37:07 UTC] Filtros - incluir_ocultos: 1, solo_ocultos: , solo_visibles: 
+[18-May-2026 12:37:07 UTC] Mostrando TODOS los productos (incluyendo ocultos)
+[18-May-2026 12:37:07 UTC] Ejecutando consulta SQL: SELECT 
+                id,
+                sku,
+                name,
+                price,
+                image_url,
+                description,
+                category,
+                rating,
+                views_count,
+                specs,
+                stock,
+                is_featured,
+                weight,
+                dimensions,
+                currency,
+                COALESCE(active, 1) as active,
+                created_at
+            FROM products 
+            WHERE 1=1 ORDER BY id ASC
+[18-May-2026 12:37:07 UTC] Productos encontrados: 81
+[18-May-2026 12:37:07 UTC] Primer producto: {"id":1,"sku":"PROD-0001","name":"Sensor inductivo prt12-4dp","price":"150.00","image_url":"https:\/\/http2.mlstatic.com\/D_Q_NP_2X_907785-MLV42256115993_062020-E.webp","description":"Sensores Autonics Inductivos...","category":"Sensores","rating":"4.5","views_count":0,"specs":"","stock":45,"is_featured":1,"weight":"0.00","dimensions":null,"currency":"Bs","active":1,"created_at":"2026-04-29 13:58:02","nombre":"Sensor inductivo prt12-4dp","categoria":"Sensores","precio":"150.00","activo":1}
+[18-May-2026 12:48:23 UTC] Conexión exitosa a la base de datos: 
+[18-May-2026 12:48:23 UTC] Filtros - incluir_ocultos: 1, solo_ocultos: , solo_visibles: 
+[18-May-2026 12:48:23 UTC] Mostrando TODOS los productos (incluyendo ocultos)
+[18-May-2026 12:48:23 UTC] Ejecutando consulta SQL: SELECT 
+                id,
+                sku,
+                name,
+                price,
+                image_url,
+                description,
+                category,
+                rating,
+                views_count,
+                specs,
+                stock,
+                is_featured,
+                weight,
+                dimensions,
+                currency,
+                COALESCE(active, 1) as active,
+                created_at
+            FROM products 
+            WHERE 1=1 ORDER BY id ASC
+[18-May-2026 12:48:23 UTC] Productos encontrados: 81
+[18-May-2026 12:48:23 UTC] Primer producto: {"id":1,"sku":"PROD-0001","name":"Sensor inductivo prt12-4dp","price":"150.00","image_url":"https:\/\/http2.mlstatic.com\/D_Q_NP_2X_907785-MLV42256115993_062020-E.webp","description":"Sensores Autonics Inductivos...","category":"Sensores","rating":"4.5","views_count":0,"specs":"","stock":45,"is_featured":1,"weight":"0.00","dimensions":null,"currency":"Bs","active":1,"created_at":"2026-04-29 13:58:02","nombre":"Sensor inductivo prt12-4dp","categoria":"Sensores","precio":"150.00","activo":1}
+[18-May-2026 12:58:00 UTC] Conexión exitosa a la base de datos: 
+[18-May-2026 12:58:00 UTC] Filtros - incluir_ocultos: 1, solo_ocultos: , solo_visibles: 
+[18-May-2026 12:58:00 UTC] Mostrando TODOS los productos (incluyendo ocultos)
+[18-May-2026 12:58:00 UTC] Ejecutando consulta SQL: SELECT 
+                id,
+                sku,
+                name,
+                price,
+                image_url,
+                description,
+                category,
+                rating,
+                views_count,
+                specs,
+                stock,
+                is_featured,
+                weight,
+                dimensions,
+                currency,
+                COALESCE(active, 1) as active,
+                created_at
+            FROM products 
+            WHERE 1=1 ORDER BY id ASC
+[18-May-2026 12:58:00 UTC] Productos encontrados: 81
+[18-May-2026 12:58:00 UTC] Primer producto: {"id":1,"sku":"PROD-0001","name":"Sensor inductivo prt12-4dp","price":"150.00","image_url":"https:\/\/http2.mlstatic.com\/D_Q_NP_2X_907785-MLV42256115993_062020-E.webp","description":"Sensores Autonics Inductivos...","category":"Sensores","rating":"4.5","views_count":0,"specs":"","stock":45,"is_featured":1,"weight":"0.00","dimensions":null,"currency":"Bs","active":1,"created_at":"2026-04-29 13:58:02","nombre":"Sensor inductivo prt12-4dp","categoria":"Sensores","precio":"150.00","activo":1}
+[18-May-2026 12:58:26 UTC] Conexión exitosa a la base de datos: 
+[18-May-2026 12:58:26 UTC] Filtros - incluir_ocultos: 1, solo_ocultos: , solo_visibles: 
+[18-May-2026 12:58:26 UTC] Mostrando TODOS los productos (incluyendo ocultos)
+[18-May-2026 12:58:26 UTC] Ejecutando consulta SQL: SELECT 
+                id,
+                sku,
+                name,
+                price,
+                image_url,
+                description,
+                category,
+                rating,
+                views_count,
+                specs,
+                stock,
+                is_featured,
+                weight,
+                dimensions,
+                currency,
+                COALESCE(active, 1) as active,
+                created_at
+            FROM products 
+            WHERE 1=1 ORDER BY id ASC
+[18-May-2026 12:58:26 UTC] Productos encontrados: 81
+[18-May-2026 12:58:26 UTC] Primer producto: {"id":1,"sku":"PROD-0001","name":"Sensor inductivo prt12-4dp","price":"150.00","image_url":"https:\/\/http2.mlstatic.com\/D_Q_NP_2X_907785-MLV42256115993_062020-E.webp","description":"Sensores Autonics Inductivos...","category":"Sensores","rating":"4.5","views_count":0,"specs":"","stock":45,"is_featured":1,"weight":"0.00","dimensions":null,"currency":"Bs","active":1,"created_at":"2026-04-29 13:58:02","nombre":"Sensor inductivo prt12-4dp","categoria":"Sensores","precio":"150.00","activo":1}
+[18-May-2026 13:18:34 UTC] Conexión exitosa a la base de datos: 
+[18-May-2026 13:18:34 UTC] Filtros - incluir_ocultos: 1, solo_ocultos: , solo_visibles: 
+[18-May-2026 13:18:34 UTC] Mostrando TODOS los productos (incluyendo ocultos)
+[18-May-2026 13:18:34 UTC] Ejecutando consulta SQL: SELECT 
+                id,
+                sku,
+                name,
+                price,
+                image_url,
+                description,
+                category,
+                rating,
+                views_count,
+                specs,
+                stock,
+                is_featured,
+                weight,
+                dimensions,
+                currency,
+                COALESCE(active, 1) as active,
+                created_at
+            FROM products 
+            WHERE 1=1 ORDER BY id ASC
+[18-May-2026 13:18:34 UTC] Productos encontrados: 81
+[18-May-2026 13:18:34 UTC] Primer producto: {"id":1,"sku":"PROD-0001","name":"Sensor inductivo prt12-4dp","price":"150.00","image_url":"https:\/\/http2.mlstatic.com\/D_Q_NP_2X_907785-MLV42256115993_062020-E.webp","description":"Sensores Autonics Inductivos...","category":"Sensores","rating":"4.5","views_count":0,"specs":"","stock":45,"is_featured":1,"weight":"0.00","dimensions":null,"currency":"Bs","active":1,"created_at":"2026-04-29 13:58:02","nombre":"Sensor inductivo prt12-4dp","categoria":"Sensores","precio":"150.00","activo":1}
+[18-May-2026 13:22:11 UTC] Conexión exitosa a la base de datos: 
+[18-May-2026 13:22:11 UTC] Filtros - incluir_ocultos: 1, solo_ocultos: , solo_visibles: 
+[18-May-2026 13:22:11 UTC] Mostrando TODOS los productos (incluyendo ocultos)
+[18-May-2026 13:22:11 UTC] Ejecutando consulta SQL: SELECT 
+                id,
+                sku,
+                name,
+                price,
+                image_url,
+                description,
+                category,
+                rating,
+                views_count,
+                specs,
+                stock,
+                is_featured,
+                weight,
+                dimensions,
+                currency,
+                COALESCE(active, 1) as active,
+                created_at
+            FROM products 
+            WHERE 1=1 ORDER BY id ASC
+[18-May-2026 13:22:11 UTC] Productos encontrados: 81
+[18-May-2026 13:22:11 UTC] Primer producto: {"id":1,"sku":"PROD-0001","name":"Sensor inductivo prt12-4dp","price":"150.00","image_url":"https:\/\/http2.mlstatic.com\/D_Q_NP_2X_907785-MLV42256115993_062020-E.webp","description":"Sensores Autonics Inductivos...","category":"Sensores","rating":"4.5","views_count":0,"specs":"","stock":45,"is_featured":1,"weight":"0.00","dimensions":null,"currency":"Bs","active":1,"created_at":"2026-04-29 13:58:02","nombre":"Sensor inductivo prt12-4dp","categoria":"Sensores","precio":"150.00","activo":1}
+[18-May-2026 13:51:33 UTC] Conexión exitosa a la base de datos: 
+[18-May-2026 13:51:33 UTC] Filtros - incluir_ocultos: 1, solo_ocultos: , solo_visibles: 
+[18-May-2026 13:51:33 UTC] Mostrando TODOS los productos (incluyendo ocultos)
+[18-May-2026 13:51:33 UTC] Ejecutando consulta SQL: SELECT 
+                id,
+                sku,
+                name,
+                price,
+                image_url,
+                description,
+                category,
+                rating,
+                views_count,
+                specs,
+                stock,
+                is_featured,
+                weight,
+                dimensions,
+                currency,
+                COALESCE(active, 1) as active,
+                created_at
+            FROM products 
+            WHERE 1=1 ORDER BY id ASC
+[18-May-2026 13:51:33 UTC] Productos encontrados: 81
+[18-May-2026 13:51:33 UTC] Primer producto: {"id":1,"sku":"PROD-0001","name":"Sensor inductivo prt12-4dp","price":"150.00","image_url":"https:\/\/http2.mlstatic.com\/D_Q_NP_2X_907785-MLV42256115993_062020-E.webp","description":"Sensores Autonics Inductivos...","category":"Sensores","rating":"4.5","views_count":0,"specs":"","stock":45,"is_featured":1,"weight":"0.00","dimensions":null,"currency":"Bs","active":1,"created_at":"2026-04-29 13:58:02","nombre":"Sensor inductivo prt12-4dp","categoria":"Sensores","precio":"150.00","activo":1}
+[18-May-2026 13:59:20 UTC] Conexión exitosa a la base de datos: 
+[18-May-2026 13:59:20 UTC] Filtros - incluir_ocultos: 1, solo_ocultos: , solo_visibles: 
+[18-May-2026 13:59:20 UTC] Mostrando TODOS los productos (incluyendo ocultos)
+[18-May-2026 13:59:20 UTC] Ejecutando consulta SQL: SELECT 
+                id,
+                sku,
+                name,
+                price,
+                image_url,
+                description,
+                category,
+                rating,
+                views_count,
+                specs,
+                stock,
+                is_featured,
+                weight,
+                dimensions,
+                currency,
+                COALESCE(active, 1) as active,
+                created_at
+            FROM products 
+            WHERE 1=1 ORDER BY id ASC
+[18-May-2026 13:59:20 UTC] Productos encontrados: 81
+[18-May-2026 13:59:20 UTC] Primer producto: {"id":1,"sku":"PROD-0001","name":"Sensor inductivo prt12-4dp","price":"150.00","image_url":"https:\/\/http2.mlstatic.com\/D_Q_NP_2X_907785-MLV42256115993_062020-E.webp","description":"Sensores Autonics Inductivos...","category":"Sensores","rating":"4.5","views_count":0,"specs":"","stock":45,"is_featured":1,"weight":"0.00","dimensions":null,"currency":"Bs","active":1,"created_at":"2026-04-29 13:58:02","nombre":"Sensor inductivo prt12-4dp","categoria":"Sensores","precio":"150.00","activo":1}
+[18-May-2026 14:26:49 UTC] Conexión exitosa a la base de datos: 
+[18-May-2026 14:26:49 UTC] Filtros - incluir_ocultos: , solo_ocultos: , solo_visibles: 
+[18-May-2026 14:26:49 UTC] Filtrando productos VISIBLES (por defecto)
+[18-May-2026 14:26:49 UTC] Ejecutando consulta SQL: SELECT 
+                id,
+                sku,
+                name,
+                price,
+                image_url,
+                description,
+                category,
+                rating,
+                views_count,
+                specs,
+                stock,
+                is_featured,
+                weight,
+                dimensions,
+                currency,
+                COALESCE(active, 1) as active,
+                created_at
+            FROM products 
+            WHERE 1=1 AND active = 1 ORDER BY id ASC
+[18-May-2026 14:26:49 UTC] Productos encontrados: 81
+[18-May-2026 14:26:49 UTC] Primer producto: {"id":1,"sku":"PROD-0001","name":"Sensor inductivo prt12-4dp","price":"150.00","image_url":"https:\/\/http2.mlstatic.com\/D_Q_NP_2X_907785-MLV42256115993_062020-E.webp","description":"Sensores Autonics Inductivos...","category":"Sensores","rating":"4.5","views_count":0,"specs":"","stock":45,"is_featured":1,"weight":"0.00","dimensions":null,"currency":"Bs","active":1,"created_at":"2026-04-29 13:58:02","nombre":"Sensor inductivo prt12-4dp","categoria":"Sensores","precio":"150.00","activo":1}
+[18-May-2026 14:26:56 UTC] Conexión exitosa a la base de datos: 
+[18-May-2026 14:26:56 UTC] Filtros - incluir_ocultos: 1, solo_ocultos: , solo_visibles: 
+[18-May-2026 14:26:56 UTC] Mostrando TODOS los productos (incluyendo ocultos)
+[18-May-2026 14:26:56 UTC] Ejecutando consulta SQL: SELECT 
+                id,
+                sku,
+                name,
+                price,
+                image_url,
+                description,
+                category,
+                rating,
+                views_count,
+                specs,
+                stock,
+                is_featured,
+                weight,
+                dimensions,
+                currency,
+                COALESCE(active, 1) as active,
+                created_at
+            FROM products 
+            WHERE 1=1 ORDER BY id ASC
+[18-May-2026 14:26:56 UTC] Productos encontrados: 81
+[18-May-2026 14:26:56 UTC] Primer producto: {"id":1,"sku":"PROD-0001","name":"Sensor inductivo prt12-4dp","price":"150.00","image_url":"https:\/\/http2.mlstatic.com\/D_Q_NP_2X_907785-MLV42256115993_062020-E.webp","description":"Sensores Autonics Inductivos...","category":"Sensores","rating":"4.5","views_count":0,"specs":"","stock":45,"is_featured":1,"weight":"0.00","dimensions":null,"currency":"Bs","active":1,"created_at":"2026-04-29 13:58:02","nombre":"Sensor inductivo prt12-4dp","categoria":"Sensores","precio":"150.00","activo":1}

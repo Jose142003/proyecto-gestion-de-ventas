@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // /proyecto/usuarios/verificar_sesion_cliente.php
 // VERIFICACIÓN EXCLUSIVA PARA CLIENTES - NO REDIRIGE A ADMIN
 
@@ -10,24 +10,8 @@ header('Cache-Control: no-cache, must-revalidate');
 error_log("=== verificar_sesion_cliente.php - INICIO ===");
 
 // ========== CONEXIÓN A BASE DE DATOS ==========
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root';
-$password = '';
-
-try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (PDOException $e) {
-    error_log("Error de conexión: " . $e->getMessage());
-    echo json_encode([
-        'success' => false, 
-        'message' => 'Error de conexión', 
-        'role' => 'error',
-        'is_authenticated' => false
-    ]);
-    exit;
-}
+require_once __DIR__ . '/../conexion/conexion.php';
+$pdo = conectarDB();
 
 // ========== VERIFICAR SESIÓN ACTIVA ==========
 if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
@@ -111,7 +95,7 @@ if ($tabla_origen === 'users' || ($tabla_origen === null && $user_rol === 'clien
             'is_authenticated' => false,
             'role' => 'invalid',
             'message' => 'Usuario no válido',
-            'redirect' => '/proyecto/interfaz usuario/login.html'
+            'redirect' => '/proyecto/interfaz_usuario/login.html'
         ]);
         exit;
     }
@@ -160,7 +144,7 @@ echo json_encode([
     'is_authenticated' => false,
     'role' => 'invalid',
     'message' => 'Sesión inválida',
-    'redirect' => '/proyecto/interfaz usuario/login.html'
+    'redirect' => '/proyecto/interfaz_usuario/login.html'
 ]);
 exit;
 ?>

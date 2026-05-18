@@ -8,12 +8,6 @@ if (!isset($_SESSION['user_rol']) || $_SESSION['user_rol'] !== 'admin') {
     exit;
 }
 
-// Configuración de la base de datos
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root';
-$password = '';
-
 // Obtener datos del POST
 $data = json_decode(file_get_contents('php://input'), true);
 $pedido_id = $data['pedido_id'] ?? 0;
@@ -23,9 +17,10 @@ if (!$pedido_id) {
     exit;
 }
 
+require_once __DIR__ . '/../conexion/conexion.php';
+
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = conectarDB();
     
     $pdo->beginTransaction();
     
@@ -145,19 +140,10 @@ try {
     $stmt_update = $pdo->prepare($update_pedido);
     $stmt_update->execute([':pedido_id' => $pedido_id]);
     
-    // 9. Registrar pago
-    $insert_pago = "
-        INSERT INTO pagos (factura_id, monto, metodo_pago, referencia, usuario_id, observaciones)
-        VALUES (:factura_id, :monto, :metodo_pago, :referencia, 1, 'Pago registrado automáticamente desde pedido')
-    ";
-    
-    $stmt_pago = $pdo->prepare($insert_pago);
-    $stmt_pago->execute([
-        ':factura_id' => $factura_id,
-        ':monto' => $pedido['total'],
-        ':metodo_pago' => $pedido['metodo_pago'],
-        ':referencia' => $pedido['numero_pedido']
-    ]);
+    // 9. Marcar factura como pagada (el pago queda registrado en los metadatos de la factura)
+    $update_factura = "UPDATE facturas SET estado = 'pagada' WHERE id = :factura_id";
+    $stmt_upd = $pdo->prepare($update_factura);
+    $stmt_upd->execute([':factura_id' => $factura_id]);
     
     $pdo->commit();
     
@@ -173,7 +159,7 @@ try {
     $pdo->rollBack();
     echo json_encode([
         'success' => false,
-        'message' => 'Error al generar factura: ' . $e->getMessage()
+        'message' => 'Error interno del servidor'
     ]);
 }
 ?>

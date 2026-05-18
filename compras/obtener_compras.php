@@ -11,8 +11,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 try {
-    $database = new Database();
-    $db = $database->getConnection();
+    $db = conectarDB();
 
     // Verificar si se solicitó un ID específico
     $compraId = isset($_GET['id']) ? intval($_GET['id']) : 0;
@@ -214,9 +213,9 @@ try {
     
 } catch (PDOException $e) {
     error_log("Compras PDO Error: " . $e->getMessage());
-    echo json_encode(['success' => false, 'message' => 'Error en la base de datos: ' . $e->getMessage()]);
+    echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
 } catch (Exception $e) {
     error_log("Compras error: " . $e->getMessage());
-    echo json_encode(['success' => false, 'message' => 'Error al cargar los datos: ' . $e->getMessage()]);
+    echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
 }
 ?>

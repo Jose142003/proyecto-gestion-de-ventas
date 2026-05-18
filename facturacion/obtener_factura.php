@@ -1,7 +1,7 @@
 <?php
 session_start();
 header('Content-Type: application/json');
-error_reporting(E_ALL);
+error_reporting(0); ini_set('display_errors', 0);
 ini_set('display_errors', 0);
 
 // Establecer zona horaria de Venezuela
@@ -33,24 +33,18 @@ if (!$usuario_autenticado) {
     exit;
 }
 
-// Configuración de la base de datos
-$host = 'localhost';
-$user = 'root';
-$password = '';
-$database = 'carrito_db';
+require_once __DIR__ . '/../conexion/conexion.php';
 
-$conn = new mysqli($host, $user, $password, $database);
-
-if ($conn->connect_error) {
+try {
+    $pdo = conectarDB();
+} catch (PDOException $e) {
     echo json_encode([
         'success' => false, 
-        'message' => 'Error de conexión: ' . $conn->connect_error, 
+        'message' => 'Error interno del servidor', 
         'facturas' => []
     ]);
     exit;
 }
-
-$conn->set_charset("utf8mb4");
 
 // Obtener facturas con toda la información necesaria - INCLUYENDO PEDIDOS RELACIONADOS
 $sql = "SELECT f.*, 
@@ -71,15 +65,14 @@ $sql = "SELECT f.*,
         LEFT JOIN users u ON f.usuario_id = u.id
         ORDER BY f.id DESC";
 
-$result = $conn->query($sql);
-
-if (!$result) {
+try {
+    $stmt = $pdo->query($sql);
+} catch (PDOException $e) {
     echo json_encode([
         'success' => false,
-        'message' => 'Error en consulta: ' . $conn->error,
+        'message' => 'Error interno del servidor',
         'facturas' => []
     ]);
-    $conn->close();
     exit;
 }
 
@@ -137,8 +130,8 @@ function detectarMetodoPago($row) {
     return $metodo_detectado;
 }
 
-if ($result->num_rows > 0) {
-    while ($row = $result->fetch_assoc()) {
+if ($stmt->rowCount() > 0) {
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         // Detectar el método de pago usando la función mejorada
         $metodo_detectado = detectarMetodoPago($row);
         
@@ -195,8 +188,6 @@ if ($result->num_rows > 0) {
         ];
     }
 }
-
-$conn->close();
 
 echo json_encode([
     'success' => true,

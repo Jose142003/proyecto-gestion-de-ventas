@@ -11,19 +11,15 @@ require_once  'Exception.php';
 require_once  'PHPMailer.php';
 require_once  'SMTP.php';
 
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root';
-$password = '';
-
 if (!isset($_SESSION['user_id'])) {
     echo json_encode(['success' => false, 'message' => 'No autorizado']);
     exit;
 }
 
+require_once __DIR__ . '/../conexion/conexion.php';
+
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = conectarDB();
     
     $data = json_decode(file_get_contents('php://input'), true);
     $pedido_id = $data['pedido_id'] ?? 0;
@@ -64,16 +60,16 @@ try {
     try {
         // Configuración del servidor SMTP
         $mail->isSMTP();
-        $mail->Host = 'smtp.gmail.com';
+        $mail->Host = SMTP_HOST;
         $mail->SMTPAuth = true;
-        $mail->Username = 'jose14chacon2003@gmail.com';
-        $mail->Password = 'bzwusevvegbuqozg';
+        $mail->Username = SMTP_USER;
+        $mail->Password = SMTP_PASS;
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port = 587;
+        $mail->Port = SMTP_PORT;
         $mail->CharSet = 'UTF-8';
         
         // Remitente y destinatario
-        $mail->setFrom('jose14chacon2003@gmail.com', 'PIC - Productos Industriales');
+        $mail->setFrom(SMTP_FROM_EMAIL, SMTP_FROM_NAME);
         $mail->addAddress($pedido['cliente_email'], $pedido['cliente_nombre']);
         
         // Contenido del correo
@@ -193,6 +189,7 @@ try {
     }
     
 } catch (PDOException $e) {
-    echo json_encode(['success' => false, 'message' => 'Error en la base de datos: ' . $e->getMessage()]);
+    error_log("Error en la base de datos: " . $e->getMessage());
+    echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
 }
 ?>

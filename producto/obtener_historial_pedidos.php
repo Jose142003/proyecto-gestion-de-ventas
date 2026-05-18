@@ -84,7 +84,7 @@ try {
     error_log("Error al obtener historial: " . $e->getMessage());
     echo json_encode([
         'success' => false,
-        'message' => 'Error al cargar el historial de compras: ' . $e->getMessage()
+        'message' => 'Error al cargar el historial de compras'
     ]);
 }
 ?>

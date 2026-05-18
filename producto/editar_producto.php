@@ -1,11 +1,22 @@
-<?php
+﻿<?php
 // editar_producto.php - Formulario para editar un producto
+session_start();
 
-// Configuración de conexión
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root';
-$password = '';
+// Verificar autenticación y permisos de administrador
+$isAdmin = false;
+if (isset($_SESSION['user_id']) && isset($_SESSION['user_rol']) && $_SESSION['user_rol'] === 'admin') {
+    $isAdmin = true;
+} elseif (isset($_SESSION['user_correo']) && (stripos($_SESSION['user_correo'], 'picca.ventas@gmail.com') !== false || stripos($_SESSION['user_correo'], 'admin') !== false)) {
+    $isAdmin = true;
+    $_SESSION['user_rol'] = 'admin';
+}
+
+if (!$isAdmin) {
+    header('Location: /proyecto/interfaz_usuario/login.html');
+    exit;
+}
+
+require_once __DIR__ . '/../conexion/conexion.php';
 
 // Obtener ID del producto
 $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
@@ -56,7 +67,7 @@ if ($id === 0) {
             <h1>ID de Producto no Válido</h1>
             <p>El ID proporcionado no es válido o no se especificó.</p>
             <a href="productos.php" class="btn">Ver Productos</a>
-            <a href="/proyecto/panel%20admin/panel_admin.php" class="btn">Panel Admin</a>
+            <a href="/proyecto/panel_admin/panel_admin.php" class="btn">Panel Admin</a>
         </div>
     </body>
     </html>';
@@ -73,28 +84,21 @@ $monedas = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'MXN'];
 // Procesar formulario cuando se envía
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
-        $conn = new mysqli($host, $username, $password, $dbname);
+        $pdo = conectarDB();
         
-        if ($conn->connect_error) {
-            throw new Exception("Error de conexión a la base de datos");
-        }
-        
-        $conn->set_charset("utf8");
-        
-        // Obtener y sanitizar datos del formulario
-        $nombre = $conn->real_escape_string($_POST['nombre']);
-        $sku = $conn->real_escape_string($_POST['sku']);
-        $descripcion = $conn->real_escape_string($_POST['descripcion']);
+        // Obtener datos del formulario
+        $nombre = $_POST['nombre'];
+        $sku = $_POST['sku'];
+        $descripcion = $_POST['descripcion'];
         $precio = floatval($_POST['precio']);
         $stock = intval($_POST['stock']);
-        $categoria = $conn->real_escape_string($_POST['categoria']);
-        $imagen = $conn->real_escape_string($_POST['imagen']);
+        $categoria = $_POST['categoria'];
+        $imagen = $_POST['imagen'];
         $rating = floatval($_POST['rating']);
-        $specs = $conn->real_escape_string($_POST['specs']);
+        $specs = $_POST['specs'];
         $peso = floatval($_POST['peso']);
-        // SOLUCIÓN: Truncar dimensiones a 100 caracteres máximo (VARCHAR(100) en BD)
-        $dimensiones = substr($conn->real_escape_string($_POST['dimensiones']), 0, 100);
-        $moneda = $conn->real_escape_string($_POST['moneda']);
+        $dimensiones = substr($_POST['dimensiones'], 0, 100);
+        $moneda = $_POST['moneda'];
         $destacado = isset($_POST['destacado']) ? 1 : 0;
         
         // Validaciones básicas
@@ -119,55 +123,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     updated_at = NOW()
                     WHERE id = ?";
             
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("sssdisssdsssii", 
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([
                 $nombre, $sku, $descripcion, $precio, $stock, $categoria,
                 $imagen, $rating, $specs, $peso, $dimensiones, $moneda,
                 $destacado, $id
-            );
+            ]);
             
-            if ($stmt->execute()) {
+            if ($stmt->rowCount() > 0) {
                 $success = 'Producto actualizado correctamente';
             } else {
-                $error = 'Error al actualizar el producto: ' . $stmt->error;
+                $error = 'Error al actualizar el producto';
             }
-            
-            $stmt->close();
         }
         
-        $conn->close();
-        
     } catch (Exception $e) {
-        $error = 'Error: ' . $e->getMessage();
+        error_log("Error en editar_producto (POST): " . $e->getMessage());
+        $error = 'Error interno del servidor';
     }
 }
 
 // Obtener datos actuales del producto
 try {
-    $conn = new mysqli($host, $username, $password, $dbname);
-    
-    if ($conn->connect_error) {
-        throw new Exception("Error de conexión a la base de datos");
-    }
-    
-    $conn->set_charset("utf8");
+    $pdo = conectarDB();
 
     $sql = "SELECT * FROM products WHERE id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $id);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$id]);
+    $producto = $stmt->fetch(PDO::FETCH_ASSOC);
     
-    if ($result->num_rows === 0) {
+    if (!$producto) {
         $error = 'Producto no encontrado';
-    } else {
-        $producto = $result->fetch_assoc();
     }
     
-    $conn->close();
-    
 } catch (Exception $e) {
-    $error = 'Error al obtener el producto: ' . $e->getMessage();
+    error_log("Error en editar_producto (GET): " . $e->getMessage());
+    $error = 'Error interno del servidor';
 }
 
 // Si hay error al obtener el producto, mostrar mensaje
@@ -215,229 +206,12 @@ if ($error && !$producto) {
         <div class="error-container">
             <div class="error-icon">❌</div>
             <h1>' . htmlspecialchars($error) . '</h1>
-            <a href="/proyecto/panel admin/panel_admin.html" class="btn">Ver Productos</a>
-            <a href="detalles_producto.php?id=' . $id . '" class="btn">Volver a Detalles</a>
-        </div>
-    </body>
-    </html>';
-    exit();
-}
-?>
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editar Producto - <?php echo htmlspecialchars($producto['name']); ?></title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            background-color: #f5f7fa;
-            color: #333;
-            line-height: 1.6;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-        
-        /* Header */
-        .header {
-            background: linear-gradient(90deg, #1a237e 0%, #283593 100%);
-            color: white;
-            padding: 25px 30px;
-        }
-        
-        .header h1 {
-            font-size: 24px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .header-actions {
-            display: flex;
-            gap: 15px;
-            margin-top: 15px;
-        }
-        
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            text-decoration: none;
-            font-size: 14px;
-        }
-        
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-        
-        .btn-primary {
-            background: #007bff;
-            color: white;
-        }
-        
-        .btn-success {
-            background: #28a745;
-            color: white;
-        }
-        
-        /* Mensajes */
-        .alert {
-            padding: 15px;
-            border-radius: 5px;
-            margin: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
-        /* Formulario */
-        .form-container {
-            padding: 30px;
-        }
-        
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group.full-width {
-            grid-column: 1 / -1;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #495057;
-        }
-        
-        input[type="text"],
-        input[type="number"],
-        select,
-        textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ced4da;
-            border-radius: 5px;
-            font-size: 14px;
-            transition: border-color 0.3s;
-        }
-        
-        input[type="text"]:focus,
-        input[type="number"]:focus,
-        select:focus,
-        textarea:focus {
-            outline: none;
-            border-color: #007bff;
-            box-shadow: 0 0 0 3px rgba(0,123,255,0.25);
-        }
-        
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-        }
-        
-        .form-actions {
-            display: flex;
-            gap: 15px;
-            justify-content: flex-end;
-            padding-top: 20px;
-            border-top: 1px solid #e9ecef;
-        }
-        
-        .preview-image {
-            max-width: 200px;
-            max-height: 200px;
-            margin-top: 10px;
-            border-radius: 5px;
-            border: 1px solid #dee2e6;
-            padding: 10px;
-            background: #f8f9fa;
-        }
-        
-        /* Responsive */
-        @media (max-width: 768px) {
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .form-actions {
-                flex-direction: column;
-            }
-            
-            .btn {
-                width: 100%;
-                justify-content: center;
-            }
-            
-            .header-actions {
-                flex-direction: column;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <!-- Header -->
-        <div class="header">
-            <h1>✏️ Editar Producto: <?php echo htmlspecialchars($producto['name']); ?></h1>
-            <div class="header-actions">
-                <a href="detalles_producto.php?id=<?php echo $id; ?>" class="btn btn-secondary">
-                    ← Volver a Detalles
-                </a>
-                <a href="/proyecto/panel admin/panel_admin.html" class="btn btn-secondary">
-                    📋 Ver Todos los Productos
-                </a>
+<a href="/proyecto/panel_admin/panel_admin.php" class="btn">Ver Productos</a>
             </div>
-        </div>
-        
-        <!-- Mensajes -->
-        <?php if ($success): ?>
+        </div>';
+    exit;
+}
+?><!-- Mensajes --><?php if ($success): ?>
             <div class="alert alert-success">
                 <span>✅</span> <?php echo htmlspecialchars($success); ?>
             </div>

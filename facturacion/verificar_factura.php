@@ -9,15 +9,10 @@ if (!$pedido_id) {
     exit;
 }
 
-// Configuración de la base de datos
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root';
-$password = '';
+require_once __DIR__ . '/../conexion/conexion.php';
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = conectarDB();
     
     $stmt = $pdo->prepare("SELECT id FROM facturas WHERE pedido_id = ?");
     $stmt->execute([$pedido_id]);
@@ -39,7 +34,7 @@ try {
 } catch (PDOException $e) {
     echo json_encode([
         'success' => false,
-        'message' => 'Error de base de datos: ' . $e->getMessage()
+        'message' => 'Error interno del servidor'
     ]);
 }
 ?>

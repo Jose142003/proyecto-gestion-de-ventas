@@ -1,0 +1,20 @@
+# Environment variables
+.env
+
+# Dependencies
+vendor/
+node_modules/
+
+# Logs
+logs/*.log
+
+# Uploads
+uploads/*.json
+uploads/*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# PHPUnit cache
+.phpunit.cache/

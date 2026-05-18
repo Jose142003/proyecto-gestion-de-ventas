@@ -1,30 +1,15 @@
 <?php
-session_start();
 header('Content-Type: application/json');
-error_reporting(E_ALL);
-ini_set('display_errors', 0);
 
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root';
-$password = '';
+require_once __DIR__ . '/../conexion/conexion.php';
+requerirAdmin();
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = conectarDB();
 } catch (PDOException $e) {
     echo json_encode([
         'success' => false,
-        'error' => 'Error de conexión: ' . $e->getMessage()
-    ]);
-    exit;
-}
-
-// Verificar autenticación
-if (!isset($_SESSION['user_id'])) {
-    echo json_encode([
-        'success' => false,
-        'error' => 'No autenticado'
+        'error' => 'Error interno del servidor'
     ]);
     exit;
 }
@@ -120,7 +105,7 @@ try {
     error_log("Error en guardar_configuracion.php: " . $e->getMessage());
     echo json_encode([
         'success' => false,
-        'error' => 'Error al guardar: ' . $e->getMessage()
+        'error' => 'Error interno del servidor'
     ]);
 }
 ?>

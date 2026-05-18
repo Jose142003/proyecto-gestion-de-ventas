@@ -2,8 +2,8 @@
 session_start();
 header('Content-Type: application/json');
 
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+error_reporting(0);
+ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 
 require_once dirname(__DIR__) . '/conexion/conexion.php';
@@ -67,16 +67,15 @@ try {
         }
         
         $stored_hash = $admin['contrasena'];
-        $input_hash = hash('sha256', $currentPassword);
         
-        // Normalizar a MAYÚSCULAS para comparación
-        if (strtoupper($input_hash) !== strtoupper($stored_hash)) {
-            echo json_encode(["success" => false, "message" => "Contraseña actual incorrecta"]);
-            exit;
+        if (!password_verify($currentPassword, $stored_hash)) {
+            if (strtoupper(hash('sha256', $currentPassword)) !== strtoupper($stored_hash)) {
+                echo json_encode(["success" => false, "message" => "Contraseña actual incorrecta"]);
+                exit;
+            }
         }
         
-        // Actualizar nueva contraseña (en MAYÚSCULAS)
-        $new_hash = strtoupper(hash('sha256', $newPassword));
+        $new_hash = password_hash($newPassword, PASSWORD_BCRYPT);
         $update = $db->prepare("UPDATE admin_users SET contrasena = ? WHERE id = ?");
         
         if ($update->execute([$new_hash, $user_id])) {

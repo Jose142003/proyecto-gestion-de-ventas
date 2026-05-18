@@ -22,8 +22,7 @@ function formatDate($date) {
     return date('d/m/Y', strtotime($date));
 }
 
-$database = new Database();
-$db = $database->getConnection();
+$db = conectarDB();
 
 // Obtener datos de la compra
 $query = "SELECT c.*, p.nombre_comercial as proveedor_nombre, p.ruc as proveedor_ruc, 

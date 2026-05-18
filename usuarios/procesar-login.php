@@ -12,16 +12,12 @@ header('Content-Type: application/json');
 ini_set('session.cookie_httponly', 1);
 ini_set('session.use_only_cookies', 1);
 ini_set('session.cookie_secure', 0);
-ini_set('session.cookie_samesite', 'Lax');
+ini_set('session.cookie_samesite', 'Strict');
 
-// Conexión directa a la base de datos
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root';
-$password = '';
+require_once __DIR__ . '/../config/database.php';
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
+    $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8", DB_USER, DB_PASS);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
     echo json_encode(["success" => false, "message" => "Error de conexión a la base de datos"]);
@@ -35,6 +31,31 @@ if (session_status() === PHP_SESSION_NONE) {
 
 if ($_SERVER["REQUEST_METHOD"] !== "POST") {
     echo json_encode(["success" => false, "message" => "Método no permitido"]);
+    exit;
+}
+
+// ========== RATE LIMITING ==========
+$maxIntentos = 5;
+$ventanaMinutos = 15;
+$ahora = time();
+
+if (!isset($_SESSION['_login_attempts'])) {
+    $_SESSION['_login_attempts'] = ['count' => 0, 'first_attempt' => $ahora];
+}
+
+$attempts = &$_SESSION['_login_attempts'];
+
+// Si pasó la ventana, reiniciar
+if ($ahora - $attempts['first_attempt'] > $ventanaMinutos * 60) {
+    $attempts = ['count' => 0, 'first_attempt' => $ahora];
+}
+
+if ($attempts['count'] >= $maxIntentos) {
+    $espera = $ventanaMinutos - floor(($ahora - $attempts['first_attempt']) / 60);
+    echo json_encode([
+        "success" => false,
+        "message" => "Demasiados intentos. Intenta de nuevo en $espera minuto(s)."
+    ]);
     exit;
 }
 
@@ -68,10 +89,16 @@ try {
             $tabla_origen = 'admin_users';
             $es_admin = true;
             
-            $sha2_hash = strtoupper(hash('sha256', $password));
-            if ($user['password'] !== $sha2_hash) {
-                echo json_encode(["success" => false, "message" => "Credenciales de administrador incorrectas"]);
-                exit;
+                if (!password_verify($password, $user['password'])) {
+                if (strtoupper(hash('sha256', $password)) !== $user['password']) {
+                    $attempts['count']++;
+                    echo json_encode(["success" => false, "message" => "Credenciales de administrador incorrectas"]);
+                    exit;
+                }
+                $new_hash = password_hash($password, PASSWORD_BCRYPT);
+                $rehash = $pdo->prepare("UPDATE admin_users SET contrasena = ? WHERE id = ?");
+                $rehash->execute([$new_hash, $user['id']]);
+                $user['password'] = $new_hash;
             }
         }
     } 
@@ -90,18 +117,20 @@ try {
             $tabla_origen = 'users';
             
             if (!$user['is_active'] || $user['estado'] !== 'activo') {
-                echo json_encode(["success" => false, "message" => "Usuario inactivo"]);
-                exit;
+                    $attempts['count']++;
+                    echo json_encode(["success" => false, "message" => "Usuario inactivo"]);
+                    exit;
+                }
+                
+                if (!password_verify($password, $user['password'])) {
+                    $attempts['count']++;
+                    echo json_encode(["success" => false, "message" => "Credenciales incorrectas"]);
+                    exit;
+                }
+                
+                $es_admin = false;
             }
-            
-            if (!password_verify($password, $user['password'])) {
-                echo json_encode(["success" => false, "message" => "Credenciales incorrectas"]);
-                exit;
-            }
-            
-            $es_admin = false;
         }
-    }
     else {
         // Sin especificar - buscar en ambas (modo automático)
         // Buscar en admin_users primero
@@ -118,12 +147,18 @@ try {
             $tabla_origen = 'admin_users';
             $es_admin = true;
             
-            $sha2_hash = strtoupper(hash('sha256', $password));
-            if ($user['password'] !== $sha2_hash) {
-                echo json_encode(["success" => false, "message" => "Credenciales incorrectas"]);
-                exit;
+                if (!password_verify($password, $user['password'])) {
+                if (strtoupper(hash('sha256', $password)) !== $user['password']) {
+                    $attempts['count']++;
+                    echo json_encode(["success" => false, "message" => "Credenciales incorrectas"]);
+                    exit;
+                }
+                $new_hash = password_hash($password, PASSWORD_BCRYPT);
+                $rehash = $pdo->prepare("UPDATE admin_users SET contrasena = ? WHERE id = ?");
+                $rehash->execute([$new_hash, $user['id']]);
+                $user['password'] = $new_hash;
             }
-        } else {
+    } else {
             // Buscar en users
             $query_user = "SELECT id, nombre, correo, password, rol, is_active, estado
                            FROM users 
@@ -153,11 +188,13 @@ try {
     }
     
     if (!$user) {
+        $attempts['count']++;
         echo json_encode(["success" => false, "message" => "Credenciales incorrectas"]);
         exit;
     }
     
     // ========== LIMPIAR Y REGENERAR SESIÓN ==========
+    $attempts = ['count' => 0, 'first_attempt' => $ahora];
     $_SESSION = array();
     session_regenerate_id(true);
     
@@ -196,10 +233,10 @@ try {
         $stmt_update->execute();
     }
     
-    // Redirección
+    // Redirección usando BASE_URL
     $redirect_url = ($tabla_origen === 'admin_users')
-        ? '/proyecto/panel admin/panel_admin.php'
-        : '/proyecto/interfaz usuario/pagina_modernizada.html';
+        ? BASE_URL . '/panel_admin/panel_admin.php'
+        : BASE_URL . '/interfaz_usuario/pagina_modernizada.html';
     
     echo json_encode([
         "success" => true,

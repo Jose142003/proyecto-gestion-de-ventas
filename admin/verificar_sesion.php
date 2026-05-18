@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // /proyecto/admin/verificar_sesion.php
 session_start();
 
@@ -13,7 +13,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     echo json_encode([
         'success' => false,
         'message' => 'No hay sesión activa',
-        'redirect' => '/proyecto/interfaz usuario/login.html'
+        'redirect' => BASE_URL . '/interfaz_usuario/login.html'
     ]);
     exit;
 }
@@ -42,14 +42,13 @@ if ($tabla_origen === 'users') {
     echo json_encode([
         'success' => false,
         'message' => 'Área restringida a administradores',
-        'redirect' => '/proyecto/interfaz usuario/pagina_modernizada.html'
+        'redirect' => BASE_URL . '/interfaz_usuario/pagina_modernizada.html'
     ]);
     exit;
 }
 
 // CASO 3: Sesión sin tabla_origen pero con user_id (legacy)
 if ($tabla_origen === null && isset($_SESSION['user_id'])) {
-    // Intentar determinar si es admin por otro medio
     if (isset($_SESSION['es_admin']) && $_SESSION['es_admin'] === true) {
         error_log("Sesión legacy detectada como admin");
         echo json_encode([
@@ -67,7 +66,7 @@ if ($tabla_origen === null && isset($_SESSION['user_id'])) {
         echo json_encode([
             'success' => false,
             'message' => 'Área restringida a administradores',
-            'redirect' => '/proyecto/interfaz usuario/pagina_modernizada.html'
+            'redirect' => BASE_URL . '/interfaz_usuario/pagina_modernizada.html'
         ]);
         exit;
     }
@@ -78,6 +77,6 @@ error_log("Acceso denegado al panel admin");
 echo json_encode([
     'success' => false,
     'message' => 'No tienes permisos de administrador',
-    'redirect' => '/proyecto/interfaz usuario/login.html'
+    'redirect' => BASE_URL . '/interfaz_usuario/login.html'
 ]);
 ?>

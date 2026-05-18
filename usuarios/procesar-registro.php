@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // procesar-registro.php - VERSIÓN CORREGIDA
 session_start();
 require_once '../conexion/conexion.php';
@@ -8,9 +8,6 @@ header('Content-Type: application/json');
 // ========== CONFIGURACIÓN ==========
 define('REGISTRO_ADMIN_PERMITIDO', true);
 define('REQUERIR_TOKEN_ADMIN', false);
-
-$debug_file = 'debug_registro.log';
-file_put_contents($debug_file, date('Y-m-d H:i:s') . ' - INICIO PROCESAMIENTO' . PHP_EOL, FILE_APPEND);
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $database = new Database();
@@ -25,8 +22,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $direccion = trim($_POST['direccion'] ?? '');
     $tipo_cuenta = trim($_POST['tipo_cuenta'] ?? 'cliente');
     $token_admin = trim($_POST['token_admin'] ?? '');
-    
-    file_put_contents($debug_file, "Tipo cuenta recibido: '$tipo_cuenta'" . PHP_EOL, FILE_APPEND);
     
     // VALIDACIÓN: Verificar que tipo_cuenta sea válido
     if ($tipo_cuenta !== 'cliente' && $tipo_cuenta !== 'admin') {
@@ -84,7 +79,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     try {
         // ========== REGISTRO DE ADMINISTRADOR ==========
         if ($tipo_cuenta === 'admin') {
-            file_put_contents($debug_file, "PROCESANDO REGISTRO ADMIN" . PHP_EOL, FILE_APPEND);
             
             if (!REGISTRO_ADMIN_PERMITIDO) {
                 echo json_encode([
@@ -123,8 +117,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
             
             // ========== REGISTRAR EN admin_users ==========
-            // Usar SHA256 (como en procesar-login.php)
-            $hashed_password = strtoupper(hash('sha256', $password));
+            $hashed_password = password_hash($password, PASSWORD_BCRYPT);
             $rol_admin = 'admin';
             $usuario_admin = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', $nombre));
             
@@ -153,7 +146,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
             if ($stmt_admin->execute()) {
                 $admin_id = $db->lastInsertId();
-                file_put_contents($debug_file, "Admin insertado correctamente con ID: $admin_id" . PHP_EOL, FILE_APPEND);
                 
                 // Establecer sesión para ADMIN
                 $_SESSION = array();
@@ -169,7 +161,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 echo json_encode([
                     "success" => true, 
                     "message" => "Administrador registrado exitosamente",
-                    "redirect_url" => "/proyecto/panel admin/panel_admin.php"
+                    "redirect_url" => "/proyecto/panel_admin/panel_admin.php"
                 ]);
             } else {
                 echo json_encode(["success" => false, "message" => "Error al registrar el administrador"]);
@@ -179,7 +171,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
         // ========== REGISTRO DE CLIENTE (USUARIO NORMAL) ==========
         if ($tipo_cuenta === 'cliente') {
-            file_put_contents($debug_file, "PROCESANDO REGISTRO CLIENTE" . PHP_EOL, FILE_APPEND);
             
             // Verificar si ya existe en admin_users
             $check_admin = "SELECT id FROM admin_users WHERE correo = :correo";
@@ -230,7 +221,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
             if ($stmt->execute()) {
                 $user_id = $db->lastInsertId();
-                file_put_contents($debug_file, "Cliente insertado correctamente con ID: $user_id" . PHP_EOL, FILE_APPEND);
                 
                 // Insertar también en clientes
                 try {
@@ -245,7 +235,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $stmt_cliente->bindParam(":estado", $estado);
                     $stmt_cliente->execute();
                 } catch (Exception $e) {
-                    file_put_contents($debug_file, "Error en clientes: " . $e->getMessage() . PHP_EOL, FILE_APPEND);
                 }
                 
                 // ========== ESTABLECER SESIÓN PARA CLIENTE ==========
@@ -262,7 +251,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 echo json_encode([
                     "success" => true, 
                     "message" => "Usuario registrado exitosamente",
-                    "redirect_url" => "/proyecto/interfaz usuario/pagina_modernizada.html"
+                    "redirect_url" => "/proyecto/interfaz_usuario/pagina_modernizada.html"
                 ]);
             } else {
                 echo json_encode(["success" => false, "message" => "Error al registrar el usuario"]);
@@ -273,7 +262,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         echo json_encode(["success" => false, "message" => "Tipo de cuenta no válido"]);
         
     } catch (PDOException $e) {
-        file_put_contents($debug_file, "EXCEPCIÓN: " . $e->getMessage() . PHP_EOL, FILE_APPEND);
         echo json_encode(["success" => false, "message" => "Error de base de datos"]);
     }
 } else {

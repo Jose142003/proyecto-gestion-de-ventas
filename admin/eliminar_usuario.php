@@ -12,7 +12,7 @@ header('Content-Type: application/json');
 $DEBUG_MODE = true; // Cambiar a false en producción
 
 if ($DEBUG_MODE) {
-    error_reporting(E_ALL);
+    error_reporting(0); ini_set('display_errors', 0);
     ini_set('display_errors', 1);
     
     // Registrar solicitud para depuración
@@ -438,7 +438,7 @@ try {
     http_response_code(500);
     echo json_encode([
         'success' => false, 
-        'message' => 'Error del servidor: ' . ($DEBUG_MODE ? $e->getMessage() : 'Por favor, contacta al administrador'),
+        'message' => 'Error interno del servidor',
         'debug' => $DEBUG_MODE ? [
             'error' => $e->getMessage(),
             'trace' => $e->getTraceAsString()

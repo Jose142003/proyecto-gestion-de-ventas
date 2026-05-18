@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // imprimir_factura.php
 session_start();
 
@@ -9,12 +9,12 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // CONEXIÓN A LA BASE DE DATOS
+require_once __DIR__ . '/../conexion/conexion.php';
 try {
-    $pdo = new PDO('mysql:host=localhost;dbname=carrito_db;charset=utf8mb4', 'root', '');
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+    $pdo = conectarDB();
 } catch(PDOException $e) {
-    die("Error de conexión a la base de datos: " . $e->getMessage());
+    error_log("Error de conexión BD: " . $e->getMessage());
+    die("Error de conexión a la base de datos");
 }
 
 // Verificar si se recibió un ID de factura
@@ -61,21 +61,14 @@ try {
     $stmt_detalles->execute([$factura_id]);
     $detalles = $stmt_detalles->fetchAll(PDO::FETCH_ASSOC);
 
-    // Obtener pagos de la factura
-    $query_pagos = "SELECT * FROM pagos WHERE factura_id = ? ORDER BY fecha_pago DESC";
-    $stmt_pagos = $pdo->prepare($query_pagos);
-    $stmt_pagos->execute([$factura_id]);
-    $pagos = $stmt_pagos->fetchAll(PDO::FETCH_ASSOC);
-
-    // Calcular saldo pendiente si hay
-    $total_pagado = 0;
-    foreach ($pagos as $pago) {
-        $total_pagado += $pago['monto'];
-    }
-    $saldo_pendiente = $factura['total'] - $total_pagado;
+    // Estado de pago basado en la factura
+    $pagada = $factura['estado'] === 'pagada';
+    $total_pagado = $pagada ? $factura['total'] : 0;
+    $saldo_pendiente = $pagada ? 0 : $factura['total'];
 
 } catch(PDOException $e) {
-    die("Error al consultar la base de datos: " . $e->getMessage());
+    error_log("Error al consultar BD: " . $e->getMessage());
+    die("Error al consultar la base de datos");
 }
 
 // Configurar datos de la empresa (puedes mover esto a una tabla de configuración)
@@ -657,43 +650,10 @@ $empresa = [
             </div>
         </div>
         
-        <!-- Sección de pagos (si existe) -->
-        <?php if (!empty($pagos)): ?>
+        <!-- Sección de estado de pago -->
         <div class="pagos-section">
-            <h3>HISTORIAL DE PAGOS</h3>
-            <table class="pagos-table">
-                <thead>
-                    <tr>
-                        <th>Fecha</th>
-                        <th>Método de Pago</th>
-                        <th>Referencia</th>
-                        <th>Monto Pagado</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($pagos as $pago): ?>
-                    <tr>
-                        <td><?php echo date('d/m/Y H:i', strtotime($pago['fecha_pago'] ?? '')); ?></td>
-                        <td><?php echo ucfirst($pago['metodo_pago'] ?? ''); ?></td>
-                        <td><?php echo htmlspecialchars($pago['referencia'] ?? ''); ?></td>
-                        <td class="text-right"><?php echo number_format($pago['monto'] ?? 0, 2, ',', '.'); ?> Bs</td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-            
-            <?php if ($saldo_pendiente > 0): ?>
-            <div class="saldo-section">
-                <div>
-                    <strong>TOTAL PAGADO:</strong>
-                    <span class="text-right"><?php echo number_format($total_pagado, 2, ',', '.'); ?> Bs</span>
-                </div>
-                <div class="saldo-pendiente">
-                    <strong>SALDO PENDIENTE:</strong>
-                    <span><?php echo number_format($saldo_pendiente, 2, ',', '.'); ?> Bs</span>
-                </div>
-            </div>
-            <?php else: ?>
+            <h3>ESTADO DE PAGO</h3>
+            <?php if ($pagada): ?>
             <div class="saldo-section" style="background: #d4edda; border-color: #c3e6cb;">
                 <div class="text-center" style="width: 100%;">
                     <strong style="color: #155724; font-size: 16px;">✅ FACTURA PAGADA COMPLETAMENTE</strong>
@@ -701,7 +661,6 @@ $empresa = [
             </div>
             <?php endif; ?>
         </div>
-        <?php endif; ?>
         
         <!-- Notas y términos -->
         <div class="notas-terminos">
@@ -750,7 +709,7 @@ $empresa = [
             <span>←</span> Volver Atrás
         </button>
         
-        <a href="/proyecto/panel admin/panel_admin.html" class="btn">
+        <a href="/proyecto/panel_admin/panel_admin.html" class="btn">
             <span>🏠</span> Ir al Dashboard
         </a>
         

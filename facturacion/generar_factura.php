@@ -1,29 +1,21 @@
 <?php
 // generar_factura.php
-session_start();
 header('Content-Type: application/json');
 
-// Configuración de la base de datos
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root';
-$password = '';
+require_once __DIR__ . '/../conexion/conexion.php';
+requerirSesion();
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = conectarDB();
 } catch (PDOException $e) {
-    echo json_encode(['success' => false, 'message' => 'Error de conexión: ' . $e->getMessage()]);
+    echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
     exit();
 }
 
 // Obtener datos del POST
 $input = json_decode(file_get_contents('php://input'), true);
-$user_id = $input['user_id'] ?? null;
+$user_id = $_SESSION['user_id'];
 $payment_method = $input['payment_method'] ?? 'transferencia';
-
-// Log para depuración
-error_log("Generar factura - User ID: " . ($user_id ?? 'null') . ", Método: " . $payment_method);
 
 if (!$user_id) {
     echo json_encode(['success' => false, 'message' => 'Usuario no especificado']);
@@ -206,7 +198,7 @@ try {
     error_log("Error en generar_factura: " . $e->getMessage());
     echo json_encode([
         'success' => false,
-        'message' => 'Error al procesar el pago: ' . $e->getMessage()
+        'message' => 'Error interno del servidor'
     ]);
 }
 ?>

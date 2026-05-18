@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // /proyecto/usuarios/cerrar_sesion.php
 session_start();
 
@@ -17,6 +17,6 @@ if (ini_get("session.use_cookies")) {
 session_destroy();
 
 // Redirigir según el origen (opcional)
-header('Location: /proyecto/interfaz usuario/login.html');
+header('Location: /proyecto/interfaz_usuario/login.html');
 exit;
 ?>

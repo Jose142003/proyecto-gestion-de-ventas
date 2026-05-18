@@ -1,11 +1,11 @@
-// sw.js - Service Worker para PIC Industrial con Push Notifications
+﻿// sw.js - Service Worker para PIC Industrial con Push Notifications
 const CACHE_NAME = 'pic-v2';
 const OFFLINE_URL = '/proyecto/offline.html';
 
 // Archivos a cachear
 const urlsToCache = [
   '/proyecto/offline.html',
-  '/proyecto/interfaz%20usuario/pagina_modernizada.html',
+  '/proyecto/interfaz_usuario/pagina_modernizada.html',
   'https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css'
 ];
@@ -101,7 +101,7 @@ self.addEventListener('push', function(event) {
       body: event.data ? event.data.text() : 'Novedades en nuestra tienda',
       icon: '/proyecto/img/pic.png',
       badge: '/proyecto/img/pic.png',
-      url: '/proyecto/interfaz%20usuario/pagina_modernizada.html'
+      url: '/proyecto/interfaz_usuario/pagina_modernizada.html'
     };
   }
   
@@ -111,7 +111,7 @@ self.addEventListener('push', function(event) {
     badge: data.badge || '/proyecto/img/pic.png',
     vibrate: [200, 100, 200],
     data: {
-      url: data.url || '/proyecto/interfaz%20usuario/pagina_modernizada.html',
+      url: data.url || '/proyecto/interfaz_usuario/pagina_modernizada.html',
       dateOfArrival: Date.now()
     },
     actions: [
@@ -141,7 +141,7 @@ self.addEventListener('notificationclick', function(event) {
     return;
   }
   
-  const urlToOpen = event.notification.data?.url || '/proyecto/interfaz%20usuario/pagina_modernizada.html';
+  const urlToOpen = event.notification.data?.url || '/proyecto/interfaz_usuario/pagina_modernizada.html';
   
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true })

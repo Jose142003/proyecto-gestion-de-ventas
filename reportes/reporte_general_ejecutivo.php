@@ -1,18 +1,13 @@
 <?php
 session_start();
 header('Content-Type: application/json');
-error_reporting(E_ALL);
+error_reporting(0); ini_set('display_errors', 0);
 ini_set('display_errors', 0);
 
-// Conexión directa a la base de datos
+require_once __DIR__ . '/../conexion/conexion.php';
+
 try {
-    $host = 'localhost';
-    $dbname = 'carrito_db';
-    $username = 'root';
-    $password = '';
-    
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = conectarDB();
     
     // Verificar sesión
     if (!isset($_SESSION['user_id'])) {
@@ -209,12 +204,12 @@ try {
 } catch (PDOException $e) {
     echo json_encode([
         'success' => false, 
-        'message' => 'Error de base de datos: ' . $e->getMessage()
+        'message' => 'Error interno del servidor'
     ]);
 } catch (Exception $e) {
     echo json_encode([
         'success' => false, 
-        'message' => 'Error: ' . $e->getMessage()
+        'message' => 'Error interno del servidor'
     ]);
 }
 ?>

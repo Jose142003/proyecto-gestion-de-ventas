@@ -1,17 +1,11 @@
 <?php
 header('Content-Type: application/json');
-error_reporting(0);
-ini_set('display_errors', 0);
 
-// Configuración de conexión
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root';
-$password = '';
+require_once __DIR__ . '/../conexion/conexion.php';
+requerirAdmin();
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = conectarDB();
 } catch(PDOException $e) {
     echo json_encode([]);
     exit;

@@ -8,14 +8,10 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root';
-$password = '';
+require_once __DIR__ . '/../conexion/conexion.php';
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = conectarDB();
     
     // Obtener categorías únicas de la tabla products
     $stmt = $pdo->query("SELECT DISTINCT category as nombre FROM products WHERE category IS NOT NULL AND category != '' ORDER BY category ASC");
@@ -32,9 +28,10 @@ try {
     ]);
     
 } catch (PDOException $e) {
+    error_log("Error en obtener_categorias: " . $e->getMessage());
     echo json_encode([
         'success' => false,
-        'message' => 'Error de base de datos: ' . $e->getMessage()
+        'message' => 'Error interno del servidor'
     ]);
 }
 ?>

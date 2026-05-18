@@ -17,8 +17,7 @@ if (!$data || !isset($data['monto_inicial'])) {
 }
 
 try {
-    $database = new Database();
-    $db = $database->getConnection();
+    $db = conectarDB();
 
     // Verificar si ya hay una caja abierta para hoy
     $stmt = $db->prepare("SELECT id FROM caja_arqueos WHERE estado = 'abierta' AND DATE(fecha_apertura) = CURDATE()");

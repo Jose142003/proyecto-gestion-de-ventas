@@ -12,14 +12,10 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root';
-$password = '';
+require_once __DIR__ . '/../conexion/conexion.php';
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = conectarDB();
     
     $user_id = $_SESSION['user_id'];
 
@@ -176,7 +172,7 @@ try {
     // ============================================================
     $productos_stock_bajo = $pdo->query("SELECT COUNT(*) FROM products WHERE stock < 10 AND stock > 0 AND active = 1")->fetchColumn() ?: 0;
     $productos_agotados = $pdo->query("SELECT COUNT(*) FROM products WHERE stock = 0 AND active = 1")->fetchColumn() ?: 0;
-    $valor_inventario = $pdo->query("SELECT SUM(precio * stock) FROM products WHERE stock > 0 AND active = 1")->fetchColumn() ?: 0;
+    $valor_inventario = $pdo->query("SELECT SUM(price * stock) FROM products WHERE stock > 0 AND active = 1")->fetchColumn() ?: 0;
 
     // ============================================================
     // 5. COMPRAS DEL MES
@@ -433,13 +429,13 @@ try {
     error_log("Error en obtener_metricas_ceo: " . $e->getMessage());
     echo json_encode([
         'success' => false, 
-        'message' => 'Error de base de datos: ' . $e->getMessage()
+        'message' => 'Error interno del servidor'
     ]);
 } catch (Exception $e) {
     error_log("Error general en obtener_metricas_ceo: " . $e->getMessage());
     echo json_encode([
         'success' => false,
-        'message' => 'Error del servidor: ' . $e->getMessage()
+        'message' => 'Error interno del servidor'
     ]);
 }
 ?>

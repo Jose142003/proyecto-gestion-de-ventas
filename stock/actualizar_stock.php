@@ -1,7 +1,7 @@
 <?php
 // actualizar_stock.php
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Origin: http://localhost');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
@@ -10,18 +10,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-// Configuración de la base de datos
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "carrito_db";
+require_once __DIR__ . '/../conexion/conexion.php';
 
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-if ($conn->connect_error) {
+try {
+    $pdo = conectarDB();
+} catch (PDOException $e) {
     echo json_encode([
         'success' => false,
-        'message' => 'Error de conexión: ' . $conn->connect_error
+        'message' => 'Error interno del servidor'
     ]);
     exit();
 }
@@ -41,54 +37,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $cantidad = intval($input['cantidad']);
     $usuario_id = isset($input['usuario_id']) ? intval($input['usuario_id']) : null;
     
-    $conn->begin_transaction();
+    $pdo->beginTransaction();
     
     try {
         // Verificar stock disponible
-        $sql = "SELECT stock, nombre FROM productos WHERE id = ? FOR UPDATE";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("i", $producto_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
+        $sql = "SELECT stock, name as nombre FROM products WHERE id = ? FOR UPDATE";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$producto_id]);
+        $producto = $stmt->fetch(PDO::FETCH_ASSOC);
         
-        if ($result->num_rows === 0) {
-            throw new Exception("Producto no encontrado");
+        if (!$producto) {
+            throw new PDOException("Producto no encontrado");
         }
         
-        $producto = $result->fetch_assoc();
-        
         if ($producto['stock'] < $cantidad) {
-            throw new Exception("Stock insuficiente. Disponible: " . $producto['stock'] . " unidades");
+            throw new PDOException("Stock insuficiente");
         }
         
         // Actualizar stock
-        $sql_update = "UPDATE productos SET stock = stock - ? WHERE id = ?";
-        $stmt_update = $conn->prepare($sql_update);
-        $stmt_update->bind_param("ii", $cantidad, $producto_id);
-        
-        if (!$stmt_update->execute()) {
-            throw new Exception("Error al actualizar stock");
-        }
+        $sql_update = "UPDATE products SET stock = stock - ? WHERE id = ?";
+        $stmt_update = $pdo->prepare($sql_update);
+        $stmt_update->execute([$cantidad, $producto_id]);
         
         // Registrar movimiento en historial si hay usuario
         if ($usuario_id) {
-            $sql_historial = "INSERT INTO historial_stock (producto_id, usuario_id, cantidad, tipo, fecha) 
-                              VALUES (?, ?, ?, 'venta', NOW())";
-            $stmt_historial = $conn->prepare($sql_historial);
-            $stmt_historial->bind_param("iii", $producto_id, $usuario_id, $cantidad);
-            $stmt_historial->execute();
-            $stmt_historial->close();
+            $stock_nuevo = $producto['stock'] - $cantidad;
+            $sql_historial = "INSERT INTO historial_stock (producto_id, usuario_id, cantidad, stock_anterior, stock_nuevo, tipo, fecha) 
+                              VALUES (?, ?, ?, ?, ?, 'venta', NOW())";
+            $stmt_historial = $pdo->prepare($sql_historial);
+            $stmt_historial->execute([$producto_id, $usuario_id, $cantidad, $producto['stock'], $stock_nuevo]);
         }
         
         // Verificar si queda stock bajo después de la venta
-        $sql_check = "SELECT stock FROM productos WHERE id = ?";
-        $stmt_check = $conn->prepare($sql_check);
-        $stmt_check->bind_param("i", $producto_id);
-        $stmt_check->execute();
-        $result_check = $stmt_check->get_result();
-        $nuevo_stock = $result_check->fetch_assoc()['stock'];
+        $sql_check = "SELECT stock FROM products WHERE id = ?";
+        $stmt_check = $pdo->prepare($sql_check);
+        $stmt_check->execute([$producto_id]);
+        $nuevo_stock = $stmt_check->fetchColumn();
         
-        $conn->commit();
+        $pdo->commit();
         
         echo json_encode([
             'success' => true,
@@ -105,16 +91,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ]);
         
     } catch (Exception $e) {
-        $conn->rollback();
+        $pdo->rollBack();
         
         echo json_encode([
             'success' => false,
-            'message' => $e->getMessage()
+            'message' => 'Error interno del servidor'
         ]);
     }
-    
-    $stmt->close();
-    if (isset($stmt_update)) $stmt_update->close();
     
 } else {
     echo json_encode([
@@ -122,6 +105,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'message' => 'Método no permitido'
     ]);
 }
-
-$conn->close();
 ?>

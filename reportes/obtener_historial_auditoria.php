@@ -13,14 +13,11 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 }
 
 $id = intval($_GET['id']);
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root';
-$password = '';
+
+require_once __DIR__ . '/../conexion/conexion.php';
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = conectarDB();
     
     $sql = "SELECT 
                 id,
@@ -63,6 +60,6 @@ try {
     echo json_encode(['success' => true, 'registro' => $registro, 'historial' => $historial]);
     
 } catch (Exception $e) {
-    echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+    echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
 }
 ?>

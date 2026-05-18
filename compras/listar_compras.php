@@ -8,8 +8,8 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 try {
-    $pdo = new PDO('mysql:host=localhost;dbname=carrito_db;charset=utf8', 'root', '');
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    require_once __DIR__ . '/../conexion/conexion.php';
+    $pdo = conectarDB();
     
     // Parámetros de paginación y filtros
     $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
@@ -108,7 +108,7 @@ try {
     error_log("Error listar compras: " . $e->getMessage());
     echo json_encode([
         'success' => false,
-        'message' => 'Error al cargar las compras: ' . $e->getMessage()
+        'message' => 'Error al cargar las compras'
     ]);
 }
 ?>

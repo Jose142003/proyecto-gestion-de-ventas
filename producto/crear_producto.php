@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // /proyecto/producto/crear_producto.php
 // IMPORTADOR MANUAL - VERSIÓN RESPONSIVE
 
@@ -18,26 +18,17 @@ if (!$isAdmin) {
     exit;
 }
 
-// Configuración de base de datos
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "carrito_db";
+require_once __DIR__ . '/../conexion/conexion.php';
 
-$conn = new mysqli($servername, $username, $password, $dbname);
-$conn->set_charset("utf8mb4");
-
-if ($conn->connect_error) {
-    die("Error de conexión: " . $conn->connect_error);
-}
+$pdo = conectarDB();
 
 // Palabras prohibidas
 $palabras_prohibidas = ['prueba', 'test', 'demo', 'xxxx', 'basura', 'eliminar', 'jose chacon', 'jose', 'marivic', 'chacon'];
 
 // Función para generar SKU con formato PROD-XXXX
-function generarSKU($conn, $nombre) {
-    $result = $conn->query("SELECT MAX(id) as max_id FROM products");
-    $row = $result->fetch_assoc();
+function generarSKU($pdo, $nombre) {
+    $stmt = $pdo->query("SELECT MAX(id) as max_id FROM products");
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
     $next_id = ($row['max_id'] ?? 80) + 1;
     return 'PROD-' . str_pad($next_id, 4, '0', STR_PAD_LEFT);
 }
@@ -71,19 +62,16 @@ function detectarCategoria($nombre) {
 }
 
 // Función para verificar si producto existe
-function productoExiste($conn, $nombre) {
-    $stmt = $conn->prepare("SELECT id FROM products WHERE name = ?");
-    $stmt->bind_param("s", $nombre);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $existe = $result->num_rows > 0;
-    $stmt->close();
+function productoExiste($pdo, $nombre) {
+    $stmt = $pdo->prepare("SELECT id FROM products WHERE name = ?");
+    $stmt->execute([$nombre]);
+    $existe = (bool)$stmt->fetch(PDO::FETCH_ASSOC);
     return $existe;
 }
 
 // Función para crear producto
-function crearProducto($conn, $datos, $usuario_id, $usuario_nombre) {
-    $sku = generarSKU($conn, $datos['nombre']);
+function crearProducto($pdo, $datos, $usuario_id, $usuario_nombre) {
+    $sku = generarSKU($pdo, $datos['nombre']);
     $categoria = $datos['categoria'] ?: detectarCategoria($datos['nombre']);
     $descripcion = $datos['descripcion'] ?: "Producto importado manualmente. " . $datos['nombre'];
     
@@ -91,18 +79,11 @@ function crearProducto($conn, $datos, $usuario_id, $usuario_nombre) {
     $rating = 4.0;
     $stock = isset($datos['stock']) ? (int)$datos['stock'] : 5;
     
-    $stmt = $conn->prepare("INSERT INTO products (sku, name, price, image_url, description, category, rating, stock, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("ssdssssii", $sku, $datos['nombre'], $datos['precio'], $datos['imagen'], $descripcion, $categoria, $rating, $stock, $active);
+    $stmt = $pdo->prepare("INSERT INTO products (sku, name, price, image_url, description, category, rating, stock, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->execute([$sku, $datos['nombre'], $datos['precio'], $datos['imagen'], $descripcion, $categoria, $rating, $stock, $active]);
     
-    if ($stmt->execute()) {
-        $id = $conn->insert_id;
-        $stmt->close();
-        return ['success' => true, 'id' => $id, 'sku' => $sku, 'nombre' => $datos['nombre']];
-    } else {
-        $error = $stmt->error;
-        $stmt->close();
-        return ['success' => false, 'error' => $error, 'nombre' => $datos['nombre']];
-    }
+    $id = (int)$pdo->lastInsertId();
+    return ['success' => true, 'id' => $id, 'sku' => $sku, 'nombre' => $datos['nombre']];
 }
 
 $usuario_id = $_SESSION['user_id'] ?? null;
@@ -126,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         if (empty($nombre)) $errores_validacion[] = "El nombre es obligatorio";
         if ($precio <= 0) $errores_validacion[] = "El precio debe ser mayor a 0";
-        if (productoExiste($conn, $nombre)) $errores_validacion[] = "El producto ya existe en la base de datos";
+        if (productoExiste($pdo, $nombre)) $errores_validacion[] = "El producto ya existe en la base de datos";
         
         foreach ($palabras_prohibidas as $prohibida) {
             if (stripos($nombre, $prohibida) !== false) {
@@ -144,7 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'stock' => $stock,
                 'descripcion' => $descripcion
             ];
-            $resultado = crearProducto($conn, $datos, $usuario_id, $usuario_nombre);
+                    $resultado = crearProducto($pdo, $datos, $usuario_id, $usuario_nombre);
             if ($resultado['success']) {
                 $importados[] = $resultado;
                 $mensaje = "✅ Producto importado correctamente. SKU: " . $resultado['sku'];
@@ -183,7 +164,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
                 
-                if (!empty($nombre) && $precio > 0 && !productoExiste($conn, $nombre) && $es_valido) {
+                if (!empty($nombre) && $precio > 0 && !productoExiste($pdo, $nombre) && $es_valido) {
                     $datos = [
                         'nombre' => $nombre,
                         'precio' => $precio,
@@ -192,7 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'stock' => $stock,
                         'descripcion' => ''
                     ];
-                    $resultado = crearProducto($conn, $datos, $usuario_id, $usuario_nombre);
+            $resultado = crearProducto($pdo, $datos, $usuario_id, $usuario_nombre);
                     if ($resultado['success']) {
                         $importados[] = $resultado;
                     } else {
@@ -219,14 +200,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Obtener productos existentes
 $productos_existentes = [];
-$result = $conn->query("SELECT id, sku, name, price, active FROM products ORDER BY id DESC LIMIT 20");
-if ($result && $result->num_rows > 0) {
-    while ($row = $result->fetch_assoc()) {
-        $productos_existentes[] = $row;
-    }
-}
-
-$conn->close();
+$stmt = $pdo->query("SELECT id, sku, name, price, active FROM products ORDER BY id DESC LIMIT 20");
+$productos_existentes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -691,7 +666,7 @@ $conn->close();
                 <small><i class="fas fa-info-circle"></i> Los SKUs se generan automáticamente con formato <strong>PROD-XXXX</strong></small>
             </div>
             <div>
-                <a href="/proyecto/panel admin/panel_admin.php" class="btn-volver">
+                <a href="/proyecto/panel_admin/panel_admin.php" class="btn-volver">
                     <i class="fas fa-arrow-left"></i> Volver
                 </a>
             </div>

@@ -1,17 +1,12 @@
 <?php
 session_start();
 
-// 1. Configuración de conexión (Igual a tu factura.php)
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root';
-$password = '';
+require_once __DIR__ . '/../conexion/conexion.php';
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = conectarDB();
 } catch (PDOException $e) {
-    die("Error de conexión: " . $e->getMessage());
+    die("Error interno del servidor");
     }
     
 // 2. Verificar que el usuario Jose (ID 6) o cualquier otro esté logueado
@@ -54,6 +49,6 @@ try {
     
 } catch (Exception $e) {
         $pdo->rollBack();
-    echo "Error al crear el pedido: " . $e->getMessage();
+    echo "Error interno del servidor";
 }
 ?>

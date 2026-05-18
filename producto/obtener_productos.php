@@ -1,26 +1,19 @@
 <?php
 // obtener_productos.php - VERSIÓN CORREGIDA
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Origin: http://localhost');
 header('Access-Control-Allow-Credentials: true');
 
 // Habilitar errores para depuración
-error_reporting(E_ALL);
+error_reporting(0); ini_set('display_errors', 0);
 ini_set('display_errors', 1);
 ini_set('log_errors', 1);
 ini_set('error_log', __DIR__ . '/error_log.txt');
 
-// Configuración de la base de datos
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root';
-$password = '';
+require_once __DIR__ . '/../conexion/conexion.php';
 
 try {
-    // Conexión PDO
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+    $pdo = conectarDB();
     
     error_log("Conexión exitosa a la base de datos: $dbname");
     
@@ -130,25 +123,23 @@ try {
     echo json_encode($response, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
     
 } catch (PDOException $e) {
-    error_log("Error de PDO: " . $e->getMessage());
-    error_log("Código de error: " . $e->getCode());
+    error_log("Error de PDO en obtener_productos: " . $e->getMessage());
     
     http_response_code(500);
     echo json_encode([
         'success' => false,
         'error' => 'Error de base de datos',
-        'message' => $e->getMessage(),
-        'code' => $e->getCode()
+        'message' => 'Error interno del servidor'
     ], JSON_UNESCAPED_UNICODE);
     
 } catch (Exception $e) {
-    error_log("Error general: " . $e->getMessage());
+    error_log("Error general en obtener_productos: " . $e->getMessage());
     
     http_response_code(500);
     echo json_encode([
         'success' => false,
         'error' => 'Error general',
-        'message' => $e->getMessage()
+        'message' => 'Error interno del servidor'
     ], JSON_UNESCAPED_UNICODE);
 }
 ?>

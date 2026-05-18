@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // /proyecto/usuarios/verificar_rol.php
 // VERIFICADOR UNIFICADO DE ROL - VERSIÓN DEFINITIVA
 
@@ -32,19 +32,8 @@ $user_rol = $_SESSION['user_rol'] ?? null;
 error_log("Datos: user_id=$user_id, tabla_origen=$tabla_origen, user_rol=$user_rol");
 
 // Conexión a BD para verificar estado real
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root';
-$password = '';
-
-try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (PDOException $e) {
-    error_log("Error de conexión: " . $e->getMessage());
-    echo json_encode(['success' => false, 'message' => 'Error de conexión', 'role' => 'error']);
-    exit;
-}
+require_once __DIR__ . '/../conexion/conexion.php';
+$pdo = conectarDB();
 
 // ========== CASO 1: ADMINISTRADOR (tabla admin_users) ==========
 if ($tabla_origen === 'admin_users') {
@@ -67,7 +56,7 @@ if ($tabla_origen === 'admin_users') {
                 'correo' => $admin['correo'],
                 'rol' => 'admin'
             ],
-            'redirect' => '/proyecto/panel admin/panel_admin.php',
+            'redirect' => '/proyecto/panel_admin/panel_admin.php',
             'message' => 'Acceso como administrador'
         ]);
         exit;
@@ -78,7 +67,7 @@ if ($tabla_origen === 'admin_users') {
             'success' => false,
             'role' => 'invalid',
             'message' => 'Usuario administrador inválido',
-            'redirect' => '/proyecto/interfaz usuario/login.html'
+            'redirect' => '/proyecto/interfaz_usuario/login.html'
         ]);
         exit;
     }
@@ -116,7 +105,7 @@ if ($tabla_origen === 'users') {
             'success' => false,
             'role' => 'inactive',
             'message' => 'Usuario inactivo',
-            'redirect' => '/proyecto/interfaz usuario/login.html'
+            'redirect' => '/proyecto/interfaz_usuario/login.html'
         ]);
         exit;
     }
@@ -147,7 +136,7 @@ if ($tabla_origen === null && isset($_SESSION['user_id'])) {
                 'correo' => $admin['correo'],
                 'rol' => 'admin'
             ],
-            'redirect' => '/proyecto/panel admin/panel_admin.php'
+            'redirect' => '/proyecto/panel_admin/panel_admin.php'
         ]);
         exit;
     }
@@ -185,7 +174,7 @@ if ($tabla_origen === null && isset($_SESSION['user_id'])) {
         'success' => false,
         'role' => 'invalid',
         'message' => 'Usuario no encontrado',
-        'redirect' => '/proyecto/interfaz usuario/login.html'
+        'redirect' => '/proyecto/interfaz_usuario/login.html'
     ]);
     exit;
 }
@@ -197,7 +186,7 @@ echo json_encode([
     'success' => false,
     'role' => 'invalid',
     'message' => 'Sesión inválida',
-    'redirect' => '/proyecto/interfaz usuario/login.html'
+    'redirect' => '/proyecto/interfaz_usuario/login.html'
 ]);
 exit;
 ?>

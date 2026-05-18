@@ -1,16 +1,13 @@
 <?php
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Origin: http://localhost');
 header('Access-Control-Allow-Credentials: true');
 
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root';
-$password = '';
+require_once __DIR__ . '/../conexion/conexion.php';
+requerirAdmin();
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = conectarDB();
     
     // CORREGIDO: usar 'products' en lugar de 'productos'
     $sqlUsuarios = "SELECT COUNT(*) as total_usuarios FROM users";
@@ -75,7 +72,7 @@ try {
     echo json_encode([
         'success' => false,
         'error' => 'Error de base de datos',
-        'message' => $e->getMessage(),
+        'message' => 'Error interno del servidor',
         'total_usuarios' => 0,
         'total_productos' => 0,
         'total_pedidos' => 0,

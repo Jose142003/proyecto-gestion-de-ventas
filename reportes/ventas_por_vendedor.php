@@ -4,16 +4,12 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Credentials: true');
 
 // Habilitar errores para depuración
-error_reporting(E_ALL);
+error_reporting(0); ini_set('display_errors', 0);
 ini_set('display_errors', 1);
 
 session_start();
 
-// Configuración de conexión
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root';
-$password = '';
+require_once __DIR__ . '/../conexion/conexion.php';
 
 // Verificar autenticación
 if (!isset($_SESSION['user_id'])) {
@@ -22,10 +18,9 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = conectarDB();
 } catch(PDOException $e) {
-    echo json_encode(['error' => 'Error de conexión: ' . $e->getMessage()]);
+    echo json_encode(['error' => 'Error interno del servidor']);
     exit;
 }
 
@@ -139,9 +134,9 @@ try {
     
 } catch(PDOException $e) {
     error_log("Error en ventas_por_vendedor.php: " . $e->getMessage());
-    echo json_encode(['error' => 'Error en la consulta: ' . $e->getMessage()]);
+    echo json_encode(['error' => 'Error interno del servidor']);
 } catch(Exception $e) {
     error_log("Error general en ventas_por_vendedor.php: " . $e->getMessage());
-    echo json_encode(['error' => 'Error: ' . $e->getMessage()]);
+    echo json_encode(['error' => 'Error interno del servidor']);
 }
 ?>

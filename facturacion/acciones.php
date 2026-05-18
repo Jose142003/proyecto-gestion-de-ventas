@@ -1,34 +1,13 @@
 <?php
 // acciones.php - Manejar acciones de facturación
-session_start();
-
-// Configuración de la base de datos
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root';
-$password = '';
-
 header('Content-Type: application/json');
 
+require_once __DIR__ . '/../conexion/conexion.php';
+requerirAdmin();
+verificarCSRF();
+
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    
-    // Verificar permisos
-    if (!isset($_SESSION['user_id'])) {
-        echo json_encode(['success' => false, 'message' => 'No autenticado']);
-        exit;
-    }
-    
-    // Verificar si es admin
-    $stmt = $pdo->prepare("SELECT rol FROM users WHERE id = ?");
-    $stmt->execute([$_SESSION['user_id']]);
-    $userRole = $stmt->fetchColumn();
-    
-    if ($userRole !== 'admin') {
-        echo json_encode(['success' => false, 'message' => 'No autorizado']);
-        exit;
-    }
+    $pdo = conectarDB();
     
     // Obtener acción
     $action = $_GET['action'] ?? $_POST['action'] ?? '';
@@ -60,7 +39,7 @@ try {
 } catch (Exception $e) {
     echo json_encode([
         'success' => false, 
-        'message' => 'Error: ' . $e->getMessage()
+        'message' => 'Error interno del servidor'
     ]);
 }
 
@@ -86,15 +65,6 @@ function marcarComoPagada($pdo, $facturaId, $usuarioId) {
         // Actualizar estado de la factura
         $stmt = $pdo->prepare("UPDATE facturas SET estado = 'pagada', updated_at = NOW() WHERE id = ?");
         $stmt->execute([$facturaId]);
-        
-        // Registrar el pago
-        $stmt = $pdo->prepare("
-            INSERT INTO pagos (factura_id, monto, metodo_pago, fecha_pago, usuario_id) 
-            SELECT id, total, metodo_pago, NOW(), ? 
-            FROM facturas 
-            WHERE id = ?
-        ");
-        $stmt->execute([$usuarioId, $facturaId]);
         
         // Registrar movimiento en inventario (si aplica)
         $stmt = $pdo->prepare("

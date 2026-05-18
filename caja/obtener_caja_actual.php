@@ -10,8 +10,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 try {
-    $database = new Database();
-    $db = $database->getConnection();
+    $db = conectarDB();
 
     $stmt = $db->prepare("SELECT * FROM caja_arqueos WHERE estado = 'abierta' AND DATE(fecha_apertura) = CURDATE() ORDER BY id DESC LIMIT 1");
     $stmt->execute();

@@ -1,22 +1,17 @@
 <?php
 session_start();
 header('Content-Type: application/json');
-error_reporting(E_ALL);
+error_reporting(0); ini_set('display_errors', 0);
 ini_set('display_errors', 0);
 
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root';
-$password = '';
+require_once __DIR__ . '/../conexion/conexion.php';
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+    $pdo = conectarDB();
 } catch (PDOException $e) {
     echo json_encode([
         'success' => false,
-        'error' => 'Error de conexión: ' . $e->getMessage()
+        'error' => 'Error interno del servidor'
     ]);
     exit;
 }
@@ -137,13 +132,13 @@ try {
     error_log("Error en obtener_configuracion.php: " . $e->getMessage());
     echo json_encode([
         'success' => false,
-        'error' => 'Error en la base de datos: ' . $e->getMessage()
+        'error' => 'Error interno del servidor'
     ]);
 } catch (Exception $e) {
     error_log("Error en obtener_configuracion.php: " . $e->getMessage());
     echo json_encode([
         'success' => false,
-        'error' => 'Error: ' . $e->getMessage()
+        'error' => 'Error interno del servidor'
     ]);
 }
 ?>

@@ -1,19 +1,14 @@
 <?php
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Origin: http://localhost');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
-// Configuración de la base de datos
-$host = 'localhost';
-$dbname = 'carrito_db'; 
-$username = 'root'; // Usuario por defecto de XAMPP
-$password = '';     // Contraseña por defecto de XAMPP
+require_once __DIR__ . '/../conexion/conexion.php';
+requerirAdmin();
 
 try {
-    // 1. Conexión a la base de datos
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = conectarDB();
     
     // 2. Verificar si la tabla 'users' existe (según tu SQL se llama 'users', no 'usuarios')
     $stmt = $pdo->query("SHOW TABLES LIKE 'users'");
@@ -42,11 +37,9 @@ try {
     ]);
     
 } catch(PDOException $e) {
-    // Respuesta en caso de error de conexión o consulta
     echo json_encode([
         'success' => false,
-        'message' => 'Error en el servidor',
-        'error' => $e->getMessage()
+        'message' => 'Error interno del servidor'
     ]);
 }
 ?>

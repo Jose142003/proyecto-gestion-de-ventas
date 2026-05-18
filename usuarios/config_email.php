@@ -1,5 +1,6 @@
 <?php
-// config_email.php - Configuración mejorada para Gmail
+// config_email.php - Configuración SMTP con variables de entorno
+require_once __DIR__ . '/../config/database.php';
 require_once 'PHPMailer.php';
 require_once 'SMTP.php';
 require_once 'Exception.php';
@@ -11,24 +12,18 @@ use PHPMailer\PHPMailer\Exception;
 class EmailSender {
     private $mail;
     
-    // Tus credenciales - ACTUALIZA LA CONTRASEÑA SI ES NECESARIO
-    private $email = 'jose14chacon2003@gmail.com';
-    private $password = 'bzwusevvegbuqozg';  // ← VERIFICA ESTA CONTRASEÑA
-    
     public function __construct() {
         $this->mail = new PHPMailer(true);
         
-        // Configuración SMTP para Gmail
         $this->mail->isSMTP();
-        $this->mail->Host = 'smtp.gmail.com';
-        $this->mail->Port = 587;
+        $this->mail->Host = SMTP_HOST;
+        $this->mail->Port = SMTP_PORT;
         $this->mail->SMTPAuth = true;
-        $this->mail->Username = $this->email;
-        $this->mail->Password = $this->password;
+        $this->mail->Username = SMTP_USER;
+        $this->mail->Password = SMTP_PASS;
         $this->mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $this->mail->CharSet = 'UTF-8';
         
-        // IMPORTANTE: Deshabilitar verificación SSL (para evitar problemas)
         $this->mail->SMTPOptions = [
             'ssl' => [
                 'verify_peer' => false,
@@ -37,32 +32,19 @@ class EmailSender {
             ]
         ];
         
-        // Deshabilitar depuración en producción
-        $this->mail->SMTPDebug = 0; // Cambia a 2 para depuración
-        
-        // Timeout más largo
+        $this->mail->SMTPDebug = 0;
         $this->mail->Timeout = 30;
     }
     
-    /**
-     * Envía un correo
-     */
     public function send($to, $subject, $body, $fromName = '') {
         try {
-            // Limpiar destinatarios anteriores
             $this->mail->clearAddresses();
             $this->mail->clearAttachments();
             
-            // Remitente
-            $this->mail->setFrom($this->email, $fromName ?: 'PIC Sistema de Facturación');
-            
-            // Destinatario
+            $this->mail->setFrom(SMTP_FROM_EMAIL, $fromName ?: 'PIC Sistema de Facturación');
             $this->mail->addAddress($to);
+            $this->mail->addReplyTo(SMTP_FROM_EMAIL, 'Soporte PIC');
             
-            // Reply-To
-            $this->mail->addReplyTo('picca.ventas@gmail.com', 'Soporte PIC');
-            
-            // Contenido
             $this->mail->isHTML(true);
             $this->mail->Subject = $subject;
             $this->mail->Body = $body;
@@ -78,9 +60,6 @@ class EmailSender {
         }
     }
     
-    /**
-     * Prueba la conexión SMTP
-     */
     public function testConnection() {
         try {
             $this->mail->smtpConnect();
@@ -92,9 +71,6 @@ class EmailSender {
     }
 }
 
-/**
- * Función helper para enviar correos
- */
 function enviarCorreo($to, $subject, $body, $fromName = '') {
     $sender = new EmailSender();
     return $sender->send($to, $subject, $body, $fromName);

@@ -1,14 +1,13 @@
-<?php
+﻿<?php
 session_start();
 if (!isset($_SESSION['user_id'])) {
-    header('Location: ../interfaz usuario/login.html');
+    header('Location: ../interfaz_usuario/login.html');
     exit;
 }
 
 require_once dirname(__DIR__) . '/conexion/conexion.php';
 
-$database = new Database();
-$db = $database->getConnection();
+$db = conectarDB();
 
 $compraId = isset($_GET['id']) ? intval($_GET['id']) : 0;
 

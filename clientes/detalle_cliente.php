@@ -1,17 +1,13 @@
-<?php
+﻿<?php
 session_start();
 header('Content-Type: text/html; charset=utf-8');
 
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root';
-$password = '';
+require_once __DIR__ . '/../conexion/conexion.php';
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = conectarDB();
 } catch(PDOException $e) {
-    die("Error de conexión: " . $e->getMessage());
+    die("Error interno del servidor");
 }
 
 $cliente_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
@@ -331,7 +327,7 @@ $pedidos = $stmtPedidos->fetchAll(PDO::FETCH_ASSOC);
 
 <script>
 function verPedido(pedidoId) {
-    window.open(`/proyecto/proceso compra/ver_pedido.php?id=${pedidoId}`, '_blank');
+    window.open(`/proyecto/proceso_compra/ver_pedido.php?id=${pedidoId}`, '_blank');
 }
 </script>
 </body>

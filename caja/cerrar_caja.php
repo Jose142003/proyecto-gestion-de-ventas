@@ -10,8 +10,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 try {
-    $database = new Database();
-    $db = $database->getConnection();
+    $db = conectarDB();
 
     // Obtener caja abierta
     $stmt = $db->prepare("SELECT * FROM caja_arqueos WHERE estado = 'abierta' ORDER BY id DESC LIMIT 1");

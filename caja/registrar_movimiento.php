@@ -18,8 +18,7 @@ if (!isset($data['tipo']) || !isset($data['monto']) || !isset($data['descripcion
 require_once '../conexion/conexion.php';
 
 try {
-    $database = new Database();
-    $db = $database->getConnection();
+    $db = conectarDB();
     
     // =============================================================
     // AUTOMATIZACIÓN: Verificar si existe caja abierta para hoy
@@ -105,6 +104,6 @@ try {
 } catch (Exception $e) {
     if (isset($db)) $db->rollBack();
     error_log("Error registrar movimiento: " . $e->getMessage());
-    echo json_encode(['success' => false, 'message' => 'Error al registrar movimiento: ' . $e->getMessage()]);
+    echo json_encode(['success' => false, 'message' => 'Error al registrar movimiento']);
 }
 ?>

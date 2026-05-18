@@ -1,30 +1,26 @@
 <?php
 // obtener_stock_productos.php
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Origin: http://localhost');
 
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "carrito_db";
+require_once __DIR__ . '/../conexion/conexion.php';
 
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-if ($conn->connect_error) {
+try {
+    $pdo = conectarDB();
+} catch (PDOException $e) {
     echo json_encode([
         'success' => false,
-        'message' => 'Error de conexión: ' . $conn->connect_error
+        'message' => 'Error interno del servidor'
     ]);
     exit();
 }
 
-// Obtener todos los productos con stock
-$sql = "SELECT id, nombre, precio, descripcion, imagen, categoria, stock FROM productos";
-$result = $conn->query($sql);
-
-$productos = [];
-if ($result && $result->num_rows > 0) {
-    while($row = $result->fetch_assoc()) {
+try {
+    // Obtener todos los productos con stock
+    $sql = "SELECT id, name as nombre, price as precio, description as descripcion, image_url as imagen, category as categoria, stock FROM products";
+    $stmt = $pdo->query($sql);
+    $productos = [];
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $productos[] = [
             'id' => $row['id'],
             'name' => $row['nombre'],
@@ -35,13 +31,16 @@ if ($result && $result->num_rows > 0) {
             'stock' => intval($row['stock'])
         ];
     }
+
+    echo json_encode([
+        'success' => true,
+        'products' => $productos,
+        'total' => count($productos)
+    ]);
+} catch (PDOException $e) {
+    echo json_encode([
+        'success' => false,
+        'message' => 'Error interno del servidor'
+    ]);
 }
-
-echo json_encode([
-    'success' => true,
-    'products' => $productos,
-    'total' => count($productos)
-]);
-
-$conn->close();
 ?>

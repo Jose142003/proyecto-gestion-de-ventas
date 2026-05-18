@@ -133,13 +133,13 @@ try {
     error_log("Error al actualizar estado del pedido: " . $e->getMessage());
     echo json_encode([
         'success' => false,
-        'message' => 'Error al actualizar: ' . $e->getMessage()
+        'message' => 'Error interno del servidor'
     ]);
 } catch (Exception $e) {
     error_log("Error general: " . $e->getMessage());
     echo json_encode([
         'success' => false,
-        'message' => $e->getMessage()
+        'message' => 'Error interno del servidor'
     ]);
 }
 ?>

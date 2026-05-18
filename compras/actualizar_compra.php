@@ -10,8 +10,7 @@ if (!isset($_SESSION['user_id'])) {
 require_once dirname(__DIR__) . '/conexion/conexion.php';
 
 try {
-    $database = new Database();
-    $db = $database->getConnection();
+    $db = conectarDB();
     $db->beginTransaction();
 
     // 1. Validar datos básicos
@@ -87,6 +86,6 @@ try {
 
 } catch (Exception $e) {
     if (isset($db)) $db->rollBack();
-    echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+    echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
 }
 ?>

@@ -18,14 +18,10 @@ if (!isset($data['pedidos']) || empty($data['pedidos'])) {
 
 $pedidos_ids = $data['pedidos'];
 
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root';
-$password = '';
+require_once __DIR__ . '/../conexion/conexion.php';
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = conectarDB();
     
     $anio = date('Y');
     $facturados = [];
@@ -189,7 +185,7 @@ try {
             
         } catch (PDOException $e) {
             $pdo->rollBack();
-            $errores[] = "Pedido $pedido_id: " . $e->getMessage();
+            $errores[] = "Error interno del servidor";
             error_log("Error facturando pedido $pedido_id: " . $e->getMessage());
         }
     }
@@ -209,7 +205,7 @@ try {
 } catch(PDOException $e) {
     echo json_encode([
         'success' => false, 
-        'message' => 'Error en la base de datos: ' . $e->getMessage()
+        'message' => 'Error interno del servidor'
     ]);
 }
 ?>

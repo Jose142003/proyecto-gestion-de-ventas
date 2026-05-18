@@ -1,0 +1,34 @@
+{
+  "name": "pic/sistema-gestion-comercial",
+  "description": "PIC - Sistema de Gestión Comercial: tienda, facturación, inventario y administración",
+  "type": "project",
+  "require": {
+    "php": ">=8.0",
+    "ext-pdo": "*",
+    "ext-mysqli": "*",
+    "ext-gd": "*",
+    "ext-curl": "*",
+    "ext-mbstring": "*"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^12.0"
+  },
+  "autoload": {
+    "files": [
+      "config/database.php",
+      "conexion/conexion.php"
+    ],
+    "psr-4": {
+      "PIC\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "PIC\\Tests\\": "tests/"
+    }
+  },
+  "scripts": {
+    "test": "phpunit --colors=always",
+    "test:verbose": "phpunit --colors=always --verbose"
+  }
+}

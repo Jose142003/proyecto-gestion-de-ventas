@@ -1,18 +1,12 @@
-<?php
+﻿<?php
 session_start();
 
-// Configuración de la base de datos directamente en el archivo
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root';
-$password = '';
+require_once __DIR__ . '/../conexion/conexion.php';
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+    $pdo = conectarDB();
 } catch (PDOException $e) {
-    die("Error de conexión a la base de datos: " . $e->getMessage());
+    die("Error interno del servidor");
 }
 
 // Configuración de la página
@@ -656,7 +650,7 @@ try {
 </head>
 <body>
     <div class="invoice-container">
-        <a href="/proyecto/panel admin/panel_admin.php" class="back-button">
+        <a href="/proyecto/panel_admin/panel_admin.php" class="back-button">
             <i class="fas fa-arrow-left"></i> Volver al Panel
         </a>
         
@@ -1064,7 +1058,7 @@ try {
         // Cancelar
         $('#btnCancelar').click(function() {
             if (confirm('¿Está seguro de cancelar? Se perderán los datos no guardados.')) {
-                window.location.href = '/proyecto/panel admin/panel_admin.php';
+                window.location.href = '/proyecto/panel_admin/panel_admin.php';
             }
         });
         
@@ -1325,7 +1319,7 @@ try {
     function cargarPedidoPorId(pedidoId) {
         mostrarLoading('Cargando pedido...');
         
-        fetch(`/proyecto/proceso compra/obtener_detalles_pedido.php?pedido_id=${pedidoId}`)
+        fetch(`/proyecto/proceso_compra/obtener_detalles_pedido.php?pedido_id=${pedidoId}`)
             .then(response => response.json())
             .then(data => {
                 if (data.success) {

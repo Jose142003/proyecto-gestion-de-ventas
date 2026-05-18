@@ -1,27 +1,20 @@
 <?php
 // obtener_producto.php - VERSIÓN CORREGIDA (COPIA DE obtener_productos.php que SÍ funciona)
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Origin: http://localhost');
 header('Access-Control-Allow-Credentials: true');
 header('Cache-Control: no-cache, no-store, must-revalidate');
 header('Pragma: no-cache');
 header('Expires: 0');
 
 // Habilitar errores para depuración
-error_reporting(E_ALL);
+error_reporting(0); ini_set('display_errors', 0);
 ini_set('display_errors', 1);
 
-// Configuración de la base de datos
-$host = 'localhost';
-$dbname = 'carrito_db';
-$username = 'root';
-$password = '';
+require_once __DIR__ . '/../conexion/conexion.php';
 
 try {
-    // Conexión PDO
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+    $pdo = conectarDB();
     
     // Verificar y crear columna 'active' si no existe
     $check_column = $pdo->query("SHOW COLUMNS FROM products LIKE 'active'");
@@ -109,11 +102,12 @@ try {
     echo json_encode($response, JSON_UNESCAPED_UNICODE);
     
 } catch (PDOException $e) {
+    error_log("Error en obtener_producto: " . $e->getMessage());
     http_response_code(500);
     echo json_encode([
         'success' => false,
         'error' => 'Error de base de datos',
-        'message' => $e->getMessage(),
+        'message' => 'Error interno del servidor',
         'products' => []
     ], JSON_UNESCAPED_UNICODE);
 }
