@@ -14,6 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $tabla_origen = $_SESSION['tabla_origen'] ?? null;
         
         require_once '../conexion/conexion.php';
+        verificarCSRF();
         $db = conectarDB();
         
         $db->beginTransaction();

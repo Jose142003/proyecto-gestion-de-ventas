@@ -3,8 +3,7 @@ require_once '../conexion/conexion.php';
 
 header('Content-Type: application/json');
 
-// Habilitar logging de errores
-ini_set('display_errors', 1);
+// Desactivar mostrar errores
 error_reporting(0); ini_set('display_errors', 0);
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {

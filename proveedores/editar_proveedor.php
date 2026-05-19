@@ -24,6 +24,10 @@ if (!in_array($usuario_rol, ['admin', 'superadmin'])) {
 // Conexión a la base de datos
 require_once __DIR__ . '/../conexion/conexion.php';
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    verificarCSRF();
+}
+
 try {
     $pdo = conectarDB();
 } catch (PDOException $e) {

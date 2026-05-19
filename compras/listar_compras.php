@@ -50,7 +50,7 @@ try {
     // Ordenamiento
     $orderBy = "c.id DESC";
     $sortField = $_GET['sort'] ?? '';
-    $sortOrder = $_GET['order'] ?? 'ASC';
+    $sortOrder = strtoupper($_GET['order'] ?? 'ASC') === 'DESC' ? 'DESC' : 'ASC';
     
     $allowedSortFields = ['numero_orden', 'fecha_orden', 'subtotal', 'total'];
     if (in_array($sortField, $allowedSortFields)) {

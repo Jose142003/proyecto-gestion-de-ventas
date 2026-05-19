@@ -122,13 +122,8 @@ try {
 
     // Conectar a la base de datos
     require_once dirname(__DIR__) . '/conexion/conexion.php';
-    
-    if (!function_exists('conectarDB')) {
-        logError("Función conectarDB no encontrada");
-        echo json_encode(['success' => false, 'message' => 'Error de configuración del servidor']);
-        if (file_exists($ruta_completa)) unlink($ruta_completa);
-        exit;
-    }
+
+    verificarCSRF();
 
     try {
         $db = conectarDB();

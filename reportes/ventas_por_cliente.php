@@ -1,9 +1,8 @@
 <?php
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Origin: http://localhost');
 header('Access-Control-Allow-Credentials: true');
 error_reporting(0); ini_set('display_errors', 0);
-ini_set('display_errors', 1);
 
 session_start();
 

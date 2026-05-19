@@ -3,6 +3,7 @@
 header('Content-Type: application/json');
 session_start();
 require_once '../conexion/conexion.php';
+verificarCSRF();
 
 try {
     // Verificar que el usuario sea administrador

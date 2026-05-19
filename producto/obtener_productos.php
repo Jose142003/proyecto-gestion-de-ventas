@@ -4,11 +4,9 @@ header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: http://localhost');
 header('Access-Control-Allow-Credentials: true');
 
-// Habilitar errores para depuración
+// Configurar errores
 error_reporting(0); ini_set('display_errors', 0);
-ini_set('display_errors', 1);
 ini_set('log_errors', 1);
-ini_set('error_log', __DIR__ . '/error_log.txt');
 
 require_once __DIR__ . '/../conexion/conexion.php';
 

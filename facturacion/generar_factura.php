@@ -4,6 +4,7 @@ header('Content-Type: application/json');
 
 require_once __DIR__ . '/../conexion/conexion.php';
 requerirSesion();
+verificarCSRF();
 
 try {
     $pdo = conectarDB();
@@ -44,7 +45,9 @@ try {
     foreach ($cart_items as $item) {
         $subtotal += $item['price'] * $item['quantity'];
     }
-    $iva = $subtotal * 0.16;
+    $ivaPorcentaje = $subtotal > 0 ? $pdo->query("SELECT iva_porcentaje FROM configuracion_sistema WHERE id = 1")->fetchColumn() : 16;
+    $ivaPorcentaje = $ivaPorcentaje ?: 16;
+    $iva = $subtotal * ($ivaPorcentaje / 100);
     $total = $subtotal + $iva;
 
     // 3. Generar número de pedido

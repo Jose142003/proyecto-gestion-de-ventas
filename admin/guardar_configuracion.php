@@ -2,6 +2,7 @@
 header('Content-Type: application/json');
 
 require_once __DIR__ . '/../conexion/conexion.php';
+verificarCSRF();
 requerirAdmin();
 
 try {

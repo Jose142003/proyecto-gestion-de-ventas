@@ -12,6 +12,7 @@ use PHPMailer\PHPMailer\Exception;
 header('Content-Type: application/json');
 
 require_once __DIR__ . '/../conexion/conexion.php';
+verificarCSRF();
 $pdo = conectarDB();
 
 // Obtener datos del POST

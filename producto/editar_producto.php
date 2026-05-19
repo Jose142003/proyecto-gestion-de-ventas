@@ -18,6 +18,11 @@ if (!$isAdmin) {
 
 require_once __DIR__ . '/../conexion/conexion.php';
 
+// Verificar CSRF en POST
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    verificarCSRF();
+}
+
 // Obtener ID del producto
 $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
@@ -256,9 +261,9 @@ if ($error && !$producto) {
                         <label for="categoria">Categoría</label>
                         <select id="categoria" name="categoria">
                             <?php foreach ($categorias as $cat): ?>
-                                <option value="<?php echo $cat; ?>" 
+                                <option value="<?php echo htmlspecialchars($cat); ?>" 
                                     <?php echo ($producto['category'] == $cat) ? 'selected' : ''; ?>>
-                                    <?php echo $cat; ?>
+                                    <?php echo htmlspecialchars($cat); ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
@@ -313,9 +318,9 @@ if ($error && !$producto) {
                         <label for="moneda">Moneda</label>
                         <select id="moneda" name="moneda">
                             <?php foreach ($monedas as $mon): ?>
-                                <option value="<?php echo $mon; ?>" 
+                                <option value="<?php echo htmlspecialchars($mon); ?>" 
                                     <?php echo ($producto['currency'] == $mon) ? 'selected' : ''; ?>>
-                                    <?php echo $mon; ?>
+                                    <?php echo htmlspecialchars($mon); ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>

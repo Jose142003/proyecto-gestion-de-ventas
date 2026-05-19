@@ -84,7 +84,10 @@ try {
         $pdo->exec("ALTER TABLE pedidos ADD COLUMN referencia_pago VARCHAR(100) DEFAULT NULL");
     }
     
-    $subtotal = $total / 1.16;
+    $ivaPorcentaje = $pdo->query("SELECT iva_porcentaje FROM configuracion_sistema WHERE id = 1")->fetchColumn();
+    $ivaPorcentaje = $ivaPorcentaje ?: 16;
+    $factor = 1 + ($ivaPorcentaje / 100);
+    $subtotal = $total / $factor;
     $iva = $total - $subtotal;
     $observaciones = "Pedido por {$payment_method} - Referencia: {$referencia}";
     

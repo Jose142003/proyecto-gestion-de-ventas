@@ -2,6 +2,7 @@
 // enviar_mensaje.php - VERSIÓN CORREGIDA
 header('Content-Type: application/json');
 
+require_once __DIR__ . '/../config/database.php';
 require_once 'PHPMailer.php';
 require_once 'SMTP.php';
 require_once 'Exception.php';
@@ -44,27 +45,18 @@ $mail = new PHPMailer(true);
 try {
     // Configuración SMTP
     $mail->isSMTP();
-    $mail->Host = 'smtp.gmail.com';
-    $mail->Port = 587;
+    $mail->Host = SMTP_HOST;
+    $mail->Port = SMTP_PORT;
     $mail->SMTPAuth = true;
-    $mail->Username = 'jose14chacon2003@gmail.com';
-    $mail->Password = 'bzwusevvegbuqozg';
+    $mail->Username = SMTP_USER;
+    $mail->Password = SMTP_PASS;
     $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
     $mail->CharSet = 'UTF-8';
-    
-    // ✅ Opciones SSL
-    $mail->SMTPOptions = [
-        'ssl' => [
-            'verify_peer' => false,
-            'verify_peer_name' => false,
-            'allow_self_signed' => true
-        ]
-    ];
     
     $mail->SMTPDebug = 0;
     
     // Remitente
-    $mail->setFrom('jose14chacon2003@gmail.com', 'PIC Sistema Web');
+    $mail->setFrom(SMTP_FROM_EMAIL, 'PIC Sistema Web');
     $mail->addAddress('Picca.ventas@gmail.com', 'Soporte PIC');
     $mail->addReplyTo($email, $nombre);
     

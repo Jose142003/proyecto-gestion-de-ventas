@@ -540,6 +540,18 @@ try {
             background: var(--bg-color);
             color: var(--text-color);
         }
+        .form-control:focus {
+            border-color: var(--accent-color);
+            outline: none;
+        }
+        select.form-control option {
+            background: var(--card-bg);
+            color: var(--text-color);
+        }
+        .data-table td small {
+            color: var(--text-color);
+            opacity: 0.7;
+        }
 
         .filtros {
             display: flex;
@@ -2747,7 +2759,7 @@ try {
 // FUNCIONES DE COMPRAS (MANTENIDAS SIN CAMBIOS FUNCIONALES)
 // ====================================================================
 async function cargarCompras() {
-    console.log('🔄 Cargando compras...');
+            console.log('🔄 Cargando compras...');
     mostrarLoading('Cargando compras...');
     try {
         const response = await fetch('/proyecto/compras/obtener_compras.php', { 
@@ -2755,14 +2767,11 @@ async function cargarCompras() {
             headers: { 'Cache-Control': 'no-cache' }
         });
         
-        console.log('📡 Response status:', response.status);
-        
         if(!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         
         const data = await response.json();
-        console.log('📦 Datos recibidos:', data);
         
         comprasData = [];
         
@@ -2782,39 +2791,20 @@ async function cargarCompras() {
             comprasData = data.data;
         }
         else {
-            console.warn('⚠️ Formato de datos inesperado:', data);
             comprasData = [];
         }
-        
-        console.log('✅ Compras cargadas:', comprasData.length, 'registros');
         
         if (data && data.error) {
             mostrarNotificacion(data.error, 'error');
         }
         
     } catch(e) { 
-        console.error('❌ Error cargando compras:', e); 
+        console.error('Error cargando compras:', e); 
         comprasData = []; 
         mostrarNotificacion('Error al cargar compras: ' + e.message, 'error');
     }
     
     renderCompras();
-    
-    const comprasSection = document.getElementById('comprasSection');
-    if (comprasSection) {
-        comprasSection.style.display = 'block';
-        comprasSection.style.visibility = 'visible';
-        comprasSection.classList.add('active');
-        comprasSection.style.opacity = '1';
-        comprasSection.style.position = 'relative';
-        comprasSection.style.zIndex = '1';
-        
-        console.log('✅ Sección de compras forzada a ser visible');
-        console.log('Display después de forzar:', window.getComputedStyle(comprasSection).display);
-    } else {
-        console.error('❌ No se encontró la sección comprasSection');
-    }
-    
     ocultarLoading();
 }
 
@@ -2884,25 +2874,10 @@ function renderCompras() {
                 <button class="btn-action btn-view" onclick="verCompra(${c.id})" title="Ver detalles"><i class="fas fa-eye"></i></button>
                 <button class="btn-action btn-pdf" onclick="exportarCompraPDF(${c.id})" title="Exportar PDF"><i class="fas fa-file-pdf"></i></button>
             </td>
-        </table>`;
+        </tr>`;
     }
     
     tbody.innerHTML = html;
-    
-    const comprasSection = document.getElementById('comprasSection');
-    if (comprasSection) {
-        comprasSection.style.display = 'block';
-        comprasSection.style.visibility = 'visible';
-        comprasSection.style.opacity = '1';
-        comprasSection.classList.add('active');
-    }
-    
-    const tableContainer = document.querySelector('#comprasSection .table-container');
-    if (tableContainer) {
-        tableContainer.style.display = 'block';
-    }
-    
-    console.log('✅ Renderizado de compras completado,', comprasData.length, 'filas');
 }
 
         async function cargarPedidos() {
@@ -3784,88 +3759,126 @@ function renderAuditoria() {
             }
         }
 
-        function renderConfiguracion() {
-            console.log('🎨 Renderizando configuración...');
-            
-            let tbody = document.getElementById('configuracionBody');
-            
-            if(!tbody) {
-                console.warn('⚠️ No se encuentra configuracionBody, intentando crearlo...');
-                
-                const tableContainer = document.querySelector('#configuracionSection .data-table');
-                if(tableContainer) {
-                    let existingTbody = tableContainer.querySelector('tbody');
-                    if(existingTbody) {
-                        existingTbody.id = 'configuracionBody';
-                        tbody = existingTbody;
-                    } else {
-                        tbody = document.createElement('tbody');
-                        tbody.id = 'configuracionBody';
-                        tableContainer.appendChild(tbody);
-                    }
-                } else {
-                    console.error('❌ No se encuentra la tabla de configuración');
-                    return;
-                }
+function renderConfiguracion() {
+    console.log('🎨 Renderizando configuración...');
+    
+    let tbody = document.getElementById('configuracionBody');
+    
+    if(!tbody) {
+        console.warn('⚠️ No se encuentra configuracionBody, intentando crearlo...');
+        const tableContainer = document.querySelector('#configuracionSection .data-table');
+        if(tableContainer) {
+            let existingTbody = tableContainer.querySelector('tbody');
+            if(existingTbody) {
+                existingTbody.id = 'configuracionBody';
+                tbody = existingTbody;
+            } else {
+                tbody = document.createElement('tbody');
+                tbody.id = 'configuracionBody';
+                tableContainer.appendChild(tbody);
             }
-            
-            let configs = [];
-            if (Array.isArray(configuracionData) && configuracionData.length > 0) {
-                configs = configuracionData;
-            } else if (configuracionData && typeof configuracionData === 'object') {
-                configs = Object.values(configuracionData);
-            }
-            
-            console.log('📋 Configuraciones a renderizar:', configs.length);
-            
-            if(!configs || configs.length === 0) { 
-                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:40px;"><i class="fas fa-cog" style="font-size:2rem; color:#ccc;"></i><br>No hay configuración disponible</tbody>'; 
-                return; 
-            }
-            
-            let html = '';
-            let lastGrupo = '';
-            
-            for(let i = 0; i < configs.length; i++) {
-                const c = configs[i];
-                const clave = c.clave || '';
-                const valor = c.valor || '';
-                const descripcion = c.descripcion || '';
-                const grupo = c.grupo || 'general';
-                const isEditable = c.editable !== false;
-                const inputDisabled = isEditable ? '' : 'disabled';
-                
-                if (!clave) continue;
-                
-                if (grupo !== lastGrupo) {
-                    if (lastGrupo !== '') {
-                        html += '<tr style="background: #e8f4fd;"><td colspan="3" style="padding: 8px 15px;"><strong><i class="fas fa-folder-open"></i> ' + escapeHtml(grupo.toUpperCase()) + '</strong></td></tr>';
-                    }
-                    lastGrupo = grupo;
-                }
-                
-                let inputHtml = '';
-                if (c.tipo === 'boolean') {
-                    inputHtml = `<select class="form-control config-valor" data-key="${escapeHtml(clave)}" ${inputDisabled} style="width:100%; padding: 8px; border-radius: 6px; border: 1px solid #ddd;">
-                        <option value="1" ${valor == 1 ? 'selected' : ''}>✅ Activo (Sí)</option>
-                        <option value="0" ${valor == 0 ? 'selected' : ''}>❌ Inactivo (No)</option>
-                    </select>`;
-                } else if (c.tipo === 'number') {
-                    inputHtml = `<input type="number" class="form-control config-valor" data-key="${escapeHtml(clave)}" value="${escapeHtml(String(valor))}" style="width:100%; padding: 8px; border-radius: 6px; border: 1px solid #ddd;" ${inputDisabled}>`;
-                } else {
-                    inputHtml = `<input type="text" class="form-control config-valor" data-key="${escapeHtml(clave)}" value="${escapeHtml(String(valor))}" style="width:100%; padding: 8px; border-radius: 6px; border: 1px solid #ddd;" ${inputDisabled}>`;
-                }
-                
-                html += `<tr>
-                    <td style="padding: 12px 15px; vertical-align: top;"><strong>${escapeHtml(clave)}</strong><br><small style="color:#888;">${escapeHtml(grupo)}</small></td>
-                    <td style="padding: 12px 15px; vertical-align: top;">${inputHtml}</td>
-                    <td style="padding: 12px 15px; color: #666; font-size:0.8rem; vertical-align: top;">${escapeHtml(descripcion)}</td>
-                </tr>`;
-            }
-            
-            tbody.innerHTML = html;
-            console.log('✅ Renderizado completo,', configs.length, 'filas generadas');
+        } else {
+            console.error('❌ No se encuentra la tabla de configuración');
+            return;
         }
+    }
+    
+    let configs = [];
+    if (Array.isArray(configuracionData) && configuracionData.length > 0) {
+        configs = configuracionData;
+    } else if (configuracionData && typeof configuracionData === 'object') {
+        configs = Object.values(configuracionData);
+    }
+    
+    console.log('📋 Configuraciones a renderizar:', configs.length);
+    
+    if(!configs || configs.length === 0) { 
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:40px;"><i class="fas fa-cog" style="font-size:2rem; color:#ccc;"></i><br>No hay configuración disponible</td></tr>'; 
+        return; 
+    }
+    
+    let html = '';
+    let lastGrupo = '';
+    
+    for(let i = 0; i < configs.length; i++) {
+        const c = configs[i];
+        const clave = c.clave || '';
+        const valor = c.valor || '';
+        const descripcion = c.descripcion || '';
+        const grupo = c.grupo || 'general';
+        const isEditable = c.editable !== false;
+        const inputDisabled = isEditable ? '' : 'disabled';
+        
+        if (!clave) continue;
+        
+        // Mostrar encabezado de grupo cuando cambia
+        if (grupo !== lastGrupo) {
+            // Siempre mostrar el encabezado del grupo (incluyendo el primero)
+            let icono = '';
+            let nombreGrupo = '';
+            
+            // Asignar iconos según el grupo
+            switch(grupo.toLowerCase()) {
+                case 'sistema':
+                    icono = '<i class="fas fa-server"></i>';
+                    nombreGrupo = 'SISTEMA';
+                    break;
+                case 'notificaciones':
+                    icono = '<i class="fas fa-bell"></i>';
+                    nombreGrupo = 'NOTIFICACIONES';
+                    break;
+                case 'inventario':
+                    icono = '<i class="fas fa-boxes"></i>';
+                    nombreGrupo = 'INVENTARIO';
+                    break;
+                case 'facturacion':
+                    icono = '<i class="fas fa-file-invoice-dollar"></i>';
+                    nombreGrupo = 'FACTURACIÓN';
+                    break;
+                default:
+                    icono = '<i class="fas fa-folder-open"></i>';
+                    nombreGrupo = grupo.toUpperCase();
+            }
+            
+            html += `<tr style="background: linear-gradient(135deg, #1a1f2e, #0a0e1a);">
+                        <td colspan="3" style="padding: 12px 15px;">
+                            <strong style="color: #3C91ED; font-size: 1rem;">${icono} ${escapeHtml(nombreGrupo)}</strong>
+                        </td>
+                     </tr>`;
+            lastGrupo = grupo;
+        }
+        
+        let inputHtml = '';
+        if (c.tipo === 'boolean') {
+            inputHtml = `<select class="form-control config-valor" data-key="${escapeHtml(clave)}" ${inputDisabled} style="width:100%; background: var(--bg-color); color: var(--text-color); border-color: var(--border-color);">
+                <option value="1" ${valor == 1 ? 'selected' : ''}>✅ Activado</option>
+                <option value="0" ${valor == 0 ? 'selected' : ''}>❌ Desactivado</option>
+            </select>`;
+        } else if (c.tipo === 'number') {
+            inputHtml = `<input type="number" class="form-control config-valor" data-key="${escapeHtml(clave)}" value="${escapeHtml(String(valor))}" style="width:100%; background: var(--bg-color); color: var(--text-color); border-color: var(--border-color);" ${inputDisabled}>`;
+        } else if (c.tipo === 'textarea') {
+            inputHtml = `<textarea class="form-control config-valor" data-key="${escapeHtml(clave)}" rows="2" style="width:100%; background: var(--bg-color); color: var(--text-color); border-color: var(--border-color);" ${inputDisabled}>${escapeHtml(String(valor))}</textarea>`;
+        } else {
+            inputHtml = `<input type="text" class="form-control config-valor" data-key="${escapeHtml(clave)}" value="${escapeHtml(String(valor))}" style="width:100%; background: var(--bg-color); color: var(--text-color); border-color: var(--border-color);" ${inputDisabled}>`;
+        }
+        
+        html += `<tr style="border-bottom: 1px solid var(--border-color);">
+            <td style="padding: 12px 15px; vertical-align: top; width: 30%;">
+                <strong style="color: var(--text-color);">${escapeHtml(clave.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()))}</strong>
+                <br><small style="color: var(--text-color); opacity: 0.6; font-size: 0.7rem;">${escapeHtml(grupo)}</small>
+            </td>
+            <td style="padding: 12px 15px; vertical-align: top; width: 40%;">
+                ${inputHtml}
+            </td>
+            <td style="padding: 12px 15px; color: var(--text-color); opacity: 0.7; font-size:0.8rem; vertical-align: top; width: 30%;">
+                ${escapeHtml(descripcion)}
+            </td>
+        </tr>`;
+    }
+    
+    tbody.innerHTML = html;
+    console.log('✅ Renderizado completo,', configs.length, 'filas generadas');
+}
 
         async function guardarConfiguracion() {
             const valores = {};

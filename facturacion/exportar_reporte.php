@@ -231,7 +231,7 @@ function exportarReporteExcel($mes, $anio, $nombre_mes, $stats, $productos_top, 
     
     foreach ($metodos_pago as $metodo) {
         echo '<tr>';
-        echo '<td>' . ucfirst($metodo['metodo_pago']) . '</td>';
+        echo '<td>' . htmlspecialchars(ucfirst($metodo['metodo_pago'])) . '</td>';
         echo '<td>' . $metodo['cantidad'] . '</td>';
         echo '<td>Bs. ' . number_format($metodo['total'], 2) . '</td>';
         echo '</tr>';
@@ -253,7 +253,7 @@ function exportarReportePDF($mes, $anio, $nombre_mes, $stats, $productos_top, $c
     <html>
     <head>
         <meta charset="UTF-8">
-        <title>Reporte de Ventas ' . $nombre_mes . ' ' . $anio . '</title>
+        <title>Reporte de Ventas ' . htmlspecialchars($nombre_mes) . ' ' . htmlspecialchars($anio) . '</title>
           <!-- PWA Meta Tags -->
     <link rel="manifest" href="/proyecto/manifest.json">
     <meta name="theme-color" content="#050C18">

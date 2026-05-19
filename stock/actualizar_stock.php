@@ -12,8 +12,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 require_once __DIR__ . '/../conexion/conexion.php';
 
-try {
-    $pdo = conectarDB();
+verificarCSRF();
+
+$pdo = conectarDB();
 } catch (PDOException $e) {
     echo json_encode([
         'success' => false,

@@ -91,12 +91,7 @@ if (!$usuario_id && $usuario_id_url > 0) {
 // ============================================================================
 // 4. CONEXIÓN A LA BASE DE DATOS
 // ============================================================================
-$host = 'localhost';
-$user = 'root';
-$password = '';
-$database = 'carrito_db';
-
-$conn = mysqli_connect($host, $user, $password, $database);
+$conn = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 if (!$conn) {
     die("Error de conexión: " . mysqli_connect_error());
 }

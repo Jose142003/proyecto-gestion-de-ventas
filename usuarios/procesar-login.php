@@ -11,7 +11,7 @@ header('Content-Type: application/json');
 // Configurar sesión para persistencia
 ini_set('session.cookie_httponly', 1);
 ini_set('session.use_only_cookies', 1);
-ini_set('session.cookie_secure', 0);
+ini_set('session.cookie_secure', 1);
 ini_set('session.cookie_samesite', 'Strict');
 
 require_once __DIR__ . '/../config/database.php';
@@ -90,16 +90,10 @@ try {
             $es_admin = true;
             
                 if (!password_verify($password, $user['password'])) {
-                if (strtoupper(hash('sha256', $password)) !== $user['password']) {
                     $attempts['count']++;
                     echo json_encode(["success" => false, "message" => "Credenciales de administrador incorrectas"]);
                     exit;
                 }
-                $new_hash = password_hash($password, PASSWORD_BCRYPT);
-                $rehash = $pdo->prepare("UPDATE admin_users SET contrasena = ? WHERE id = ?");
-                $rehash->execute([$new_hash, $user['id']]);
-                $user['password'] = $new_hash;
-            }
         }
     } 
     elseif ($tipo_usuario === 'cliente') {
@@ -148,16 +142,10 @@ try {
             $es_admin = true;
             
                 if (!password_verify($password, $user['password'])) {
-                if (strtoupper(hash('sha256', $password)) !== $user['password']) {
                     $attempts['count']++;
                     echo json_encode(["success" => false, "message" => "Credenciales incorrectas"]);
                     exit;
                 }
-                $new_hash = password_hash($password, PASSWORD_BCRYPT);
-                $rehash = $pdo->prepare("UPDATE admin_users SET contrasena = ? WHERE id = ?");
-                $rehash->execute([$new_hash, $user['id']]);
-                $user['password'] = $new_hash;
-            }
     } else {
             // Buscar en users
             $query_user = "SELECT id, nombre, correo, password, rol, is_active, estado

@@ -29,6 +29,8 @@ if ($es_admin || $tabla_origen === 'admin_users') {
 
 require_once dirname(__DIR__) . '/conexion/conexion.php';
 
+verificarCSRF();
+
 try {
     $database = new Database();
     $db = $database->getConnection();

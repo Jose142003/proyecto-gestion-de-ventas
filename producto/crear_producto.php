@@ -20,81 +20,8 @@ if (!$isAdmin) {
 
 require_once __DIR__ . '/../conexion/conexion.php';
 
-$pdo = conectarDB();
-
-// Palabras prohibidas
-$palabras_prohibidas = ['prueba', 'test', 'demo', 'xxxx', 'basura', 'eliminar', 'jose chacon', 'jose', 'marivic', 'chacon'];
-
-// Función para generar SKU con formato PROD-XXXX
-function generarSKU($pdo, $nombre) {
-    $stmt = $pdo->query("SELECT MAX(id) as max_id FROM products");
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    $next_id = ($row['max_id'] ?? 80) + 1;
-    return 'PROD-' . str_pad($next_id, 4, '0', STR_PAD_LEFT);
-}
-
-// Función para detectar categoría
-function detectarCategoria($nombre) {
-    $nombre_lower = strtolower($nombre);
-    
-    $categorias = [
-        'sensor' => 'Sensores',
-        'contactor' => 'Contactores',
-        'rele' => 'Relés',
-        'variador' => 'Variadores',
-        'fuente' => 'Fuentes de Poder',
-        'temporizador' => 'Temporizadores',
-        'controlador' => 'Controladores',
-        'boton' => 'Botoneras',
-        'guardamotor' => 'Protecciones',
-        'pinza' => 'Instrumentos de Medición',
-        'multimetro' => 'Instrumentos de Medición',
-        'timer' => 'Temporizadores',
-        'at8n' => 'Temporizadores'
-    ];
-    
-    foreach ($categorias as $keyword => $categoria) {
-        if (strpos($nombre_lower, $keyword) !== false) {
-            return $categoria;
-        }
-    }
-    return 'General';
-}
-
-// Función para verificar si producto existe
-function productoExiste($pdo, $nombre) {
-    $stmt = $pdo->prepare("SELECT id FROM products WHERE name = ?");
-    $stmt->execute([$nombre]);
-    $existe = (bool)$stmt->fetch(PDO::FETCH_ASSOC);
-    return $existe;
-}
-
-// Función para crear producto
-function crearProducto($pdo, $datos, $usuario_id, $usuario_nombre) {
-    $sku = generarSKU($pdo, $datos['nombre']);
-    $categoria = $datos['categoria'] ?: detectarCategoria($datos['nombre']);
-    $descripcion = $datos['descripcion'] ?: "Producto importado manualmente. " . $datos['nombre'];
-    
-    $active = 1;
-    $rating = 4.0;
-    $stock = isset($datos['stock']) ? (int)$datos['stock'] : 5;
-    
-    $stmt = $pdo->prepare("INSERT INTO products (sku, name, price, image_url, description, category, rating, stock, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->execute([$sku, $datos['nombre'], $datos['precio'], $datos['imagen'], $descripcion, $categoria, $rating, $stock, $active]);
-    
-    $id = (int)$pdo->lastInsertId();
-    return ['success' => true, 'id' => $id, 'sku' => $sku, 'nombre' => $datos['nombre']];
-}
-
-$usuario_id = $_SESSION['user_id'] ?? null;
-$usuario_nombre = $_SESSION['user_nombre'] ?? $_SESSION['user_correo'] ?? 'Admin';
-$mensaje = '';
-$tipo_mensaje = '';
-$importados = [];
-$errores = [];
-
-// Procesar formulario
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    verificarCSRF();
     if (isset($_POST['accion']) && $_POST['accion'] === 'importar_individual') {
         $nombre = trim($_POST['nombre'] ?? '');
         $precio = floatval($_POST['precio'] ?? 0);

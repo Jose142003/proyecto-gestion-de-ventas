@@ -3,6 +3,7 @@ header('Content-Type: application/json');
 session_start();
 
 require_once __DIR__ . '/../conexion/conexion.php';
+verificarCSRF();
 
 try {
     $pdo = conectarDB();

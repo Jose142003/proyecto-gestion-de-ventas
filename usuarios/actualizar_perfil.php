@@ -21,6 +21,8 @@ require_once '../conexion/conexion.php';
 
 session_start();
 
+verificarCSRF();
+
 // Verificar que el usuario esté autenticado
 if (!isset($_SESSION['user_id'])) {
     echo json_encode(['success' => false, 'message' => 'No autorizado. Por favor inicie sesión nuevamente.']);

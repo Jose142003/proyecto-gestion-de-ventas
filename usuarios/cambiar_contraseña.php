@@ -8,6 +8,8 @@ ini_set('log_errors', 1);
 
 require_once dirname(__DIR__) . '/conexion/conexion.php';
 
+verificarCSRF();
+
 if (!isset($_SESSION['user_id'])) {
     echo json_encode(["success" => false, "message" => "Usuario no autenticado"]);
     exit;
