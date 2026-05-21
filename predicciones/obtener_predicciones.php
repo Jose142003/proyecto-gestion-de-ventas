@@ -6,36 +6,32 @@ header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: http://localhost');
 header('Access-Control-Allow-Credentials: true');
 
+register_shutdown_function(function () {
+    $e = error_get_last();
+    if ($e && in_array($e['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => 'Error interno',
+            'tendencias' => [], 'productos' => [], 'alertas' => [],
+            'conteo_alertas' => ['total_alertas' => 0, 'criticas' => 0, 'bajas' => 0],
+            'recomendaciones' => []], JSON_UNESCAPED_UNICODE);
+    }
+});
+
+set_error_handler(function () { return false; });
+
 require_once __DIR__ . '/../conexion/conexion.php';
 requerirAdmin();
 
 function tablaExiste($pdo, $tabla): bool {
-    try {
-        $r = $pdo->query("SHOW TABLES LIKE '$tabla'");
-        return $r->rowCount() > 0;
-    } catch (PDOException $e) {
-        return false;
-    }
+    try { return (bool)$pdo->query("SHOW TABLES LIKE " . $pdo->quote($tabla))->fetch(); } catch (Throwable $e) { return false; }
 }
 
 function querySeguro($pdo, string $sql, array $params = []) {
-    try {
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute($params);
-        return $stmt->fetchAll();
-    } catch (PDOException $e) {
-        return [];
-    }
+    try { $stmt = $pdo->prepare($sql); $stmt->execute($params); return $stmt->fetchAll(); } catch (Throwable $e) { return []; }
 }
 
 function scalarSeguro($pdo, string $sql, array $params = []) {
-    try {
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute($params);
-        return $stmt->fetchColumn();
-    } catch (PDOException $e) {
-        return null;
-    }
+    try { $stmt = $pdo->prepare($sql); $stmt->execute($params); return $stmt->fetchColumn(); } catch (Throwable $e) { return null; }
 }
 
 try {
@@ -127,7 +123,7 @@ try {
 
     echo json_encode($response, JSON_UNESCAPED_UNICODE);
 
-} catch (PDOException $e) {
+} catch (Throwable $e) {
     http_response_code(500);
     echo json_encode([
         'success' => false, 'error' => 'Error de base de datos',

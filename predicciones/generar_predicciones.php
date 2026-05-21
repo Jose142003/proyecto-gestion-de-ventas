@@ -6,14 +6,27 @@ header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: http://localhost');
 header('Access-Control-Allow-Credentials: true');
 
+register_shutdown_function(function () {
+    $e = error_get_last();
+    if ($e && in_array($e['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'Error interno']);
+    }
+});
+
+set_error_handler(function () { return false; });
+
 require_once __DIR__ . '/../conexion/conexion.php';
 requerirAdmin();
+
+function tablaExiste($pdo, $tabla): bool {
+    try { return (bool)$pdo->query("SHOW TABLES LIKE " . $pdo->quote($tabla))->fetch(); } catch (Throwable $e) { return false; }
+}
 
 try {
     $pdo = conectarDB();
 
-    $check = $pdo->query("SHOW TABLES LIKE 'predicciones_ventas'");
-    if ($check->rowCount() === 0) {
+    if (!tablaExiste($pdo, 'predicciones_ventas')) {
         echo json_encode(['success' => false, 'message' => 'Migración pendiente. Ejecute sql/migracion_nuevas_funcionalidades.sql', 'migracion_pendiente' => true]);
         exit;
     }
@@ -27,25 +40,14 @@ try {
 
     $productos = $pdo->query("SELECT id, name, stock FROM products WHERE active = 1 AND deleted_at IS NULL")->fetchAll();
 
-    $stmtInsert = $pdo->prepare("
-        INSERT INTO predicciones_ventas (producto_id, categoria, mes, anio, ventas_reales, ventas_predichas, precision_prediccion, tendencia, nivel_confianza, stock_sugerido)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ");
+    $stmtInsert = $pdo->prepare("INSERT INTO predicciones_ventas (producto_id, categoria, mes, anio, ventas_reales, ventas_predichas, precision_prediccion, tendencia, nivel_confianza, stock_sugerido) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
-    $stmtInsertAlerta = $pdo->prepare("
-        INSERT INTO alertas_stock (producto_id, tipo, nivel_actual, nivel_sugerido, mensaje)
-        VALUES (?, ?, ?, ?, ?)
-    ");
+    $stmtInsertAlerta = $pdo->prepare("INSERT INTO alertas_stock (producto_id, tipo, nivel_actual, nivel_sugerido, mensaje) VALUES (?, ?, ?, ?, ?)");
 
     $prediccionesGeneradas = 0;
 
     foreach ($productos as $producto) {
-        $historial = $pdo->prepare("
-            SELECT DATE_FORMAT(pe.fecha_pedido, '%Y-%m') as mes_anio, SUM(pd.cantidad) as total_vendido
-            FROM pedido_detalles pd JOIN pedidos pe ON pd.pedido_id = pe.id
-            WHERE pd.producto_id = ? AND pe.estado NOT IN ('cancelado') AND pe.fecha_pedido >= DATE_SUB(CURRENT_DATE, INTERVAL 12 MONTH)
-            GROUP BY DATE_FORMAT(pe.fecha_pedido, '%Y-%m') ORDER BY mes_anio ASC
-        ");
+        $historial = $pdo->prepare("SELECT DATE_FORMAT(pe.fecha_pedido, '%Y-%m') as mes_anio, SUM(pd.cantidad) as total_vendido FROM pedido_detalles pd JOIN pedidos pe ON pd.pedido_id = pe.id WHERE pd.producto_id = ? AND pe.estado NOT IN ('cancelado') AND pe.fecha_pedido >= DATE_SUB(CURRENT_DATE, INTERVAL 12 MONTH) GROUP BY DATE_FORMAT(pe.fecha_pedido, '%Y-%m') ORDER BY mes_anio ASC");
         $historial->execute([$producto['id']]);
         $historialRows = $historial->fetchAll();
 
@@ -75,19 +77,21 @@ try {
         $prediccionesGeneradas++;
 
         if ($producto['stock'] <= 10) {
-            $existe = $pdo->prepare("SELECT id FROM alertas_stock WHERE producto_id = ? AND resuelta = FALSE ORDER BY fecha_alerta DESC LIMIT 1");
-            $existe->execute([$producto['id']]);
-            if (!$existe->fetch()) {
-                $tipoAlerta = $producto['stock'] <= 0 ? 'critico' : ($producto['stock'] <= 5 ? 'critico' : 'bajo');
-                $stmtInsertAlerta->execute([$producto['id'], $tipoAlerta, $producto['stock'], $stockSugerido, "Stock $tipoAlerta: '{$producto['name']}' tiene {$producto['stock']} unidades (sugerido: $stockSugerido)"]);
-            }
+            try {
+                $existe = $pdo->prepare("SELECT id FROM alertas_stock WHERE producto_id = ? AND resuelta = FALSE ORDER BY fecha_alerta DESC LIMIT 1");
+                $existe->execute([$producto['id']]);
+                if (!$existe->fetch()) {
+                    $tipoAlerta = $producto['stock'] <= 0 ? 'critico' : ($producto['stock'] <= 5 ? 'critico' : 'bajo');
+                    $stmtInsertAlerta->execute([$producto['id'], $tipoAlerta, $producto['stock'], $stockSugerido, "Stock $tipoAlerta: '{$producto['name']}' tiene {$producto['stock']} unidades (sugerido: $stockSugerido)"]);
+                }
+            } catch (Throwable $e) {}
         }
     }
 
     $pdo->commit();
     echo json_encode(['success' => true, 'message' => "Predicciones generadas para $prediccionesGeneradas productos", 'total' => $prediccionesGeneradas], JSON_UNESCAPED_UNICODE);
 
-} catch (PDOException $e) {
+} catch (Throwable $e) {
     if (isset($pdo) && $pdo->inTransaction()) $pdo->rollBack();
     http_response_code(500);
     echo json_encode(['success' => false, 'message' => 'Error al generar predicciones']);

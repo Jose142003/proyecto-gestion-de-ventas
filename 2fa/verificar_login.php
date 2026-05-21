@@ -3,6 +3,17 @@ error_reporting(0);
 ini_set('display_errors', 0);
 
 header('Content-Type: application/json');
+
+register_shutdown_function(function () {
+    $e = error_get_last();
+    if ($e && in_array($e['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'Error interno']);
+    }
+});
+
+set_error_handler(function () { return false; });
+
 require_once __DIR__ . '/../config/database.php';
 
 $input = json_decode(file_get_contents('php://input'), true);
@@ -87,10 +98,9 @@ try {
 
     echo json_encode(['success' => true, 'message' => 'Autenticación exitosa', 'redirect_url' => '/proyecto/panel_admin/panel_admin.php']);
 
-} catch (PDOException $e) {
-    error_log("Error 2FA: " . $e->getMessage());
+} catch (Throwable $e) {
     http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Error de base de datos']);
+    echo json_encode(['success' => false, 'message' => 'Error al verificar código 2FA']);
 }
 
 function generarTOTP(string $secret, int $timeSlice): string {

@@ -6,6 +6,16 @@ header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: http://localhost');
 header('Access-Control-Allow-Credentials: true');
 
+register_shutdown_function(function () {
+    $e = error_get_last();
+    if ($e && in_array($e['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'Error interno']);
+    }
+});
+
+set_error_handler(function () { return false; });
+
 require_once __DIR__ . '/../conexion/conexion.php';
 requerirAdmin();
 
@@ -86,12 +96,9 @@ try {
         ]);
     }
 
-} catch (PDOException $e) {
+} catch (Throwable $e) {
     http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Error de base de datos']);
-} catch (Exception $e) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+    echo json_encode(['success' => false, 'message' => 'Error al enviar notificación']);
 }
 
 function obtenerConfigWhatsApp($pdo): array {

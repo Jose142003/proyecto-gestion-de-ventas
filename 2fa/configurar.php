@@ -6,16 +6,21 @@ header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: http://localhost');
 header('Access-Control-Allow-Credentials: true');
 
+register_shutdown_function(function () {
+    $e = error_get_last();
+    if ($e && in_array($e['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'Error interno']);
+    }
+});
+
+set_error_handler(function () { return false; });
+
 require_once __DIR__ . '/../conexion/conexion.php';
 requerirAdmin();
 
 function columnaExiste($pdo, $tabla, $columna): bool {
-    try {
-        $r = $pdo->query("SHOW COLUMNS FROM `$tabla` LIKE '$columna'");
-        return $r->rowCount() > 0;
-    } catch (PDOException $e) {
-        return false;
-    }
+    try { return (bool)$pdo->query("SHOW COLUMNS FROM `$tabla` LIKE " . $pdo->quote($columna))->fetch(); } catch (Throwable $e) { return false; }
 }
 
 try {
@@ -97,9 +102,9 @@ try {
         echo json_encode(['success' => false, 'message' => 'Acción no válida']);
     }
 
-} catch (PDOException $e) {
+} catch (Throwable $e) {
     http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Error de base de datos']);
+    echo json_encode(['success' => false, 'message' => 'Error al procesar configuración 2FA']);
 }
 
 function verificarTOTP($pdo, int $userId, string $secret, string $code): bool {
