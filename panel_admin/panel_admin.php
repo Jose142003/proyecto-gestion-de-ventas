@@ -4717,6 +4717,21 @@ async function cambiarPasswordRecuperacion(event) {
                 const data = await response.json();
                 if (!data.success) throw new Error('Error al cargar predicciones');
 
+                if (data.migracion_pendiente) {
+                    document.getElementById('prediccionesBody').innerHTML = `<tr><td colspan="10" style="text-align:center;padding:30px">
+                        <i class="fas fa-database" style="font-size:2rem;color:var(--warning);display:block;margin-bottom:10px"></i>
+                        <p style="color:var(--warning)">${data.mensaje_migracion || 'Migración pendiente'}</p>
+                        <small style="color:#aaa">Ejecute el archivo sql/migracion_nuevas_funcionalidades.sql en su base de datos</small>
+                    </td></tr>`;
+                    document.getElementById('predPrecision').textContent = '--';
+                    document.getElementById('predConfianza').textContent = '--';
+                    document.getElementById('predSubiendo').textContent = '--';
+                    document.getElementById('predBajando').textContent = '--';
+                    document.getElementById('alertasStockList').innerHTML = '<div style="text-align:center;padding:20px;color:#aaa">Migración pendiente</div>';
+                    document.getElementById('recomendacionesList').innerHTML = '<div style="text-align:center;padding:20px;color:#aaa">Migración pendiente</div>';
+                    return;
+                }
+
                 if (data.resumen) {
                     document.getElementById('predPrecision').textContent = (data.resumen.precision_general || 0) + '%';
                     document.getElementById('predConfianza').textContent = (data.resumen.confianza_general || 0) + '%';
@@ -5139,6 +5154,16 @@ async function cambiarPasswordRecuperacion(event) {
             try {
                 const response = await fetch('/proyecto/2fa/configurar.php?action=estado', { credentials: 'include' });
                 const data = await response.json();
+                if (data.migracion_pendiente) {
+                    document.getElementById('2faEstadoBadge').className = 'badge badge-pending';
+                    document.getElementById('2faEstadoBadge').innerHTML = '<i class="fas fa-clock"></i> Migración pendiente';
+                    document.getElementById('2faTitulo').textContent = '2FA no disponible';
+                    document.getElementById('2faDescripcion').textContent = 'Ejecute sql/migracion_nuevas_funcionalidades.sql para activar la autenticación de dos factores.';
+                    document.getElementById('2faSetupSection').style.display = 'none';
+                    document.getElementById('2faActiveSection').style.display = 'none';
+                    document.getElementById('2faDisabledSection').style.display = 'none';
+                    return;
+                }
                 const enabled = data.enabled;
                 const badge = document.getElementById('2faEstadoBadge');
                 const setupSection = document.getElementById('2faSetupSection');
