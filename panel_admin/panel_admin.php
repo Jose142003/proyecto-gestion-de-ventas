@@ -83,6 +83,7 @@ try {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" type="image/png" href="/proyecto/img/pic.png">
     <link rel="shortcut icon" href="/proyecto/img/pic.png">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
        :root {
             --primary-color: #0a0e1a;
@@ -1661,6 +1662,10 @@ try {
                 <div class="menu-item" data-section="pedidosSection"><i class="fas fa-clipboard-list"></i> Pedidos</div>
                 <div class="menu-item" data-section="facturacionSection"><i class="fas fa-file-invoice-dollar"></i> Facturacion</div>
                 <div class="menu-item" data-section="cajaSection"><i class="fas fa-cash-register"></i> Caja / Arqueo</div>
+                <div class="menu-section-title">Herramientas</div>
+                <a href="/proyecto/admin/asistente_tecnico.php" class="menu-item" style="display:flex;text-decoration:none;color:inherit"><i class="fas fa-robot"></i> Asistente Técnico</a>
+                <div class="menu-item" data-section="prediccionesSection"><i class="fas fa-brain"></i> IA Predictiva</div>
+                <div class="menu-item" data-section="biDashboardSection"><i class="fas fa-chart-pie"></i> BI Dashboard</div>
                 <div class="menu-section-title">Reportes</div>
                 <div class="menu-item" data-section="ventasClienteSection"><i class="fas fa-chart-line"></i> Ventas por Cliente</div>
                 <div class="menu-item" data-section="ventasVendedorSection"><i class="fas fa-user-tie"></i> Ventas por Vendedor</div>
@@ -1672,8 +1677,11 @@ try {
                 <div class="menu-section-title">Sistema</div>
                 <div class="menu-item" data-section="ceoSection"><i class="fas fa-crown"></i> Panel CEO</div>
                 <div class="menu-item" data-section="configuracionSection"><i class="fas fa-cog"></i> Configuracion</div>
+                <div class="menu-item" data-section="whatsappSection"><i class="fab fa-whatsapp"></i> WhatsApp</div>
                 <div class="menu-item" data-section="backupSection"><i class="fas fa-database"></i> Backup</div>
                 <div class="menu-item" data-section="reporteStockSection"><i class="fas fa-chart-simple"></i> Reporte de Stock</div>
+                <div class="menu-section-title">Seguridad</div>
+                <div class="menu-item" data-section="seguridad2faSection"><i class="fas fa-shield-alt"></i> Autenticación 2FA</div>
             </nav>
             <div class="logout"><button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Cerrar Sesion</button></div>
         </aside>
@@ -2206,6 +2214,161 @@ try {
                     <div class="table-content"><table class="data-table"><thead><tr><th>ID</th><th>Archivo</th><th>Tamaño</th><th>Tipo</th><th>Fecha</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="backupsList"><tr><td colspan="7" style="text-align:center">Cargando...</tbody></table></div>
                 </div>
             </div>
+
+            <!-- IA Predictiva Section -->
+            <div id="prediccionesSection" class="content-section">
+                <div class="header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+                    <h3><i class="fas fa-brain"></i> IA Predictiva - Pronóstico de Ventas e Inventario</h3>
+                    <div>
+                        <button class="btn-primary" id="btnGenerarPredicciones" style="background:var(--info)"><i class="fas fa-sync-alt"></i> Generar Predicciones</button>
+                    </div>
+                </div>
+                <div class="kpi-grid" id="prediccionesResumen">
+                    <div class="kpi-card"><div class="kpi-icon"><i class="fas fa-chart-line"></i></div><div class="kpi-value" id="predPrecision">0%</div><div class="kpi-label">Precisión Promedio</div></div>
+                    <div class="kpi-card"><div class="kpi-icon"><i class="fas fa-check-circle"></i></div><div class="kpi-value" id="predConfianza">0%</div><div class="kpi-label">Nivel de Confianza</div></div>
+                    <div class="kpi-card"><div class="kpi-icon"><i class="fas fa-arrow-up" style="color:#2ed573"></i></div><div class="kpi-value" id="predSubiendo">0</div><div class="kpi-label">Productos en Aumento</div></div>
+                    <div class="kpi-card"><div class="kpi-icon"><i class="fas fa-arrow-down" style="color:#ff4757"></i></div><div class="kpi-value" id="predBajando">0</div><div class="kpi-label">Productos en Descenso</div></div>
+                </div>
+                <div class="chart-container"><div class="chart-title"><i class="fas fa-chart-bar"></i> Pronóstico vs Real (Este Mes)</div><canvas id="prediccionesChart" style="max-height:300px;width:100%"></canvas></div>
+                <div class="table-container" style="margin-top:20px">
+                    <div class="table-header"><h3><i class="fas fa-boxes"></i> Predicciones por Producto</h3><div class="filtros"><input type="text" id="searchPredicciones" placeholder="Buscar producto..." class="form-control" style="width:200px"></div></div>
+                    <div class="table-content"><table class="data-table"><thead><tr><th>Producto</th><th>SKU</th><th>Categoría</th><th>Stock Actual</th><th>Ventas Esperadas</th><th>Stock Sugerido</th><th>Tendencia</th><th>Confianza</th><th>Días para Agotar</th><th>Estado</th></tr></thead><tbody id="prediccionesBody"><tr><td colspan="10" style="text-align:center">Generando predicciones...</tbody></table></div>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:20px;margin-top:20px">
+                    <div class="chart-container"><div class="chart-title"><i class="fas fa-exclamation-triangle" style="color:#ffa502"></i> Alertas de Stock</div><div id="alertasStockList" class="top-list"><div style="text-align:center;padding:20px">Cargando alertas...</div></div></div>
+                    <div class="chart-container"><div class="chart-title"><i class="fas fa-lightbulb" style="color:#2ed573"></i> Recomendaciones</div><div id="recomendacionesList" class="top-list"><div style="text-align:center;padding:20px">Cargando recomendaciones...</div></div></div>
+                </div>
+            </div>
+
+            <!-- BI Dashboard Section -->
+            <div id="biDashboardSection" class="content-section">
+                <div class="header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+                    <h3><i class="fas fa-chart-pie"></i> Business Intelligence - Analítica Avanzada</h3>
+                    <button class="btn-primary" id="btnActualizarBI" style="background:var(--info)"><i class="fas fa-sync-alt"></i> Actualizar Datos</button>
+                </div>
+                <div class="kpi-grid" id="biKpiGrid">
+                    <div class="kpi-card"><div class="kpi-icon"><i class="fas fa-chart-line"></i></div><div class="kpi-value" id="biVentasHoy">Bs. 0</div><div class="kpi-label">Ventas Hoy</div></div>
+                    <div class="kpi-card"><div class="kpi-icon"><i class="fas fa-calendar-week"></i></div><div class="kpi-value" id="biVentasMes">Bs. 0</div><div class="kpi-label">Ventas del Mes</div></div>
+                    <div class="kpi-card"><div class="kpi-icon"><i class="fas fa-percent"></i></div><div class="kpi-value" id="biCrecimiento">0%</div><div class="kpi-label">Crecimiento</div></div>
+                    <div class="kpi-card"><div class="kpi-icon"><i class="fas fa-ticket-alt"></i></div><div class="kpi-value" id="biTicketPromedio">Bs. 0</div><div class="kpi-label">Ticket Promedio</div></div>
+                    <div class="kpi-card"><div class="kpi-icon"><i class="fas fa-users"></i></div><div class="kpi-value" id="biClientesActivos">0</div><div class="kpi-label">Clientes Activos</div></div>
+                    <div class="kpi-card"><div class="kpi-icon"><i class="fas fa-box"></i></div><div class="kpi-value" id="biStockBajo">0</div><div class="kpi-label">Stock Bajo</div></div>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:20px;margin-bottom:20px">
+                    <div class="chart-container"><div class="chart-title"><i class="fas fa-chart-line"></i> Tendencia de Ventas (12 meses)</div><canvas id="biVentasChart" style="max-height:300px;width:100%"></canvas></div>
+                    <div class="chart-container"><div class="chart-title"><i class="fas fa-chart-pie"></i> Distribución por Método de Pago</div><canvas id="biMetodosPagoChart" style="max-height:300px;width:100%"></canvas></div>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:20px;margin-bottom:20px">
+                    <div class="chart-container"><div class="chart-title"><i class="fas fa-chart-bar"></i> Ventas por Categoría</div><canvas id="biCategoriasChart" style="max-height:300px;width:100%"></canvas></div>
+                    <div class="chart-container"><div class="chart-title"><i class="fas fa-users"></i> Nuevos Clientes por Mes</div><canvas id="biClientesChart" style="max-height:300px;width:100%"></canvas></div>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(350px,1fr));gap:20px">
+                    <div class="chart-container"><div class="chart-title"><i class="fas fa-trophy"></i> Top 10 Productos Más Vendidos</div><div id="biTopProductos" class="top-list"><div style="text-align:center;padding:20px">Cargando...</div></div></div>
+                    <div class="chart-container"><div class="chart-title"><i class="fas fa-star"></i> Top 10 Clientes</div><div id="biTopClientes" class="top-list"><div style="text-align:center;padding:20px">Cargando...</div></div></div>
+                    <div class="chart-container"><div class="chart-title"><i class="fas fa-layer-group"></i> Stock por Categoría</div><canvas id="biStockCategoriasChart" style="max-height:250px;width:100%"></canvas></div>
+                </div>
+            </div>
+
+            <!-- WhatsApp Section -->
+            <div id="whatsappSection" class="content-section">
+                <div class="header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+                    <h3><i class="fab fa-whatsapp"></i> Integración WhatsApp Business</h3>
+                </div>
+                <div class="card" style="margin-bottom:20px">
+                    <div class="card-header"><h3 class="card-title"><i class="fas fa-cog"></i> Configuración de API</h3></div>
+                    <div class="card-body" style="padding:20px">
+                        <div class="filtros-avanzados" style="grid-template-columns:1fr 1fr">
+                            <div class="filtro-group"><label>URL de la API de WhatsApp</label><input type="text" id="whatsappApiUrl" class="form-control" placeholder="https://graph.facebook.com/v17.0/123456789/messages"></div>
+                            <div class="filtro-group"><label>Token de Acceso</label><input type="password" id="whatsappApiToken" class="form-control" placeholder="EAAT..."></div>
+                            <div class="filtro-group"><label>Número de WhatsApp (código de país + número)</label><input type="text" id="whatsappNumero" class="form-control" placeholder="584141234567"></div>
+                            <div class="filtro-group"><label>Notificar nuevos pedidos</label><select id="whatsappNotifPedido" class="form-control"><option value="0">No</option><option value="1">Sí</option></select></div>
+                            <div class="filtro-group"><label>Notificar stock bajo</label><select id="whatsappNotifStock" class="form-control"><option value="0">No</option><option value="1">Sí</option></select></div>
+                        </div>
+                        <div class="form-actions" style="margin-top:15px">
+                            <button class="btn-primary" id="btnGuardarWhatsApp"><i class="fas fa-save"></i> Guardar Configuración</button>
+                            <button class="btn-primary" id="btnProbarWhatsApp" style="background:var(--success);margin-left:10px"><i class="fab fa-whatsapp"></i> Enviar Mensaje de Prueba</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><h3 class="card-title"><i class="fas fa-info-circle"></i> Información de la Integración</h3></div>
+                    <div class="card-body" style="padding:20px">
+                        <div class="profile-info-row"><div class="profile-info-label">Estado</div><div class="profile-info-value" id="whatsappEstado"><span class="badge badge-pending"><i class="fas fa-clock"></i> No configurado</span></div></div>
+                        <div class="profile-info-row"><div class="profile-info-label">Número</div><div class="profile-info-value" id="whatsappNumeroDisplay">-</div></div>
+                        <div class="profile-info-row"><div class="profile-info-label">Notificaciones de pedidos</div><div class="profile-info-value" id="whatsappNotifPedidoDisplay">Desactivado</div></div>
+                        <div class="profile-info-row"><div class="profile-info-label">Notificaciones de stock</div><div class="profile-info-value" id="whatsappNotifStockDisplay">Desactivado</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2FA Section -->
+            <div id="seguridad2faSection" class="content-section">
+                <div class="header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+                    <h3><i class="fas fa-shield-alt"></i> Autenticación de Dos Factores (2FA)</h3>
+                </div>
+                <div class="card" style="max-width:600px;margin:0 auto">
+                    <div class="card-header"><h3 class="card-title"><i class="fas fa-lock"></i> Seguridad de la Cuenta</h3></div>
+                    <div class="card-body" style="padding:25px;text-align:center">
+                        <div style="font-size:4rem;color:var(--accent-color);margin-bottom:20px" id="2faIcon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h3 style="margin-bottom:10px;color:var(--text-color)" id="2faTitulo">Protege tu cuenta</h3>
+                        <p style="color:#aaa;margin-bottom:20px" id="2faDescripcion">
+                            La autenticación de dos factores añade una capa adicional de seguridad a tu cuenta.
+                            Cada vez que inicies sesión, necesitarás tu contraseña y un código generado por tu aplicación de autenticación.
+                        </p>
+                        <div id="2faEstado" class="profile-info-row" style="justify-content:center;margin-bottom:20px">
+                            <span class="badge badge-pending" id="2faEstadoBadge"><i class="fas fa-clock"></i> Verificando estado...</span>
+                        </div>
+                        <div id="2faSetupSection" style="display:none">
+                            <div style="background:var(--bg-color);border-radius:10px;padding:20px;margin-bottom:20px;text-align:left">
+                                <h4 style="color:var(--accent-color);margin-bottom:15px"><i class="fas fa-cog"></i> Paso 1: Escanea el código QR</h4>
+                                <p style="color:#aaa;font-size:0.85rem;margin-bottom:15px">Abre Google Authenticator (o cualquier app compatible) y escanea este código:</p>
+                                <div id="2faQRCode" style="text-align:center;margin-bottom:15px;background:white;padding:15px;border-radius:10px;display:inline-block;width:100%">
+                                    <div id="2faQRContainer" style="width:200px;height:200px;margin:0 auto;background:#f0f0f0;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#999">
+                                        <i class="fas fa-qrcode" style="font-size:4rem"></i>
+                                    </div>
+                                </div>
+                                <p style="color:#aaa;font-size:0.8rem;text-align:center">O ingresa manualmente: <code id="2faSecretDisplay" style="background:#0f1219;padding:4px 8px;border-radius:4px;color:var(--accent-color);font-size:0.9rem"></code></p>
+                                <h4 style="color:var(--accent-color);margin:20px 0 15px"><i class="fas fa-key"></i> Paso 2: Verifica el código</h4>
+                                <p style="color:#aaa;font-size:0.85rem;margin-bottom:15px">Ingresa el código de 6 dígitos que aparece en tu app:</p>
+                                <div style="display:flex;gap:8px;justify-content:center;margin-bottom:15px" id="2faCodeInput">
+                                    <input type="text" maxlength="1" class="code-digit-2fa form-control" style="width:45px;height:55px;text-align:center;font-size:1.3rem;font-weight:700" id="2fa1">
+                                    <input type="text" maxlength="1" class="code-digit-2fa form-control" style="width:45px;height:55px;text-align:center;font-size:1.3rem;font-weight:700" id="2fa2">
+                                    <input type="text" maxlength="1" class="code-digit-2fa form-control" style="width:45px;height:55px;text-align:center;font-size:1.3rem;font-weight:700" id="2fa3">
+                                    <input type="text" maxlength="1" class="code-digit-2fa form-control" style="width:45px;height:55px;text-align:center;font-size:1.3rem;font-weight:700" id="2fa4">
+                                    <input type="text" maxlength="1" class="code-digit-2fa form-control" style="width:45px;height:55px;text-align:center;font-size:1.3rem;font-weight:700" id="2fa5">
+                                    <input type="text" maxlength="1" class="code-digit-2fa form-control" style="width:45px;height:55px;text-align:center;font-size:1.3rem;font-weight:700" id="2fa6">
+                                </div>
+                                <div class="form-actions" style="justify-content:center">
+                                    <button class="btn-primary" id="btnVerificar2FA"><i class="fas fa-check-circle"></i> Verificar y Activar</button>
+                                </div>
+                            </div>
+                            <div style="background:rgba(255,165,2,0.1);border:1px solid rgba(255,165,2,0.3);border-radius:10px;padding:15px;margin-bottom:20px">
+                                <h4 style="color:var(--warning);margin-bottom:10px"><i class="fas fa-exclamation-triangle"></i> Códigos de Respaldo</h4>
+                                <p style="color:#aaa;font-size:0.8rem;margin-bottom:10px">Guarda estos códigos en un lugar seguro. Puedes usarlos si pierdes acceso a tu app de autenticación.</p>
+                                <div id="2faBackupCodes" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center"></div>
+                            </div>
+                        </div>
+                        <div id="2faActiveSection" style="display:none">
+                            <div style="background:rgba(46,213,115,0.1);border:1px solid rgba(46,213,115,0.3);border-radius:10px;padding:20px;margin-bottom:20px">
+                                <i class="fas fa-check-circle" style="font-size:3rem;color:var(--success);margin-bottom:10px"></i>
+                                <h4 style="color:var(--success)">2FA Activado</h4>
+                                <p style="color:#aaa;font-size:0.85rem">Tu cuenta está protegida con autenticación de dos factores.</p>
+                            </div>
+                            <div class="form-actions" style="justify-content:center">
+                                <button class="btn-danger" id="btnDesactivar2FA"><i class="fas fa-shield-slash"></i> Desactivar 2FA</button>
+                            </div>
+                        </div>
+                        <div id="2faDisabledSection">
+                            <div class="form-actions" style="justify-content:center">
+                                <button class="btn-primary" id="btnConfigurar2FA"><i class="fas fa-shield-alt"></i> Configurar 2FA</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </main>
     </div>
 
@@ -2296,6 +2459,13 @@ try {
         
         window.ceoVentasMesChart = null;
         window.ceoMetodoPagoChart = null;
+
+        let biVentasChartInstance = null;
+        let biMetodosPagoChartInstance = null;
+        let biCategoriasChartInstance = null;
+        let biClientesChartInstance = null;
+        let biStockCategoriasChartInstance = null;
+        let prediccionesChartInstance = null;
 
         // ====================================================================
         // FUNCIONES DE BÚSQUEDA EN TIEMPO REAL
@@ -2984,7 +3154,7 @@ function renderCompras() {
                         document.getElementById('cajaMontoInicial').innerHTML = formatMoney(data.monto_inicial);
                         document.getElementById('cajaIngresos').innerHTML = formatMoney(data.total_ingresos);
                         document.getElementById('cajaEgresos').innerHTML = formatMoney(data.total_egresos);
-                        document.getElementById('cajaTotal').innerHTML = formatMoney(data.saldo_actual);
+                        document.getElementById('cajaTotal').innerHTML = formatMoney(data.total || data.saldo_actual);
                     }
                 }
             } catch(e) { console.error('Error cargando caja:', e); }
@@ -4539,6 +4709,556 @@ async function cambiarPasswordRecuperacion(event) {
         }
 
         // ====================================================================
+        // IA PREDICTIVA - FUNCIONES
+        // ====================================================================
+        async function cargarPredicciones() {
+            try {
+                const response = await fetch('/proyecto/predicciones/obtener_predicciones.php?tipo=general', { credentials: 'include' });
+                const data = await response.json();
+                if (!data.success) throw new Error('Error al cargar predicciones');
+
+                if (data.resumen) {
+                    document.getElementById('predPrecision').textContent = (data.resumen.precision_general || 0) + '%';
+                    document.getElementById('predConfianza').textContent = (data.resumen.confianza_general || 0) + '%';
+                    document.getElementById('predSubiendo').textContent = data.resumen.productos_subiendo || 0;
+                    document.getElementById('predBajando').textContent = data.resumen.productos_bajando || 0;
+                }
+
+                const alertas = data.conteo_alertas || {};
+                const totalAlertas = alertas.total_alertas || 0;
+                const criticas = alertas.criticas || 0;
+                if (criticas > 0) {
+                    document.getElementById('predSubiendo').parentElement.style.borderLeft = '4px solid var(--danger)';
+                }
+
+                const tbody = document.getElementById('prediccionesBody');
+                if (data.productos && data.productos.length > 0) {
+                    tbody.innerHTML = data.productos.map(p => {
+                        const tendenciaIcon = p.tendencia === 'subiendo' ? '<i class="fas fa-arrow-up" style="color:#2ed573"></i>' :
+                            p.tendencia === 'bajando' ? '<i class="fas fa-arrow-down" style="color:#ff4757"></i>' :
+                            '<i class="fas fa-minus" style="color:#ffa502"></i>';
+                        const estadoClass = p.estado_stock === 'agotado' || p.estado_stock === 'critico' ? 'badge-inactive' :
+                            p.estado_stock === 'bajo' ? 'badge-pending' : 'badge-active';
+                        const estadoLabel = p.estado_stock === 'agotado' ? 'Agotado' :
+                            p.estado_stock === 'critico' ? 'Crítico' :
+                            p.estado_stock === 'bajo' ? 'Bajo' :
+                            p.estado_stock === 'exceso' ? 'Exceso' : 'Normal';
+                        return `<tr>
+                            <td>${escapeHtml(p.name)}</td>
+                            <td>${escapeHtml(p.sku)}</td>
+                            <td>${escapeHtml(p.category)}</td>
+                            <td><strong>${p.stock}</strong></td>
+                            <td>${p.ventas_esperadas.toFixed(0)}</td>
+                            <td>${p.stock_sugerido}</td>
+                            <td>${tendenciaIcon} ${p.tendencia}</td>
+                            <td>${p.confianza}%</td>
+                            <td>${p.dias_para_agotar > 0 ? p.dias_para_agotar + ' días' : 'N/A'}</td>
+                            <td><span class="badge ${estadoClass}">${estadoLabel}</span></td>
+                        </tr>`;
+                    }).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center">No hay datos de predicción. Haz clic en "Generar Predicciones".</td></tr>';
+                }
+
+                initSearchPredicciones();
+
+                const alertasList = document.getElementById('alertasStockList');
+                if (data.alertas && data.alertas.length > 0) {
+                    alertasList.innerHTML = data.alertas.map(a => `
+                        <div class="top-item">
+                            <div>
+                                <span class="${a.tipo === 'critico' ? 'badge-inactive' : 'badge-pending'}" style="padding:2px 8px;border-radius:4px;font-size:0.7rem">${a.tipo.toUpperCase()}</span>
+                                <span style="margin-left:8px">${escapeHtml(a.producto_nombre)}</span>
+                            </div>
+                            <div>
+                                <small style="color:#aaa">Stock: ${a.nivel_actual} | Sug: ${a.nivel_sugerido}</small>
+                                <button class="btn-action" style="background:var(--success);margin-left:8px" onclick="resolverAlerta(${a.id})"><i class="fas fa-check"></i></button>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    alertasList.innerHTML = '<div style="text-align:center;padding:20px;color:#aaa"><i class="fas fa-check-circle" style="color:var(--success);font-size:2rem;display:block;margin-bottom:10px"></i>No hay alertas pendientes</div>';
+                }
+
+                const recomList = document.getElementById('recomendacionesList');
+                if (data.recomendaciones && data.recomendaciones.length > 0) {
+                    const prioridadColors = { alta: 'var(--danger)', media: 'var(--warning)', baja: 'var(--info)' };
+                    recomList.innerHTML = data.recomendaciones.map(r => `
+                        <div class="top-item">
+                            <div>
+                                <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${prioridadColors[r.prioridad] || '#aaa'};margin-right:8px"></span>
+                                <strong>${escapeHtml(r.name)}</strong>
+                                <small style="color:#aaa;display:block;margin-left:18px">Stock: ${r.stock} | Sugerido: ${r.stock_sugerido} | Demanda: ${r.demanda_esperada}</small>
+                            </div>
+                            <div><small style="color:${r.prioridad === 'alta' ? 'var(--danger)' : 'var(--warning)'}">${escapeHtml(r.accion_recomendada)}</small></div>
+                        </div>
+                    `).join('');
+                } else {
+                    recomList.innerHTML = '<div style="text-align:center;padding:20px;color:#aaa"><i class="fas fa-thumbs-up" style="color:var(--success);font-size:2rem;display:block;margin-bottom:10px"></i>Sin recomendaciones pendientes</div>';
+                }
+
+                renderPrediccionesChart(data.tendencias || []);
+            } catch (e) {
+                console.error('Error cargarPredicciones:', e);
+                document.getElementById('prediccionesBody').innerHTML = '<tr><td colspan="10" style="text-align:center">Error al cargar predicciones</td></tr>';
+            }
+        }
+
+        function initSearchPredicciones() {
+            const input = document.getElementById('searchPredicciones');
+            if (!input) return;
+            input.addEventListener('keyup', function() {
+                const term = this.value.toLowerCase();
+                const rows = document.getElementById('prediccionesBody').querySelectorAll('tr');
+                rows.forEach(r => { r.style.display = r.textContent.toLowerCase().includes(term) ? '' : 'none'; });
+            });
+        }
+
+        function renderPrediccionesChart(tendencias) {
+            if (prediccionesChartInstance) prediccionesChartInstance.destroy();
+            const canvas = document.getElementById('prediccionesChart');
+            if (!canvas || !tendencias.length) return;
+            const ctx = canvas.getContext('2d');
+            const labels = tendencias.map(t => `${t.mes}/${t.anio}`);
+            prediccionesChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        { label: 'Ventas Reales', data: tendencias.map(t => t.ventas_reales), backgroundColor: 'rgba(60,145,237,0.7)', borderRadius: 4 },
+                        { label: 'Pronóstico', data: tendencias.map(t => t.ventas_predichas), backgroundColor: 'rgba(46,213,115,0.7)', borderRadius: 4 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#e4e6eb' } } },
+                    scales: { y: { beginAtZero: true, ticks: { color: '#aaa' } }, x: { ticks: { color: '#aaa' } } }
+                }
+            });
+        }
+
+        async function generarPredicciones() {
+            const btn = document.getElementById('btnGenerarPredicciones');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
+            try {
+                const response = await fetch('/proyecto/predicciones/generar_predicciones.php', { method: 'POST', credentials: 'include' });
+                const data = await response.json();
+                if (data.success) {
+                    mostrarNotificacion(data.message || 'Predicciones generadas', 'success');
+                    await cargarPredicciones();
+                } else {
+                    mostrarNotificacion(data.message || 'Error al generar', 'error');
+                }
+            } catch (e) {
+                mostrarNotificacion('Error al generar predicciones', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-sync-alt"></i> Generar Predicciones';
+            }
+        }
+
+        async function resolverAlerta(alertaId) {
+            try {
+                const response = await fetch('/proyecto/predicciones/resolver_alerta.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ alerta_id: alertaId }),
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                if (data.success) {
+                    mostrarNotificacion('Alerta resuelta', 'success');
+                    await cargarPredicciones();
+                } else {
+                    mostrarNotificacion(data.message || 'Error', 'warning');
+                }
+            } catch (e) {
+                mostrarNotificacion('Error al resolver alerta', 'error');
+            }
+        }
+
+        // ====================================================================
+        // BI DASHBOARD - FUNCIONES
+        // ====================================================================
+        async function cargarBIDashboard() {
+            try {
+                const response = await fetch('/proyecto/bi/obtener_datos_bi.php', { credentials: 'include' });
+                const data = await response.json();
+                if (!data.success) throw new Error('Error al cargar BI');
+
+                if (data.kpis) {
+                    document.getElementById('biVentasHoy').textContent = formatMoney(data.kpis.ventas_hoy);
+                    document.getElementById('biVentasMes').textContent = formatMoney(data.kpis.ventas_mes);
+                    document.getElementById('biCrecimiento').textContent = (data.kpis.crecimiento >= 0 ? '+' : '') + data.kpis.crecimiento + '%';
+                    document.getElementById('biTicketPromedio').textContent = formatMoney(data.kpis.ticket_promedio);
+                    document.getElementById('biClientesActivos').textContent = data.kpis.clientes_activos;
+                    document.getElementById('biStockBajo').textContent = data.kpis.stock_bajo;
+                }
+
+                renderBiVentasChart(data.ventas_por_mes || []);
+                renderBiMetodosPagoChart(data.metodos_pago || []);
+                renderBiCategoriasChart(data.ventas_por_categoria || []);
+                renderBiClientesChart(data.tendencia_clientes || []);
+                renderBiStockCategoriasChart(data.stock_por_categoria || []);
+
+                const topProd = document.getElementById('biTopProductos');
+                if (data.top_productos && data.top_productos.length > 0) {
+                    topProd.innerHTML = data.top_productos.map((p, i) => `
+                        <div class="top-item">
+                            <span class="top-number">${i + 1}</span>
+                            <span class="top-name">${escapeHtml(p.name)}</span>
+                            <span class="top-value">${p.total_vendido} vendidos</span>
+                        </div>
+                    `).join('');
+                }
+
+                const topClient = document.getElementById('biTopClientes');
+                if (data.top_clientes && data.top_clientes.length > 0) {
+                    topClient.innerHTML = data.top_clientes.map((c, i) => `
+                        <div class="top-item">
+                            <span class="top-number">${i + 1}</span>
+                            <span class="top-name">${escapeHtml(c.nombre)}</span>
+                            <span class="top-value">${formatMoney(c.monto_total)}</span>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) {
+                console.error('Error BI:', e);
+            }
+        }
+
+        function renderBiVentasChart(ventasPorMes) {
+            if (biVentasChartInstance) biVentasChartInstance.destroy();
+            const canvas = document.getElementById('biVentasChart');
+            if (!canvas || !ventasPorMes.length) return;
+            const ctx = canvas.getContext('2d');
+            biVentasChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ventasPorMes.map(v => v.mes_nombre || v.mes),
+                    datasets: [{
+                        label: 'Ventas',
+                        data: ventasPorMes.map(v => v.total_ventas),
+                        borderColor: '#3C91ED',
+                        backgroundColor: 'rgba(60,145,237,0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#3C91ED'
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#e4e6eb' } } },
+                    scales: { y: { beginAtZero: true, ticks: { color: '#aaa', callback: v => 'Bs. ' + v.toLocaleString() } }, x: { ticks: { color: '#aaa' } } }
+                }
+            });
+        }
+
+        function renderBiMetodosPagoChart(metodosPago) {
+            if (biMetodosPagoChartInstance) biMetodosPagoChartInstance.destroy();
+            const canvas = document.getElementById('biMetodosPagoChart');
+            if (!canvas || !metodosPago.length) return;
+            const ctx = canvas.getContext('2d');
+            const colors = ['#3C91ED', '#2ed573', '#ffa502', '#ff4757', '#9B59B6'];
+            biMetodosPagoChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: metodosPago.map(m => m.metodo_pago),
+                    datasets: [{ data: metodosPago.map(m => m.monto), backgroundColor: colors.slice(0, metodosPago.length) }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { color: '#e4e6eb', padding: 15 } } }
+                }
+            });
+        }
+
+        function renderBiCategoriasChart(ventasCategoria) {
+            if (biCategoriasChartInstance) biCategoriasChartInstance.destroy();
+            const canvas = document.getElementById('biCategoriasChart');
+            if (!canvas || !ventasCategoria.length) return;
+            const ctx = canvas.getContext('2d');
+            const colors = ['#3C91ED', '#2ed573', '#ffa502', '#ff4757', '#9B59B6', '#E67E22', '#1abc9c', '#3498db'];
+            biCategoriasChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ventasCategoria.map(c => c.category),
+                    datasets: [{
+                        label: 'Ingresos',
+                        data: ventasCategoria.map(c => c.ingresos),
+                        backgroundColor: colors.slice(0, ventasCategoria.length),
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: { legend: { display: false } },
+                    scales: { x: { beginAtZero: true, ticks: { color: '#aaa', callback: v => 'Bs. ' + v.toLocaleString() } }, y: { ticks: { color: '#aaa' } } }
+                }
+            });
+        }
+
+        function renderBiClientesChart(tendenciaClientes) {
+            if (biClientesChartInstance) biClientesChartInstance.destroy();
+            const canvas = document.getElementById('biClientesChart');
+            if (!canvas || !tendenciaClientes.length) return;
+            const ctx = canvas.getContext('2d');
+            biClientesChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: tendenciaClientes.map(c => c.mes),
+                    datasets: [{
+                        label: 'Nuevos Clientes',
+                        data: tendenciaClientes.map(c => c.nuevos_clientes),
+                        borderColor: '#2ed573',
+                        backgroundColor: 'rgba(46,213,117,0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#2ed573'
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#e4e6eb' } } },
+                    scales: { y: { beginAtZero: true, ticks: { color: '#aaa' } }, x: { ticks: { color: '#aaa' } } }
+                }
+            });
+        }
+
+        function renderBiStockCategoriasChart(stockCategoria) {
+            if (biStockCategoriasChartInstance) biStockCategoriasChartInstance.destroy();
+            const canvas = document.getElementById('biStockCategoriasChart');
+            if (!canvas || !stockCategoria.length) return;
+            const ctx = canvas.getContext('2d');
+            const colors = ['#3C91ED', '#2ed573', '#ffa502', '#ff4757', '#9B59B6', '#E67E22', '#1abc9c', '#3498db'];
+            biStockCategoriasChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: stockCategoria.map(c => c.category),
+                    datasets: [{ data: stockCategoria.map(c => c.stock_total), backgroundColor: colors.slice(0, stockCategoria.length) }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { color: '#e4e6eb', padding: 10, font: { size: 10 } } } }
+                }
+            });
+        }
+
+        // ====================================================================
+        // WHATSAPP - FUNCIONES
+        // ====================================================================
+        async function cargarWhatsAppConfig() {
+            try {
+                const response = await fetch('/proyecto/admin/obtener_configuracion.php', { credentials: 'include' });
+                const data = await response.json();
+                if (data.success && data.data) {
+                    const config = data.data;
+                    const getVal = (key) => { const item = config.find(c => c.clave === key); return item ? item.valor : ''; };
+                    document.getElementById('whatsappApiUrl').value = getVal('whatsapp_api_url');
+                    document.getElementById('whatsappApiToken').value = getVal('whatsapp_api_token');
+                    document.getElementById('whatsappNumero').value = getVal('whatsapp_numero');
+                    document.getElementById('whatsappNotifPedido').value = getVal('whatsapp_notificaciones_pedido') || '0';
+                    document.getElementById('whatsappNotifStock').value = getVal('whatsapp_notificaciones_stock') || '0';
+
+                    const apiUrl = getVal('whatsapp_api_url');
+                    const apiToken = getVal('whatsapp_api_token');
+                    const numero = getVal('whatsapp_numero');
+                    const isConfigured = apiUrl && apiToken && numero;
+
+                    document.getElementById('whatsappEstado').innerHTML = isConfigured ?
+                        '<span class="badge badge-active"><i class="fas fa-check-circle"></i> Configurado</span>' :
+                        '<span class="badge badge-pending"><i class="fas fa-clock"></i> No configurado</span>';
+                    document.getElementById('whatsappNumeroDisplay').textContent = numero || '-';
+                    document.getElementById('whatsappNotifPedidoDisplay').textContent = getVal('whatsapp_notificaciones_pedido') === '1' ? 'Activado' : 'Desactivado';
+                    document.getElementById('whatsappNotifStockDisplay').textContent = getVal('whatsapp_notificaciones_stock') === '1' ? 'Activado' : 'Desactivado';
+                }
+            } catch (e) {
+                console.error('Error cargarWhatsApp:', e);
+            }
+        }
+
+        async function guardarWhatsApp() {
+            const payload = {};
+            payload['whatsapp_api_url'] = document.getElementById('whatsappApiUrl').value;
+            payload['whatsapp_api_token'] = document.getElementById('whatsappApiToken').value;
+            payload['whatsapp_numero'] = document.getElementById('whatsappNumero').value;
+            payload['whatsapp_notificaciones_pedido'] = document.getElementById('whatsappNotifPedido').value;
+            payload['whatsapp_notificaciones_stock'] = document.getElementById('whatsappNotifStock').value;
+
+            try {
+                const response = await fetch('/proyecto/admin/guardar_configuracion.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                if (data.success) {
+                    mostrarNotificacion('Configuración de WhatsApp guardada', 'success');
+                    await cargarWhatsAppConfig();
+                } else {
+                    mostrarNotificacion(data.message || 'Error al guardar', 'warning');
+                }
+            } catch (e) {
+                mostrarNotificacion('Error al guardar configuración', 'error');
+            }
+        }
+
+        async function probarWhatsApp() {
+            const mensaje = prompt('Ingresa el mensaje de prueba:', '🧪 Mensaje de prueba desde PIC - Sistema de Gestión Comercial');
+            if (!mensaje) return;
+            try {
+                const response = await fetch('/proyecto/whatsapp/enviar_notificacion.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tipo: 'prueba', destinatario: document.getElementById('whatsappNumero').value, mensaje }),
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                if (data.success) {
+                    mostrarNotificacion('✅ Mensaje de prueba enviado', 'success');
+                } else if (data.demo_mode) {
+                    mostrarNotificacion('⚠️ ' + data.message, 'warning');
+                } else {
+                    mostrarNotificacion('❌ ' + (data.message || 'Error al enviar'), 'error');
+                }
+            } catch (e) {
+                mostrarNotificacion('Error al enviar mensaje de prueba', 'error');
+            }
+        }
+
+        // ====================================================================
+        // 2FA - FUNCIONES
+        // ====================================================================
+        let current2faSecret = '';
+        let current2faBackupCodes = [];
+
+        async function cargar2FA() {
+            try {
+                const response = await fetch('/proyecto/2fa/configurar.php?action=estado', { credentials: 'include' });
+                const data = await response.json();
+                const enabled = data.enabled;
+                const badge = document.getElementById('2faEstadoBadge');
+                const setupSection = document.getElementById('2faSetupSection');
+                const activeSection = document.getElementById('2faActiveSection');
+                const disabledSection = document.getElementById('2faDisabledSection');
+
+                if (enabled) {
+                    badge.className = 'badge badge-active';
+                    badge.innerHTML = '<i class="fas fa-check-circle"></i> 2FA Activado';
+                    setupSection.style.display = 'none';
+                    activeSection.style.display = 'block';
+                    disabledSection.style.display = 'none';
+                    document.getElementById('2faTitulo').textContent = '✅ Cuenta Protegida';
+                    document.getElementById('2faDescripcion').textContent = 'La autenticación en dos pasos está activa en tu cuenta.';
+                } else {
+                    badge.className = 'badge badge-pending';
+                    badge.innerHTML = '<i class="fas fa-clock"></i> 2FA Desactivado';
+                    setupSection.style.display = 'none';
+                    activeSection.style.display = 'none';
+                    disabledSection.style.display = 'block';
+                    document.getElementById('2faTitulo').textContent = 'Protege tu cuenta';
+                    document.getElementById('2faDescripcion').textContent = 'La autenticación de dos factores añade una capa adicional de seguridad a tu cuenta.';
+                }
+            } catch (e) {
+                console.error('Error cargar2FA:', e);
+            }
+        }
+
+        async function configurar2FA() {
+            try {
+                const response = await fetch('/proyecto/2fa/configurar.php?action=generar_secreto', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                if (!data.success) throw new Error(data.message);
+
+                current2faSecret = data.secret;
+                current2faBackupCodes = data.backup_codes || [];
+
+                document.getElementById('2faSecretDisplay').textContent = data.secret;
+                document.getElementById('2faSetupSection').style.display = 'block';
+                document.getElementById('2faActiveSection').style.display = 'none';
+                document.getElementById('2faDisabledSection').style.display = 'none';
+
+                if (data.qr_content) {
+                    const qrContainer = document.getElementById('2faQRContainer');
+                    qrContainer.innerHTML = `<div style="text-align:center;padding:10px">
+                        <p style="color:#333;font-size:0.8rem;margin-bottom:8px;word-break:break-all">${data.qr_content}</p>
+                        <div style="background:#f8f8f8;border:2px dashed #ddd;border-radius:8px;padding:15px">
+                            <i class="fas fa-qrcode" style="font-size:5rem;color:#3C91ED"></i>
+                            <p style="color:#666;font-size:0.75rem;margin-top:8px">Escanea con Google Authenticator</p>
+                        </div>
+                        <p style="color:#999;font-size:0.7rem;margin-top:8px">Clave: <code style="background:#eee;padding:2px 6px;border-radius:3px;font-size:0.8rem">${data.secret}</code></p>
+                    </div>`;
+                }
+
+                const backupContainer = document.getElementById('2faBackupCodes');
+                backupContainer.innerHTML = data.backup_codes.map(c =>
+                    `<code style="background:#0f1219;padding:6px 12px;border-radius:4px;color:var(--accent-color);font-size:0.8rem">${c}</code>`
+                ).join('');
+            } catch (e) {
+                mostrarNotificacion('Error al configurar 2FA: ' + e.message, 'error');
+            }
+        }
+
+        async function verificar2FA() {
+            const code = Array.from(document.querySelectorAll('.code-digit-2fa')).map(i => i.value).join('');
+            if (code.length !== 6) {
+                mostrarNotificacion('Ingresa el código de 6 dígitos', 'warning');
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('code', code);
+
+                const response = await fetch('/proyecto/2fa/configurar.php?action=verificar', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                if (data.success) {
+                    mostrarNotificacion('✅ 2FA activado correctamente', 'success');
+                    await cargar2FA();
+                } else {
+                    mostrarNotificacion(data.message || 'Código inválido', 'error');
+                }
+            } catch (e) {
+                mostrarNotificacion('Error al verificar código', 'error');
+            }
+        }
+
+        async function desactivar2FA() {
+            const password = prompt('Ingresa tu contraseña para desactivar 2FA:');
+            if (!password) return;
+
+            try {
+                const formData = new FormData();
+                formData.append('password', password);
+
+                const response = await fetch('/proyecto/2fa/configurar.php?action=desactivar', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                if (data.success) {
+                    mostrarNotificacion('2FA desactivado', 'success');
+                    await cargar2FA();
+                } else {
+                    mostrarNotificacion(data.message || 'Contraseña incorrecta', 'error');
+                }
+            } catch (e) {
+                mostrarNotificacion('Error al desactivar 2FA', 'error');
+            }
+        }
+
+        // ====================================================================
         // DETECCIÓN DE CONEXIÓN Y MODO OFFLINE
         // ====================================================================
         let isOnline = navigator.onLine;
@@ -4692,7 +5412,11 @@ async function cambiarPasswordRecuperacion(event) {
                 'backupSection': cargarBackups, 
                 'reporteStockSection': cargarReporteStock,
                 'reporteGeneralSection': cargarReporteGeneral, 
-                'reporteEspecificoSection': () => { cargarReporteEspecifico(); }
+                'reporteEspecificoSection': () => { cargarReporteEspecifico(); },
+                'prediccionesSection': cargarPredicciones,
+                'biDashboardSection': cargarBIDashboard,
+                'whatsappSection': cargarWhatsAppConfig,
+                'seguridad2faSection': cargar2FA
             };
             const loader = loaders[sectionId];
             if(loader) loader();
@@ -4761,6 +5485,24 @@ async function cambiarPasswordRecuperacion(event) {
             document.getElementById('filtroVisibles')?.addEventListener('click', mostrarProductosVisibles);
             document.getElementById('filtroOcultos')?.addEventListener('click', mostrarProductosOcultos);
             document.getElementById('btnActualizarProductos')?.addEventListener('click', cargarProductos);
+            document.getElementById('btnGenerarPredicciones')?.addEventListener('click', generarPredicciones);
+            document.getElementById('btnActualizarBI')?.addEventListener('click', cargarBIDashboard);
+            document.getElementById('btnGuardarWhatsApp')?.addEventListener('click', guardarWhatsApp);
+            document.getElementById('btnProbarWhatsApp')?.addEventListener('click', probarWhatsApp);
+            document.getElementById('btnConfigurar2FA')?.addEventListener('click', configurar2FA);
+            document.getElementById('btnVerificar2FA')?.addEventListener('click', verificar2FA);
+            document.getElementById('btnDesactivar2FA')?.addEventListener('click', desactivar2FA);
+
+            document.querySelectorAll('.code-digit-2fa').forEach((input, idx, arr) => {
+                input.addEventListener('input', function() {
+                    this.value = this.value.replace(/\D/g, '').slice(0, 1);
+                    if (this.value && idx < arr.length - 1) arr[idx + 1].focus();
+                });
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Backspace' && !this.value && idx > 0) { arr[idx - 1].focus(); arr[idx - 1].value = ''; }
+                });
+            });
+
             inicializarFechasReporte();
             initSearchUsers();
             initSearchProducts();

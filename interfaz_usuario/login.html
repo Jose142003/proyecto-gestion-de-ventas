@@ -521,20 +521,29 @@
                 console.log('Respuesta del servidor:', result);
                 
                 if (result.success) {
+                    if (result.require_2fa) {
+                        messageDiv.className = 'alert-message alert-info';
+                        messageDiv.textContent = '🔐 Verificación de dos factores requerida. Redirigiendo...';
+                        messageDiv.style.display = 'block';
+                        messageDiv.style.backgroundColor = '#cce5ff';
+                        messageDiv.style.color = '#004085';
+                        messageDiv.style.border = '1px solid #b8daff';
+                        setTimeout(() => {
+                            window.location.href = result.redirect_url;
+                        }, 1000);
+                        return;
+                    }
+                    
                     messageDiv.className = 'alert-message alert-success';
                     messageDiv.textContent = result.message || 'Ingreso exitoso. Redirigiendo...';
                     messageDiv.style.display = 'block';
                     
-                    // 🔴 IMPORTANTE: Usar la URL de redirección que viene del servidor
                     const redirectUrl = result.redirect_url;
-                    
-                    console.log('Redirigiendo a:', redirectUrl);
                     
                     setTimeout(() => {
                         if (redirectUrl) {
                             window.location.href = redirectUrl;
                         } else {
-                            // Fallback por si no viene redirect_url
                             if (result.is_admin === true) {
                                 window.location.href = '/proyecto/panel_admin/panel_admin.php';
                             } else {

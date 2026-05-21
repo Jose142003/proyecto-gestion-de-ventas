@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificación 2FA - PIC</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="/proyecto/img/pic.png">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #0a0e1a, #1a1f2e);
+            padding: 20px;
+        }
+        .container {
+            background: #1e2436;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 440px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            border: 1px solid #2c3348;
+            text-align: center;
+        }
+        .logo { margin-bottom: 25px; }
+        .logo h1 { color: #5aa9e6; font-size: 2rem; }
+        .logo p { color: rgba(255,255,255,0.5); font-size: 0.85rem; }
+        h2 { color: #e4e6eb; font-size: 1.3rem; margin-bottom: 10px; }
+        p { color: #aaa; font-size: 0.9rem; margin-bottom: 25px; line-height: 1.5; }
+        .icon-shield {
+            font-size: 3rem;
+            color: #3C91ED;
+            margin-bottom: 20px;
+        }
+        .code-input {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 25px;
+        }
+        .code-input input {
+            width: 50px;
+            height: 60px;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: #0f1219;
+            border: 2px solid #2c3348;
+            border-radius: 10px;
+            color: #e4e6eb;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .code-input input:focus {
+            border-color: #3C91ED;
+            box-shadow: 0 0 15px rgba(60,145,237,0.3);
+        }
+        .code-input input.filled {
+            border-color: #2ed573;
+        }
+        .btn-verify {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #3C91ED, #5aa9e6);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-verify:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(60,145,237,0.4); }
+        .btn-verify:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .error-msg {
+            color: #ff4757;
+            font-size: 0.85rem;
+            margin-top: 15px;
+            display: none;
+        }
+        .info-box {
+            background: rgba(60,145,237,0.1);
+            border: 1px solid rgba(60,145,237,0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .info-box i { color: #3C91ED; margin-right: 8px; }
+        .info-box p { font-size: 0.8rem; margin-bottom: 0; color: #ccc; }
+        .loading-spinner {
+            width: 24px; height: 24px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @media (max-width: 480px) {
+            .container { padding: 25px; }
+            .code-input input { width: 40px; height: 50px; font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo"><h1>PIC</h1><p>Sistema de Gestión Comercial</p></div>
+        <div class="icon-shield"><i class="fas fa-shield-alt"></i></div>
+        <h2>Verificación en Dos Pasos</h2>
+        <p>Ingresa el código de 6 dígitos desde tu aplicación de autenticación</p>
+        
+        <div class="info-box">
+            <i class="fas fa-info-circle"></i> Abre Google Authenticator o tu app 2FA y escribe el código generado.
+        </div>
+
+        <div class="code-input" id="codeInput">
+            <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" class="code-digit" id="d1" autofocus>
+            <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" class="code-digit" id="d2">
+            <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" class="code-digit" id="d3">
+            <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" class="code-digit" id="d4">
+            <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" class="code-digit" id="d5">
+            <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" class="code-digit" id="d6">
+        </div>
+
+        <button class="btn-verify" id="btnVerify" disabled onclick="verificarCodigo()">
+            <i class="fas fa-check-circle"></i> Verificar Código
+        </button>
+
+        <div class="error-msg" id="errorMsg">
+            <i class="fas fa-exclamation-circle"></i> <span id="errorText">Código inválido. Intenta de nuevo.</span>
+        </div>
+
+        <p style="margin-top: 20px; font-size: 0.75rem;">
+            <i class="fas fa-sync-alt"></i> El código se actualiza cada 30 segundos
+        </p>
+    </div>
+
+    <script>
+        const token = new URLSearchParams(window.location.search).get('token');
+
+        if (!token) {
+            document.getElementById('errorText').textContent = 'Token de verificación no encontrado. Inicia sesión nuevamente.';
+            document.getElementById('errorMsg').style.display = 'block';
+            document.getElementById('btnVerify').disabled = true;
+        }
+
+        const inputs = document.querySelectorAll('.code-digit');
+        inputs.forEach((input, index) => {
+            input.addEventListener('input', function() {
+                this.value = this.value.replace(/\D/g, '').slice(0, 1);
+                if (this.value) {
+                    this.classList.add('filled');
+                    if (index < inputs.length - 1) {
+                        inputs[index + 1].focus();
+                    }
+                } else {
+                    this.classList.remove('filled');
+                }
+                updateVerifyButton();
+            });
+
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Backspace' && !this.value && index > 0) {
+                    inputs[index - 1].focus();
+                    inputs[index - 1].value = '';
+                    inputs[index - 1].classList.remove('filled');
+                }
+                if (e.key === 'Enter') {
+                    verificarCodigo();
+                }
+            });
+
+            input.addEventListener('focus', function() {
+                this.select();
+            });
+        });
+
+        function updateVerifyButton() {
+            const allFilled = Array.from(inputs).every(i => i.value.length === 1);
+            document.getElementById('btnVerify').disabled = !allFilled || !token;
+        }
+
+        async function verificarCodigo() {
+            const code = Array.from(inputs).map(i => i.value).join('');
+            if (code.length !== 6 || !token) return;
+
+            const btn = document.getElementById('btnVerify');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span> Verificando...';
+
+            const errorMsg = document.getElementById('errorMsg');
+            errorMsg.style.display = 'none';
+
+            try {
+                const formData = new FormData();
+                formData.append('code', code);
+                formData.append('token', token);
+
+                const response = await fetch('/proyecto/2fa/verificar_login.php', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    btn.innerHTML = '<i class="fas fa-check-circle"></i> ¡Verificado!';
+                    btn.style.background = 'linear-gradient(135deg, #2ed573, #1abc9c)';
+                    setTimeout(() => {
+                        window.location.href = data.redirect_url || '/proyecto/panel_admin/panel_admin.php';
+                    }, 500);
+                } else {
+                    throw new Error(data.message || 'Código inválido');
+                }
+            } catch (e) {
+                errorMsg.querySelector('#errorText').textContent = e.message || 'Error al verificar. Intenta de nuevo.';
+                errorMsg.style.display = 'block';
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check-circle"></i> Verificar Código';
+                inputs.forEach(i => { i.value = ''; i.classList.remove('filled'); });
+                inputs[0].focus();
+            }
+        }
+    </script>
+</body>
+</html>

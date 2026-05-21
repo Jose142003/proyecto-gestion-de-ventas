@@ -18,6 +18,34 @@
 - **PWA** — Progressive Web App con service worker y modo offline parcial
 - **Multi-moneda** — Precios en Bolívares y dólares con tasas actualizadas
 
+### 🧠 IA Predictiva (Nuevo)
+- Predicción de ventas por producto usando promedios móviles y regresión lineal
+- Alertas inteligentes de stock (crítico, bajo, exceso, sin movimiento)
+- Recomendaciones de reabastecimiento basadas en tendencias
+- Pronóstico de demanda con días estimados para agotar inventario
+- Dashboard visual con comparación real vs pronóstico
+
+### 📊 BI Dashboard (Nuevo)
+- Panel de Business Intelligence con 6 KPIs en tiempo real
+- Gráficos interactivos (Chart.js): tendencia de ventas 12 meses, distribución por método de pago, ventas por categoría
+- Top 10 productos más vendidos y mejores clientes
+- Tendencia de nuevos clientes y stock por categoría
+- Análisis de crecimiento mes a mes
+
+### 🔐 Autenticación 2FA (Nuevo)
+- Autenticación de dos factores TOTP (Google Authenticator compatible)
+- Generación de QR para escaneo rápido
+- 8 códigos de respaldo de un solo uso
+- Verificación obligatoria en inicio de sesión admin
+- Activar/desactivar desde el panel de seguridad
+
+### 💬 WhatsApp Business (Nuevo)
+- Integración con WhatsApp Business API (Meta/Cloud API)
+- Notificaciones automáticas de nuevos pedidos
+- Alertas de stock bajo por WhatsApp
+- Configuración desde el panel administrativo
+- Mensajes de prueba para validar la integración
+
 ## Seguridad implementada
 
 - Contraseñas con **bcrypt** (password_hash / password_verify)
@@ -81,7 +109,11 @@ El sistema utiliza 20 tablas:
 ├── stock/              # Control de inventario
 ├── tasas/              # Tasas de cambio (BCV)
 ├── uploads/            # Archivos subidos
-└── usuarios/           # Autenticación y perfiles
+├── usuarios/           # Autenticación y perfiles
+├── predicciones/       # IA Predictiva - pronósticos y alertas
+├── 2fa/                # Autenticación de dos factores
+├── bi/                 # Business Intelligence - analítica avanzada
+└── whatsapp/           # Integración con WhatsApp Business
 ```
 
 ## Tecnologías

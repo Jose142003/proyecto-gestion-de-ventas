@@ -181,6 +181,33 @@ try {
         exit;
     }
     
+    // ========== VERIFICAR 2FA PARA ADMINISTRADORES ==========
+    if ($tabla_origen === 'admin_users') {
+        $stmt2fa = $pdo->prepare("SELECT 2fa_enabled, 2fa_secret FROM admin_users WHERE id = ?");
+        $stmt2fa->execute([$user['id']]);
+        $admin2fa = $stmt2fa->fetch();
+        
+        if ($admin2fa && $admin2fa['2fa_enabled'] && !empty($admin2fa['2fa_secret'])) {
+            $tokenVerificacion = bin2hex(random_bytes(32));
+            $expiracion = date('Y-m-d H:i:s', time() + 300);
+            
+            $stmtToken = $pdo->prepare("
+                INSERT INTO sesiones_2fa (admin_user_id, token_verificacion, expiracion)
+                VALUES (?, ?, ?)
+            ");
+            $stmtToken->execute([$user['id'], $tokenVerificacion, $expiracion]);
+            
+            echo json_encode([
+                "success" => true,
+                "require_2fa" => true,
+                "message" => "Verificación de dos factores requerida",
+                "token_2fa" => $tokenVerificacion,
+                "redirect_url" => BASE_URL . '/2fa/verificar.html?token=' . $tokenVerificacion
+            ]);
+            exit;
+        }
+    }
+    
     // ========== LIMPIAR Y REGENERAR SESIÓN ==========
     $attempts = ['count' => 0, 'first_attempt' => $ahora];
     $_SESSION = array();
@@ -194,6 +221,7 @@ try {
     $_SESSION['user_rol'] = $user['rol'];
     $_SESSION['tabla_origen'] = $tabla_origen; // CRÍTICO: 'users' o 'admin_users'
     $_SESSION['user_tipo_login'] = $tipo_usuario ?: ($es_admin ? 'admin' : 'cliente');
+    $_SESSION['2fa_verified'] = true;
     
     // ========== BANDERAS CLARAS ==========
     if ($tabla_origen === 'admin_users') {
