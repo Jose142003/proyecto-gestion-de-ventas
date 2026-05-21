@@ -17,7 +17,7 @@ CREATE TABLE predicciones_ventas (
     ventas_reales DECIMAL(12,2) DEFAULT 0,
     ventas_predichas DECIMAL(12,2) DEFAULT 0,
     precision_prediccion DECIMAL(5,2) DEFAULT 0,
-    tendencia VARCHAR(20) DEFAULT "estable",
+    tendencia VARCHAR(20) DEFAULT 'estable',
     nivel_confianza DECIMAL(5,2) DEFAULT 0,
     stock_sugerido INT DEFAULT 0,
     fecha_generacion DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -31,7 +31,7 @@ DROP TABLE IF EXISTS alertas_stock;
 CREATE TABLE alertas_stock (
     id INT AUTO_INCREMENT PRIMARY KEY,
     producto_id INT NOT NULL,
-    tipo VARCHAR(30) DEFAULT "bajo",
+    tipo VARCHAR(30) DEFAULT 'bajo',
     nivel_actual INT DEFAULT 0,
     nivel_sugerido INT DEFAULT 0,
     dias_para_agotar INT NULL,
@@ -57,25 +57,25 @@ BEGIN
     DECLARE cont INT;
 
     SELECT COUNT(*) INTO cont FROM information_schema.COLUMNS
-    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "admin_users" AND COLUMN_NAME = "2fa_enabled";
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'admin_users' AND COLUMN_NAME = '2fa_enabled';
     IF cont = 0 THEN
         ALTER TABLE admin_users ADD COLUMN 2fa_enabled TINYINT(1) DEFAULT 0;
     END IF;
 
     SELECT COUNT(*) INTO cont FROM information_schema.COLUMNS
-    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "admin_users" AND COLUMN_NAME = "2fa_secret";
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'admin_users' AND COLUMN_NAME = '2fa_secret';
     IF cont = 0 THEN
         ALTER TABLE admin_users ADD COLUMN 2fa_secret VARCHAR(255) NULL;
     END IF;
 
     SELECT COUNT(*) INTO cont FROM information_schema.COLUMNS
-    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "admin_users" AND COLUMN_NAME = "2fa_backup_codes";
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'admin_users' AND COLUMN_NAME = '2fa_backup_codes';
     IF cont = 0 THEN
         ALTER TABLE admin_users ADD COLUMN 2fa_backup_codes TEXT NULL;
     END IF;
 
     SELECT COUNT(*) INTO cont FROM information_schema.COLUMNS
-    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "admin_users" AND COLUMN_NAME = "2fa_verified_at";
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'admin_users' AND COLUMN_NAME = '2fa_verified_at';
     IF cont = 0 THEN
         ALTER TABLE admin_users ADD COLUMN 2fa_verified_at DATETIME NULL;
     END IF;
@@ -124,24 +124,24 @@ CREATE TABLE bi_metricas_diarias (
 -- ##########################################################################
 
 INSERT IGNORE INTO configuracion_sistema (clave, valor, tipo, grupo, descripcion, editable, orden) VALUES
-("whatsapp_api_url", "", "text", "whatsapp", "URL de la API de WhatsApp", 1, 50),
-("whatsapp_api_token", "", "password", "whatsapp", "Token de la API de WhatsApp", 1, 51),
-("whatsapp_numero", "", "text", "whatsapp", "Número de WhatsApp de la empresa", 1, 52),
-("whatsapp_notificaciones_pedido", "0", "boolean", "whatsapp", "Notificar nuevos pedidos por WhatsApp", 1, 53),
-("whatsapp_notificaciones_stock", "0", "boolean", "whatsapp", "Notificar stock bajo por WhatsApp", 1, 54);
+('whatsapp_api_url', '', 'text', 'whatsapp', 'URL de la API de WhatsApp', 1, 50),
+('whatsapp_api_token', '', 'password', 'whatsapp', 'Token de la API de WhatsApp', 1, 51),
+('whatsapp_numero', '', 'text', 'whatsapp', 'Numero de WhatsApp de la empresa', 1, 52),
+('whatsapp_notificaciones_pedido', '0', 'boolean', 'whatsapp', 'Notificar nuevos pedidos por WhatsApp', 1, 53),
+('whatsapp_notificaciones_stock', '0', 'boolean', 'whatsapp', 'Notificar stock bajo por WhatsApp', 1, 54);
 
 -- ##########################################################################
 -- 5. DATOS DE EJEMPLO
 -- ##########################################################################
 
 INSERT IGNORE INTO predicciones_ventas (producto_id, mes, anio, ventas_reales, ventas_predichas, precision_prediccion, tendencia, nivel_confianza, stock_sugerido)
-SELECT p.id, MONTH(CURRENT_DATE), YEAR(CURRENT_DATE), COALESCE(SUM(pd.cantidad), 0), GREATEST(COALESCE(SUM(pd.cantidad), 0) * 1.15, 5), 85.00, "estable", 75.00, GREATEST(CEIL(COALESCE(SUM(pd.cantidad), 0) * 1.2), 10)
-FROM products p LEFT JOIN pedido_detalles pd ON p.id = pd.producto_id LEFT JOIN pedidos pe ON pd.pedido_id = pe.id AND pe.estado NOT IN ("cancelado")
+SELECT p.id, MONTH(CURRENT_DATE), YEAR(CURRENT_DATE), COALESCE(SUM(pd.cantidad), 0), GREATEST(COALESCE(SUM(pd.cantidad), 0) * 1.15, 5), 85.00, 'estable', 75.00, GREATEST(CEIL(COALESCE(SUM(pd.cantidad), 0) * 1.2), 10)
+FROM products p LEFT JOIN pedido_detalles pd ON p.id = pd.producto_id LEFT JOIN pedidos pe ON pd.pedido_id = pe.id AND pe.estado NOT IN ('cancelado')
 GROUP BY p.id HAVING COALESCE(SUM(pd.cantidad), 0) > 0 LIMIT 20;
 
 INSERT IGNORE INTO alertas_stock (producto_id, tipo, nivel_actual, nivel_sugerido, mensaje)
-SELECT id, CASE WHEN stock = 0 THEN "critico" WHEN stock <= 5 THEN "critico" ELSE "bajo" END, stock, GREATEST(15, stock * 2),
-CONCAT("El producto """, name, """, CASE WHEN stock = 0 THEN " está AGOTADO" WHEN stock <= 5 THEN CONCAT(" tiene stock CRÍTICO (", stock, " unidades)") ELSE CONCAT(" tiene stock BAJO (", stock, " unidades)") END, ". Se recomienda reabastecer.")
+SELECT id, CASE WHEN stock = 0 THEN 'critico' WHEN stock <= 5 THEN 'critico' ELSE 'bajo' END, stock, GREATEST(15, stock * 2),
+CONCAT('El producto ', name, CASE WHEN stock = 0 THEN ' esta AGOTADO' WHEN stock <= 5 THEN CONCAT(' tiene stock CRITICO (', stock, ' unidades)') ELSE CONCAT(' tiene stock BAJO (', stock, ' unidades)') END, '. Se recomienda reabastecer.')
 FROM products WHERE stock <= 10 ORDER BY stock ASC;
 
-SELECT "Migración completada exitosamente" as Mensaje;
+SELECT 'Migracion completada exitosamente' as Mensaje;
