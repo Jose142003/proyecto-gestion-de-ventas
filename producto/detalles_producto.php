@@ -582,7 +582,7 @@ try {
             <div class="error-container">
                 <h2><?php echo htmlspecialchars($error); ?></h2>
                 <p>ID de producto: <?php echo $id; ?></p>
-                <a href="/proyecto/panel%20admin/panel_admin.php" class="btn-volver">
+                <a href="/proyecto/panel_admin/panel_admin.php" class="btn-volver">
                     ← Volver al Panel de Administración
                 </a>
             </div>
@@ -592,7 +592,7 @@ try {
             <div class="header">
                 <h1>📊 <strong>INFORMACIÓN TÉCNICA</strong> DEL PRODUCTO</h1>
                 <div class="header-actions">
-                    <a href="/proyecto/panel%20admin/panel_admin.html" class="btn-volver">
+                    <a href="/proyecto/panel_admin/panel_admin.php" class="btn-volver">
                         ← Volver al Panel Admin
                     </a>
                     <div class="badge">ID: <?php echo $producto['id']; ?> | <?php echo date('d/m/Y H:i'); ?></div>
@@ -693,25 +693,13 @@ try {
                     <!-- ESTADÍSTICAS PRINCIPALES -->
                     <div class="stats-section">
                         <div class="section-title">
-                            <span>📈</span> ESTADÍSTICAS DEL PRODUCTO
+                            <span>📈</span> MOVIMIENTOS DE INVENTARIO
                         </div>
                         <div class="stats-grid">
-                            <div class="stat-card ventas">
-                                <h3>VENTAS TOTALES</h3>
-                                <div class="stat-value"><?php echo $total_vendido; ?></div>
-                                <div class="stat-unit">Unidades Vendidas</div>
-                            </div>
-                            
                             <div class="stat-card entrada">
                                 <h3>ENTRADAS DE INVENTARIO</h3>
                                 <div class="stat-value"><?php echo $entradas; ?></div>
                                 <div class="stat-unit">Unidades Ingresadas</div>
-                            </div>
-                            
-                            <div class="stat-card valor">
-                                <h3>INGRESOS POR VENTAS</h3>
-                                <div class="stat-value"><?php echo htmlspecialchars($producto['currency']); ?> <?php echo number_format($total_ventas, 0, ',', '.'); ?></div>
-                                <div class="stat-unit">Total Facturado</div>
                             </div>
                             
                             <div class="stat-card inventario">
@@ -733,46 +721,7 @@ try {
                         </div>
                     </div>
                     
-                    <!-- VENTAS RECIENTES -->
-                    <?php if (!empty($ventas_recientes)): ?>
-                    <div class="tech-section">
-                        <div class="section-title">
-                            <span>💰</span> VENTAS RECIENTES DEL PRODUCTO
-                        </div>
-                        <div class="table-container">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Factura</th>
-                                        <th>Cliente</th>
-                                        <th>Cantidad</th>
-                                        <th>Total</th>
-                                        <th>Fecha</th>
-                                        <th>Estado</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach ($ventas_recientes as $venta): ?>
-                                    <tr>
-                                        <td><?php echo htmlspecialchars($venta['numero_factura']); ?></td>
-                                        <td><?php echo htmlspecialchars($venta['cliente']); ?></td>
-                                        <td><?php echo $venta['cantidad']; ?> unid.</td>
-                                        <td><?php echo htmlspecialchars($producto['currency']); ?> <?php echo number_format($venta['subtotal'], 2, ',', '.'); ?></td>
-                                        <td><?php echo $venta['fecha_venta']; ?></td>
-                                        <td>
-                                            <span style="padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; 
-                                                background: <?php echo $venta['estado'] == 'pagada' ? '#4caf50' : '#ff9800'; ?>; 
-                                                color: white;">
-                                                <?php echo strtoupper($venta['estado']); ?>
-                                            </span>
-                                        </td>
-                                    </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <?php endif; ?>
+
                     
                     <!-- PRODUCTOS SIMILARES -->
                     <?php if (!empty($productos_similares)): ?>

@@ -31,7 +31,8 @@ try {
             'monto_inicial' => (float)$caja['monto_inicial'],
             'ingresos' => (float)$caja['monto_ingresos'],
             'egresos' => (float)$caja['monto_egresos'],
-            'total' => (float)($caja['monto_inicial'] + $caja['monto_ingresos'] - $caja['monto_egresos']),
+            'total' => (float)($caja['monto_inicial'] + $caja['monto_ingresos']),
+            'saldo_actual' => (float)($caja['monto_inicial'] + $caja['monto_ingresos'] - $caja['monto_egresos']),
             'movimientos' => $movimientos
         ]);
     } else {
@@ -41,6 +42,7 @@ try {
             'ingresos' => 0,
             'egresos' => 0,
             'total' => 0,
+            'saldo_actual' => 0,
             'movimientos' => []
         ]);
     }
@@ -52,6 +54,7 @@ try {
         'ingresos' => 0,
         'egresos' => 0,
         'total' => 0,
+        'saldo_actual' => 0,
         'movimientos' => []
     ]);
 }

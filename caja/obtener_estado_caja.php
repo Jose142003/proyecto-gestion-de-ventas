@@ -24,6 +24,7 @@ try {
             'monto_inicial' => 0,
             'total_ingresos' => 0,
             'total_egresos' => 0,
+            'total' => 0,
             'saldo_actual' => 0
         ]);
         exit;
@@ -35,6 +36,7 @@ try {
         'monto_inicial' => floatval($caja['monto_inicial']),
         'total_ingresos' => floatval($caja['monto_ingresos']),
         'total_egresos' => floatval($caja['monto_egresos']),
+        'total' => floatval($caja['monto_inicial'] + $caja['monto_ingresos']),
         'saldo_actual' => floatval($caja['monto_inicial'] + $caja['monto_ingresos'] - $caja['monto_egresos'])
     ]);
     
@@ -47,6 +49,7 @@ try {
         'monto_inicial' => 0,
         'total_ingresos' => 0,
         'total_egresos' => 0,
+        'total' => 0,
         'saldo_actual' => 0
     ]);
 }

@@ -2,7 +2,7 @@
   "name": "Proyectos Industriales Del Centro",
   "short_name": "PIC Industrial",
   "description": "Suministros industriales de alta calidad - Tienda oficial",
-  "start_url": "/proyecto/interfaz_usuario/pagina_modernizada.html",
+  "start_url": "/proyecto/",
   "display": "standalone",
   "theme_color": "#050C18",
   "background_color": "#F3F3F3",
@@ -10,13 +10,13 @@
   "scope": "/proyecto/",
   "icons": [
   {
-    "src": "/proyecto/img/icon-192.png",
+    "src": "/proyecto/img/pic.png",
     "sizes": "192x192",
     "type": "image/png",
     "purpose": "any maskable"
   },
   {
-    "src": "/proyecto/img/icon-512.png",
+    "src": "/proyecto/img/pic.png",
     "sizes": "512x512",
     "type": "image/png",
     "purpose": "any maskable"

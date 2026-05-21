@@ -4,6 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bienvenido | Proyectos Industriales del Centro</title>
+    
+    <!-- PWA -->
+    <link rel="manifest" href="/proyecto/manifest.json">
+    <meta name="theme-color" content="#050C18">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="PIC Industrial">
+    <link rel="apple-touch-icon" href="/proyecto/img/pic.png">
+    <link rel="icon" type="image/png" href="/proyecto/img/pic.png">
+    
+    <!-- Open Graph (WhatsApp, Facebook, etc) -->
+    <meta property="og:title" content="Proyectos Industriales del Centro">
+    <meta property="og:description" content="Suministros industriales de alta calidad - Tienda oficial">
+    <meta property="og:image" content="/proyecto/img/pic.png">
+    <meta property="og:url" content="https://www.picindustrial.com">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="PIC Industrial">
+    <meta name="twitter:card" content="summary_large_image">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -724,6 +743,19 @@
             // Mostrar productos iniciales
             displayProducts('Todos');
         });
+
+        // Registrar Service Worker para PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/proyecto/sw.js')
+                    .then(function(reg) {
+                        console.log('SW registrado correctamente');
+                    })
+                    .catch(function(err) {
+                        console.warn('Error al registrar SW:', err);
+                    });
+            });
+        }
     </script>
 </body>
 </html>

@@ -1,3 +1,3 @@
 <?php
-header('Location: interfaz_usuario/index.html');
+header('Location: /proyecto/interfaz_usuario/index.html');
 exit;

@@ -1,18 +1,28 @@
 <?php
-$img192 = imagecreatetruecolor(192, 192);
-$bg = imagecolorallocate($img192, 5, 12, 24);
-imagefill($img192, 0, 0, $bg);
-$text = imagecolorallocate($img192, 255, 255, 255);
-imagestring($img192, 5, 60, 88, 'PIC', $text);
-imagepng($img192, __DIR__ . '/icon-192.png');
-imagedestroy($img192);
+$source = __DIR__ . '/pic.png';
 
-$img512 = imagecreatetruecolor(512, 512);
-$bg = imagecolorallocate($img512, 5, 12, 24);
-imagefill($img512, 0, 0, $bg);
-$text = imagecolorallocate($img512, 255, 255, 255);
-imagestring($img512, 5, 220, 248, 'PIC', $text);
-imagepng($img512, __DIR__ . '/icon-512.png');
-imagedestroy($img512);
+function resizeIcon($srcPath, $size, $destPath) {
+    $src = imagecreatefrompng($srcPath);
+    if (!$src) {
+        echo "Error: No se pudo cargar $srcPath\n";
+        return false;
+    }
+    
+    $srcW = imagesx($src);
+    $srcH = imagesy($src);
+    
+    $dst = imagecreatetruecolor($size, $size);
+    imagealphablending($dst, false);
+    imagesavealpha($dst, true);
+    
+    imagecopyresampled($dst, $src, 0, 0, 0, 0, $size, $size, $srcW, $srcH);
+    imagepng($dst, $destPath);
+    
+    echo "Icono {$size}x{$size} creado: $destPath\n";
+    return true;
+}
 
-echo "Icons created successfully\n";
+resizeIcon($source, 192, __DIR__ . '/icon-192.png');
+resizeIcon($source, 512, __DIR__ . '/icon-512.png');
+
+echo "Iconos generados correctamente desde pic.png\n";

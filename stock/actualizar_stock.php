@@ -14,8 +14,10 @@ require_once __DIR__ . '/../conexion/conexion.php';
 
 verificarCSRF();
 
-$pdo = conectarDB();
+try {
+    $pdo = getConexion();
 } catch (PDOException $e) {
+    http_response_code(500);
     echo json_encode([
         'success' => false,
         'message' => 'Error interno del servidor'
