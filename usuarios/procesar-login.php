@@ -183,28 +183,35 @@ try {
     
     // ========== VERIFICAR 2FA PARA ADMINISTRADORES ==========
     if ($tabla_origen === 'admin_users') {
-        $stmt2fa = $pdo->prepare("SELECT 2fa_enabled, 2fa_secret FROM admin_users WHERE id = ?");
-        $stmt2fa->execute([$user['id']]);
-        $admin2fa = $stmt2fa->fetch();
-        
-        if ($admin2fa && $admin2fa['2fa_enabled'] && !empty($admin2fa['2fa_secret'])) {
-            $tokenVerificacion = bin2hex(random_bytes(32));
-            $expiracion = date('Y-m-d H:i:s', time() + 300);
-            
-            $stmtToken = $pdo->prepare("
-                INSERT INTO sesiones_2fa (admin_user_id, token_verificacion, expiracion)
-                VALUES (?, ?, ?)
-            ");
-            $stmtToken->execute([$user['id'], $tokenVerificacion, $expiracion]);
-            
-            echo json_encode([
-                "success" => true,
-                "require_2fa" => true,
-                "message" => "Verificación de dos factores requerida",
-                "token_2fa" => $tokenVerificacion,
-                "redirect_url" => BASE_URL . '/2fa/verificar.html?token=' . $tokenVerificacion
-            ]);
-            exit;
+        try {
+            $stmt2fa = $pdo->query("SHOW COLUMNS FROM admin_users LIKE '2fa_enabled'");
+            if ($stmt2fa->rowCount() > 0) {
+                $stmt2fa = $pdo->prepare("SELECT 2fa_enabled, 2fa_secret FROM admin_users WHERE id = ?");
+                $stmt2fa->execute([$user['id']]);
+                $admin2fa = $stmt2fa->fetch();
+                
+                if ($admin2fa && $admin2fa['2fa_enabled'] && !empty($admin2fa['2fa_secret'])) {
+                    $tokenVerificacion = bin2hex(random_bytes(32));
+                    $expiracion = date('Y-m-d H:i:s', time() + 300);
+                    
+                    $stmtToken = $pdo->prepare("
+                        INSERT INTO sesiones_2fa (admin_user_id, token_verificacion, expiracion)
+                        VALUES (?, ?, ?)
+                    ");
+                    $stmtToken->execute([$user['id'], $tokenVerificacion, $expiracion]);
+                    
+                    echo json_encode([
+                        "success" => true,
+                        "require_2fa" => true,
+                        "message" => "Verificación de dos factores requerida",
+                        "token_2fa" => $tokenVerificacion,
+                        "redirect_url" => BASE_URL . '/2fa/verificar.html?token=' . $tokenVerificacion
+                    ]);
+                    exit;
+                }
+            }
+        } catch (PDOException $e) {
+            error_log("2FA check skipped (columns may not exist): " . $e->getMessage());
         }
     }
     
