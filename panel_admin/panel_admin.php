@@ -4763,7 +4763,7 @@ async function cambiarPasswordRecuperacion(event) {
                             <td>${escapeHtml(p.sku)}</td>
                             <td>${escapeHtml(p.category)}</td>
                             <td><strong>${p.stock}</strong></td>
-                            <td>${p.ventas_esperadas.toFixed(0)}</td>
+                            <td>${(+p.ventas_esperadas).toFixed(0)}</td>
                             <td>${p.stock_sugerido}</td>
                             <td>${tendenciaIcon} ${p.tendencia}</td>
                             <td>${p.confianza}%</td>
