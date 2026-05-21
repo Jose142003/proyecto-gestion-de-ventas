@@ -17,8 +17,6 @@ register_shutdown_function(function () {
     }
 });
 
-set_error_handler(function () { return false; });
-
 require_once __DIR__ . '/../conexion/conexion.php';
 requerirAdmin();
 

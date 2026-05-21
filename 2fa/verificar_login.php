@@ -12,8 +12,6 @@ register_shutdown_function(function () {
     }
 });
 
-set_error_handler(function () { return false; });
-
 require_once __DIR__ . '/../config/database.php';
 
 $input = json_decode(file_get_contents('php://input'), true);
