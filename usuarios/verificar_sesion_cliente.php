@@ -2,10 +2,13 @@
 // /proyecto/usuarios/verificar_sesion_cliente.php
 // VERIFICACIÓN EXCLUSIVA PARA CLIENTES - NO REDIRIGE A ADMIN
 
+session_name('CLIENTSESSID');
 session_start();
 
 header('Content-Type: application/json');
-header('Cache-Control: no-cache, must-revalidate');
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0, private');
+header('Pragma: no-cache');
+header('Expires: 0');
 
 error_log("=== verificar_sesion_cliente.php - INICIO ===");
 
@@ -15,6 +18,19 @@ $pdo = conectarDB();
 
 // ========== VERIFICAR SESIÓN ACTIVA ==========
 if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+    // Si tenía persist_token (sesión se perdió), redirigir al login
+    if (isset($_COOKIE['persist_token'])) {
+        error_log("Sesión perdida pero hay persist_token - Redirigiendo al login");
+        echo json_encode([
+            'success' => false,
+            'is_authenticated' => false,
+            'role' => 'guest',
+            'redirect' => '/proyecto/interfaz_usuario/login.html',
+            'message' => 'Sesión expirada'
+        ]);
+        exit;
+    }
+    
     error_log("No hay sesión activa - Invitado");
     echo json_encode([
         'success' => false,
@@ -34,12 +50,9 @@ $user_rol = $_SESSION['user_rol'] ?? '';
 
 error_log("user_id: $user_id, tabla_origen: $tabla_origen, user_rol: $user_rol");
 
-// ========== CASO 1: Es ADMINISTRADOR (NO PUEDE ESTAR AQUÍ) ==========
+// ========== CASO 1: Es ADMINISTRADOR (NO PUEDE COMPRAR) ==========
 if ($tabla_origen === 'admin_users') {
-    error_log("⚠️ ADMINISTRADOR detectado - Debe salir de la tienda");
-    
-    // Destruir la sesión actual
-    session_destroy();
+    error_log("⚠️ ADMINISTRADOR detectado - Modo invitado en tienda");
     
     echo json_encode([
         'success' => false,
@@ -48,8 +61,8 @@ if ($tabla_origen === 'admin_users') {
         'is_admin' => false,
         'is_cliente' => false,
         'can_purchase' => false,
-        'force_logout' => true,
-        'message' => 'Sesión de administrador cerrada'
+        'force_logout' => false,
+        'message' => 'Los administradores no pueden comprar en la tienda'
     ]);
     exit;
 }

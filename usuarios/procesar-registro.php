@@ -1,5 +1,6 @@
 ﻿<?php
 // procesar-registro.php - VERSIÓN CORREGIDA
+session_name('CLIENTSESSID');
 session_start();
 require_once '../conexion/conexion.php';
 

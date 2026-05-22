@@ -11,8 +11,8 @@ header('Content-Type: application/json');
 // Configurar sesión para persistencia
 ini_set('session.cookie_httponly', 1);
 ini_set('session.use_only_cookies', 1);
-ini_set('session.cookie_secure', 1);
-ini_set('session.cookie_samesite', 'Strict');
+ini_set('session.cookie_secure', 0);
+ini_set('session.cookie_samesite', 'Lax');
 
 require_once __DIR__ . '/../config/database.php';
 
@@ -24,8 +24,9 @@ try {
     exit;
 }
 
-// Iniciar sesión al principio
+// Iniciar sesión temporal para rate limiting
 if (session_status() === PHP_SESSION_NONE) {
+    session_name('LOGIN_SESSID');
     session_start();
 }
 
@@ -215,11 +216,20 @@ try {
         }
     }
     
-    // ========== LIMPIAR Y REGENERAR SESIÓN ==========
-    $attempts = ['count' => 0, 'first_attempt' => $ahora];
+    // ========== LIMPIAR Y REGENERAR SESIÓN (SEPARADA POR ROL) ==========
+    // Cerrar sesión temporal de login
+    session_write_close();
+
+    // Usar nombre de sesión diferente según el rol para que coexistan
+    if ($tabla_origen === 'admin_users') {
+        session_name(ini_get('session.name')); // Restablecer a PHPSESSID
+    } else {
+        session_name('CLIENTSESSID'); // Sesión separada para clientes
+    }
+    session_start();
     $_SESSION = array();
     session_regenerate_id(true);
-    
+
     // ========== VARIABLES OBLIGATORIAS ==========
     $_SESSION['loggedin'] = true;
     $_SESSION['user_id'] = $user['id'];
@@ -229,7 +239,7 @@ try {
     $_SESSION['tabla_origen'] = $tabla_origen; // CRÍTICO: 'users' o 'admin_users'
     $_SESSION['user_tipo_login'] = $tipo_usuario ?: ($es_admin ? 'admin' : 'cliente');
     $_SESSION['2fa_verified'] = true;
-    
+
     // ========== BANDERAS CLARAS ==========
     if ($tabla_origen === 'admin_users') {
         $_SESSION['es_admin'] = true;
@@ -242,6 +252,15 @@ try {
         $_SESSION['is_cliente'] = true;
         $_SESSION['user_tipo'] = 'cliente';
     }
+    
+    // Cookie persistente como respaldo por si la sesión se pierde
+    $token_data = $user['id'] . '|' . $user['nombre'] . '|' . $tabla_origen;
+    $token_sig = hash_hmac('sha256', $token_data, BASE_URL);
+    $token_value = base64_encode($token_data . '|' . $token_sig);
+    setcookie('persist_token', $token_value, time() + 86400 * 30, '/', '', false, true);
+    
+    // Cerrar sesión para asegurar que los datos se escriban antes de continuar
+    session_write_close();
     
     // Actualizar último login
     if ($tabla_origen === 'users') {

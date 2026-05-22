@@ -63,6 +63,31 @@ function errorResponse(string $message, int $status = 400): void {
     jsonResponse(['success' => false, 'message' => $message], $status);
 }
 
+// ========== HELPER DE SESIÓN (CLIENTE + ADMIN) ==========
+
+function iniciarSesion(): void {
+    if (session_status() !== PHP_SESSION_NONE) return;
+
+    $referer = $_SERVER['HTTP_REFERER'] ?? '';
+
+    // Si la llamada viene del panel admin, usar sesión por defecto (PHPSESSID)
+    if (strpos($referer, '/panel_admin/') !== false || strpos($referer, '/admin/') !== false) {
+        @session_start();
+        return;
+    }
+
+    // Si viene del área de cliente o desconocido, intentar CLIENTSESSID primero
+    if (isset($_COOKIE['CLIENTSESSID'])) {
+        session_name('CLIENTSESSID');
+        @session_start();
+        if (isset($_SESSION['user_id'])) return;
+        @session_write_close();
+    }
+
+    // Fallback a sesión por defecto (admin/PHPSESSID)
+    @session_start();
+}
+
 // ========== CSRF PROTECTION ==========
 
 function generarTokenCSRF(): string {

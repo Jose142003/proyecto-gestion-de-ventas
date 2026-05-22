@@ -45,3 +45,9 @@ AddDefaultCharset UTF-8
 <IfModule mod_php.c>
     php_flag expose_php Off
 </IfModule>
+
+# Permitir PHP en pagina_modernizada.html
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^interfaz_usuario/pagina_modernizada\.html$ /proyecto/interfaz_usuario/pagina_modernizada_check.php [L,QSA]
+</IfModule>

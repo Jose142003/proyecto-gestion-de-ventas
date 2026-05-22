@@ -1,7 +1,7 @@
 <?php
 // obtener_usuario.php - Versión mejorada para PERFIL (NO para autenticación)
-session_start();
-require_once '../conexion/conexion.php';
+require_once dirname(__DIR__) . '/conexion/conexion.php';
+iniciarSesion();
 
 header('Content-Type: application/json');
 

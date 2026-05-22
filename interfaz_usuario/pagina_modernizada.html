@@ -1,4 +1,15 @@
-﻿<!DOCTYPE html>
+﻿<?php
+session_name('CLIENTSESSID');
+session_start();
+if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+    if (isset($_COOKIE['persist_token'])) {
+        setcookie('persist_token', '', time() - 3600, '/');
+        header('Location: /proyecto/interfaz_usuario/login.html');
+        exit;
+    }
+}
+@session_write_close();
+?><!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="utf-8"/>
@@ -1300,6 +1311,13 @@ async function obtenerUsuarioActual() {
         
         // ========== CASO 5: INVITADO (sin sesión) ==========
         console.log('👤 Modo invitado - Sin sesión activa');
+        
+        // Si el servidor indica redirect (sesión perdida), redirigir al login
+        if (data.redirect) {
+            window.location.href = data.redirect;
+            return false;
+        }
+        
         CURRENT_USER = { 
             id: null, 
             nombre: 'Invitado', 
@@ -1375,8 +1393,14 @@ function iniciarVerificacionSesionPeriodica() {
                     window.location.reload();
                 }, 2000);
             }
+            // Si el servidor indica redirect (sesión perdida)
+            if (data.redirect) {
+                window.location.href = data.redirect;
+                return;
+            }
+            
             // Si la sesión se perdió completamente
-            else if (!data.success && !data.is_authenticated && CURRENT_USER && CURRENT_USER.id) {
+            if (!data.success && !data.is_authenticated && CURRENT_USER && CURRENT_USER.id) {
                 console.log('⚠️ Sesión expirada');
                 showNotification('Sesión expirada. Por favor inicia sesión nuevamente.', 'warning');
                 setTimeout(() => {

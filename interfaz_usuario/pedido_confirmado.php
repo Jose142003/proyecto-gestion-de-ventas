@@ -2,6 +2,7 @@
 // /proyecto/interfaz_usuario/pedido_confirmado.php
 // VERSIÓN CORREGIDA - MANTIENE SESIÓN DE CLIENTE
 
+session_name('CLIENTSESSID');
 session_start();
 
 // ============================================================================
