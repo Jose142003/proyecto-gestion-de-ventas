@@ -15,7 +15,9 @@ try {
     $fecha_desde = $_GET['fecha_desde'] ?? null;
     $fecha_hasta = $_GET['fecha_hasta'] ?? null;
     $tipo = $_GET['tipo'] ?? null;
-    $limit = isset($_GET['limit']) ? intval($_GET['limit']) : 100;
+    $page = max(1, (int)($_GET['page'] ?? 1));
+    $limit = min(100, max(1, (int)($_GET['limit'] ?? 50)));
+    $offset = ($page - 1) * $limit;
     
     $sql = "SELECT cm.*, u.nombre as usuario_nombre 
             FROM caja_movimientos cm
@@ -38,12 +40,13 @@ try {
         $params[':tipo'] = $tipo;
     }
     
-    $sql .= " ORDER BY cm.fecha_movimiento DESC LIMIT :limit";
+    $sql .= " ORDER BY cm.fecha_movimiento DESC LIMIT :limit OFFSET :offset";
     $params[':limit'] = $limit;
+    $params[':offset'] = $offset;
     
     $stmt = $db->prepare($sql);
     foreach ($params as $key => $value) {
-        if ($key == ':limit') {
+        if (in_array($key, [':limit', ':offset'])) {
             $stmt->bindValue($key, $value, PDO::PARAM_INT);
         } else {
             $stmt->bindValue($key, $value);
@@ -67,6 +70,24 @@ try {
         ];
     }
     
+    $countSql = "SELECT COUNT(*) FROM caja_movimientos cm WHERE 1=1";
+    $countParams = [];
+    if ($fecha_desde) {
+        $countSql .= " AND DATE(cm.fecha_movimiento) >= ?";
+        $countParams[] = $fecha_desde;
+    }
+    if ($fecha_hasta) {
+        $countSql .= " AND DATE(cm.fecha_movimiento) <= ?";
+        $countParams[] = $fecha_hasta;
+    }
+    if ($tipo && in_array($tipo, ['ingreso', 'egreso'])) {
+        $countSql .= " AND cm.tipo = ?";
+        $countParams[] = $tipo;
+    }
+    $countStmt = $db->prepare($countSql);
+    $countStmt->execute($countParams);
+    $total = (int)$countStmt->fetchColumn();
+
     $stmtRes = $db->query("SELECT 
                             SUM(CASE WHEN tipo = 'ingreso' THEN monto ELSE 0 END) as total_ingresos,
                             SUM(CASE WHEN tipo = 'egreso' THEN monto ELSE 0 END) as total_egresos
@@ -76,6 +97,10 @@ try {
     echo json_encode([
         'success' => true,
         'movimientos' => $movimientosFormateados,
+        'total' => $total,
+        'page' => $page,
+        'limit' => $limit,
+        'total_pages' => ceil($total / $limit),
         'total_ingresos' => floatval($resumen['total_ingresos'] ?? 0),
         'total_egresos' => floatval($resumen['total_egresos'] ?? 0)
     ]);

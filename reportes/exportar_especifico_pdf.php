@@ -27,8 +27,7 @@ function getEstadoTexto($estado) {
     return $estados[$estado] ?? $estado;
 }
 
-$database = new Database();
-$db = $database->getConnection();
+$db = Database::getConnection();
 
 $desde = $_GET['desde'] ?? '';
 $hasta = $_GET['hasta'] ?? '';
@@ -38,6 +37,7 @@ $buscar = $_GET['buscar'] ?? '';
 
 $data = [];
 $titulo = '';
+$params = [];
 
 switch ($tipo) {
     case 'ventas':
@@ -47,13 +47,13 @@ switch ($tipo) {
                   FROM pedidos p
                   JOIN users u ON p.usuario_id = u.id
                   WHERE 1=1";
-        if ($desde) $query .= " AND DATE(p.fecha_pedido) >= '$desde'";
-        if ($hasta) $query .= " AND DATE(p.fecha_pedido) <= '$hasta'";
-        if ($estado) $query .= " AND p.estado = '$estado'";
-        if ($buscar) $query .= " AND (u.nombre LIKE '%$buscar%' OR p.numero_pedido LIKE '%$buscar%')";
+        if ($desde) { $query .= " AND DATE(p.fecha_pedido) >= ?"; $params[] = $desde; }
+        if ($hasta) { $query .= " AND DATE(p.fecha_pedido) <= ?"; $params[] = $hasta; }
+        if ($estado) { $query .= " AND p.estado = ?"; $params[] = $estado; }
+        if ($buscar) { $query .= " AND (u.nombre LIKE ? OR p.numero_pedido LIKE ?)"; $params[] = "%$buscar%"; $params[] = "%$buscar%"; }
         $query .= " ORDER BY p.fecha_pedido DESC";
         $stmt = $db->prepare($query);
-        $stmt->execute();
+        $stmt->execute($params);
         $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
         break;
         
@@ -64,13 +64,14 @@ switch ($tipo) {
                   FROM compras c
                   JOIN proveedores p ON c.proveedor_id = p.id
                   WHERE 1=1";
-        if ($desde) $query .= " AND DATE(c.fecha_orden) >= '$desde'";
-        if ($hasta) $query .= " AND DATE(c.fecha_orden) <= '$hasta'";
-        if ($estado) $query .= " AND c.estado = '$estado'";
-        if ($buscar) $query .= " AND (p.nombre_comercial LIKE '%$buscar%' OR c.numero_orden LIKE '%$buscar%')";
+        $params = [];
+        if ($desde) { $query .= " AND DATE(c.fecha_orden) >= ?"; $params[] = $desde; }
+        if ($hasta) { $query .= " AND DATE(c.fecha_orden) <= ?"; $params[] = $hasta; }
+        if ($estado) { $query .= " AND c.estado = ?"; $params[] = $estado; }
+        if ($buscar) { $query .= " AND (p.nombre_comercial LIKE ? OR c.numero_orden LIKE ?)"; $params[] = "%$buscar%"; $params[] = "%$buscar%"; }
         $query .= " ORDER BY c.fecha_orden DESC";
         $stmt = $db->prepare($query);
-        $stmt->execute();
+        $stmt->execute($params);
         $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
         break;
         
@@ -81,13 +82,14 @@ switch ($tipo) {
                   FROM pedidos p
                   JOIN users u ON p.usuario_id = u.id
                   WHERE 1=1";
-        if ($desde) $query .= " AND DATE(p.fecha_pedido) >= '$desde'";
-        if ($hasta) $query .= " AND DATE(p.fecha_pedido) <= '$hasta'";
-        if ($estado) $query .= " AND p.estado = '$estado'";
-        if ($buscar) $query .= " AND (u.nombre LIKE '%$buscar%' OR p.numero_pedido LIKE '%$buscar%')";
+        $params = [];
+        if ($desde) { $query .= " AND DATE(p.fecha_pedido) >= ?"; $params[] = $desde; }
+        if ($hasta) { $query .= " AND DATE(p.fecha_pedido) <= ?"; $params[] = $hasta; }
+        if ($estado) { $query .= " AND p.estado = ?"; $params[] = $estado; }
+        if ($buscar) { $query .= " AND (u.nombre LIKE ? OR p.numero_pedido LIKE ?)"; $params[] = "%$buscar%"; $params[] = "%$buscar%"; }
         $query .= " ORDER BY p.fecha_pedido DESC";
         $stmt = $db->prepare($query);
-        $stmt->execute();
+        $stmt->execute($params);
         $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
         break;
         

@@ -64,8 +64,7 @@ if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
 }
 
 // Conectar a la base de datos
-$database = new Database();
-$db = $database->getConnection();
+$db = Database::getConnection();
     
 try {
     $db->beginTransaction();

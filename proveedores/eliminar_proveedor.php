@@ -16,13 +16,13 @@ if (!$data || empty($data['id'])) {
     exit;
 }
 
-$database = new Database();
-$db = $database->getConnection();
+$db = Database::getConnection();
 
 $query = "DELETE FROM proveedores WHERE id = ?";
 $stmt = $db->prepare($query);
 
 if ($stmt->execute([$data['id']])) {
+    auditoriaRegistrar('eliminar_proveedor', 'proveedores', "Proveedor ID {$data['id']} eliminado");
     echo json_encode(['success' => true, 'message' => 'Proveedor eliminado correctamente']);
 } else {
     echo json_encode(['success' => false, 'message' => 'Error al eliminar proveedor']);

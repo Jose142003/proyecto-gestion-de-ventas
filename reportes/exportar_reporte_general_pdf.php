@@ -30,8 +30,7 @@ function getMetodoPagoTexto($metodo) {
     return ucfirst($metodo) ?: 'No especificado';
 }
 
-$database = new Database();
-$db = $database->getConnection();
+$db = Database::getConnection();
 
 // Ventas totales
 $query = "SELECT SUM(total) as total FROM pedidos WHERE estado = 'completado' OR estado = 'facturado'";

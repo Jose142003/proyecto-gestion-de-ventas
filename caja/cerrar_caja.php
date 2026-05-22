@@ -29,6 +29,7 @@ try {
     $stmt = $db->prepare($query);
 
     if ($stmt->execute([$_SESSION['user_id'], $totalEsperado, $totalEsperado, 0, $caja['id']])) {
+        auditoriaRegistrar('cerrar_caja', 'caja', "Caja cerrada - Caja ID: {$caja['id']} - Número: {$caja['numero_arqueo']} - Monto esperado: $totalEsperado");
         echo json_encode(['success' => true, 'message' => 'Caja cerrada correctamente']);
     } else {
         echo json_encode(['success' => false, 'message' => 'Error al cerrar caja']);

@@ -35,6 +35,7 @@ try {
     $stmt = $db->prepare($query);
 
     if ($stmt->execute([$numeroArqueo, $_SESSION['user_id'], $data['monto_inicial'], $data['observaciones'] ?? ''])) {
+        auditoriaRegistrar('abrir_caja', 'caja', "Caja abierta - Monto inicial: {$data['monto_inicial']}");
         echo json_encode(['success' => true, 'message' => 'Caja abierta correctamente']);
     } else {
         echo json_encode(['success' => false, 'message' => 'Error al abrir caja']);

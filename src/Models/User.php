@@ -32,9 +32,9 @@ class User
             INSERT INTO users (nombre, correo, password, telefono, cedula, is_active, estado, created_at)
             VALUES (?, ?, ?, ?, ?, 1, 'activo', NOW())
         ");
-        $hash = password_hash($data['password'], PASSWORD_BCRYPT);
+        $hash = password_hash($data['password'] ?? '', PASSWORD_BCRYPT);
         $stmt->execute([
-            $data['nombre'], $data['correo'], $hash,
+            $data['nombre'] ?? '', $data['correo'] ?? '', $hash,
             $data['telefono'] ?? '', $data['cedula'] ?? ''
         ]);
         return (int) $this->pdo->lastInsertId();

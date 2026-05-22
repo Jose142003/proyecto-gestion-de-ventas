@@ -59,6 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($update_stmt->execute([$nombre, $correo, $telefono, $cedula, $rol, $is_active, $id])) {
             $mensaje = "Usuario actualizado correctamente";
             $tipo_mensaje = "success";
+            auditoriaRegistrar('editar_usuario', 'usuarios', "Usuario ID $id editado: $nombre ($correo)");
         } else {
             throw new Exception("Error al actualizar el usuario");
         }

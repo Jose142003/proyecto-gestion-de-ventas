@@ -59,25 +59,25 @@ BEGIN
     SELECT COUNT(*) INTO cont FROM information_schema.COLUMNS
     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'admin_users' AND COLUMN_NAME = '2fa_enabled';
     IF cont = 0 THEN
-        ALTER TABLE admin_users ADD COLUMN 2fa_enabled TINYINT(1) DEFAULT 0;
+        ALTER TABLE admin_users ADD COLUMN `2fa_enabled` TINYINT(1) DEFAULT 0;
     END IF;
 
     SELECT COUNT(*) INTO cont FROM information_schema.COLUMNS
     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'admin_users' AND COLUMN_NAME = '2fa_secret';
     IF cont = 0 THEN
-        ALTER TABLE admin_users ADD COLUMN 2fa_secret VARCHAR(255) NULL;
+        ALTER TABLE admin_users ADD COLUMN `2fa_secret` VARCHAR(255) NULL;
     END IF;
 
     SELECT COUNT(*) INTO cont FROM information_schema.COLUMNS
     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'admin_users' AND COLUMN_NAME = '2fa_backup_codes';
     IF cont = 0 THEN
-        ALTER TABLE admin_users ADD COLUMN 2fa_backup_codes TEXT NULL;
+        ALTER TABLE admin_users ADD COLUMN `2fa_backup_codes` TEXT NULL;
     END IF;
 
     SELECT COUNT(*) INTO cont FROM information_schema.COLUMNS
     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'admin_users' AND COLUMN_NAME = '2fa_verified_at';
     IF cont = 0 THEN
-        ALTER TABLE admin_users ADD COLUMN 2fa_verified_at DATETIME NULL;
+        ALTER TABLE admin_users ADD COLUMN `2fa_verified_at` DATETIME NULL;
     END IF;
 END//
 DELIMITER ;

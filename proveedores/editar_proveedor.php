@@ -100,17 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
 
             // Registrar en auditoría
-            $audit_sql = "INSERT INTO auditoria_logs (usuario_id, usuario_nombre, usuario_rol, accion, modulo, descripcion, tabla_afectada, registro_id, ip_address) 
-                          VALUES (:usuario_id, :usuario_nombre, :usuario_rol, 'editar', 'proveedores', :descripcion, 'proveedores', :registro_id, :ip)";
-            $audit_stmt = $pdo->prepare($audit_sql);
-            $audit_stmt->execute([
-                ':usuario_id' => $usuario_id,
-                ':usuario_nombre' => $usuario_nombre,
-                ':usuario_rol' => $usuario_rol,
-                ':descripcion' => "Proveedor editado: $nombre_comercial",
-                ':registro_id' => $id,
-                ':ip' => $_SERVER['REMOTE_ADDR'] ?? null
-            ]);
+            auditoriaRegistrar('editar_proveedor', 'proveedores', "Proveedor editado: $nombre_comercial");
 
             // Redirigir al panel_admin.html con mensaje de éxito
             header('Location: /proyecto/panel_admin/panel_admin.html?mensaje=Proveedor actualizado correctamente&tipo=success');

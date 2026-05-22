@@ -110,6 +110,7 @@ function marcarPagada($pdo, $factura_id) {
         
         $pdo->commit();
         
+        auditoriaRegistrar('procesar_factura', 'facturacion', "Factura #{$factura['numero_factura']} marcada como pagada. Total: Bs. " . number_format($factura['total'], 2));
         echo json_encode([
             'success' => true,
             'message' => 'Factura marcada como pagada exitosamente'
@@ -187,6 +188,7 @@ function anularFactura($pdo, $factura_id, $motivo) {
         
         $pdo->commit();
         
+        auditoriaRegistrar('procesar_factura', 'facturacion', "Factura #{$factura['numero_factura']} anulada. Motivo: $motivo");
         echo json_encode([
             'success' => true,
             'message' => 'Factura anulada exitosamente. Stock restaurado.'

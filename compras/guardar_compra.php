@@ -103,6 +103,7 @@ try {
     
     $pdo->commit();
     
+    auditoriaRegistrar('guardar_compra', 'compras', "Compra registrada: $numero_orden - Proveedor ID: {$input['proveedor_id']}");
     echo json_encode([
         'success' => true, 
         'message' => 'Compra registrada y stock actualizado correctamente',

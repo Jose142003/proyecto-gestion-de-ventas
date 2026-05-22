@@ -112,18 +112,20 @@ try {
         $tiene_factura = $factura_check->fetch();
         
         if (!$tiene_factura) {
-            echo json_encode([
-                'success' => true,
-                'message' => 'Estado actualizado. Nota: El pedido no tiene factura asociada aún.',
-                'estado_anterior' => $estado_anterior,
-                'nuevo_estado' => $nuevo_estado,
-                'sin_factura' => true
-            ]);
-            exit;
-        }
+        auditoriaRegistrar('actualizar_estado_pedido', 'facturacion', "Pedido ID $pedido_id: estado '$estado_anterior' -> '$nuevo_estado' (sin factura)");
+        echo json_encode([
+            'success' => true,
+            'message' => 'Estado actualizado. Nota: El pedido no tiene factura asociada aún.',
+            'estado_anterior' => $estado_anterior,
+            'nuevo_estado' => $nuevo_estado,
+            'sin_factura' => true
+        ]);
+        exit;
     }
-    
-    echo json_encode([
+}
+
+auditoriaRegistrar('actualizar_estado_pedido', 'facturacion', "Pedido ID $pedido_id: estado '$estado_anterior' -> '$nuevo_estado'");
+echo json_encode([
         'success' => true,
         'message' => 'Estado actualizado correctamente',
         'estado_anterior' => $estado_anterior,

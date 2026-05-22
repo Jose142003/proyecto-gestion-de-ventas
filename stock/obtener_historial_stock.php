@@ -18,6 +18,9 @@ try {
     // Obtener parámetros de filtro
     $fecha = isset($_GET['fecha']) ? $_GET['fecha'] : null;
     $tipo = isset($_GET['tipo']) ? $_GET['tipo'] : null;
+    $page = max(1, (int)($_GET['page'] ?? 1));
+    $limit = min(100, max(1, (int)($_GET['limit'] ?? 50)));
+    $offset = ($page - 1) * $limit;
 
     $sql = "SELECT 
                 hs.*,
@@ -42,7 +45,9 @@ try {
         $params[] = $tipo;
     }
 
-    $sql .= " ORDER BY hs.fecha DESC LIMIT 100";
+    $sql .= " ORDER BY hs.fecha DESC LIMIT ? OFFSET ?";
+    $params[] = $limit;
+    $params[] = $offset;
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
@@ -52,10 +57,27 @@ try {
         $row['stock_nuevo'] = $row['stock_actual'];
     }
 
+    $countSql = "SELECT COUNT(*) FROM historial_stock hs WHERE 1=1";
+    $countParams = [];
+    if ($fecha) {
+        $countSql .= " AND DATE(hs.fecha) = ?";
+        $countParams[] = $fecha;
+    }
+    if ($tipo) {
+        $countSql .= " AND hs.tipo = ?";
+        $countParams[] = $tipo;
+    }
+    $countStmt = $pdo->prepare($countSql);
+    $countStmt->execute($countParams);
+    $total = (int)$countStmt->fetchColumn();
+
     echo json_encode([
         'success' => true,
         'historial' => $historial,
-        'total' => count($historial)
+        'total' => $total,
+        'page' => $page,
+        'limit' => $limit,
+        'total_pages' => ceil($total / $limit)
     ]);
 } catch (PDOException $e) {
     echo json_encode([

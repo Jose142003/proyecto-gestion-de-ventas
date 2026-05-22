@@ -132,6 +132,7 @@ try {
         $stmt = $conn->prepare("INSERT INTO backups (nombre_archivo, ruta_archivo, tamanio_bytes, tipo, estado, usuario_id) VALUES (?, ?, ?, 'completo', 'completado', ?)");
         $stmt->execute([$nombre_archivo, $ruta_completa, $tamano, $user_id]);
         
+        auditoriaRegistrar('crear_backup', 'backups', "Backup creado: $nombre_archivo - " . round($tamano / 1024, 2) . " KB");
         responder(true, 'Backup generado correctamente', [
             'archivo' => $nombre_archivo,
             'tamaño' => round($tamano / 1024, 2) . ' KB',

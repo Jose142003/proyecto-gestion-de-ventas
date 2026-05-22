@@ -18,6 +18,9 @@ require_once __DIR__ . '/../conexion/conexion.php';
 
 try {
     $pdo = conectarDB();
+    $page = max(1, (int)($_GET['page'] ?? 1));
+    $limit = min(100, max(1, (int)($_GET['limit'] ?? 50)));
+    $offset = ($page - 1) * $limit;
     
     $sql = "SELECT 
                 id,
@@ -57,7 +60,15 @@ try {
         }
     }
     
-    echo json_encode(['success' => true, 'registro' => $registro, 'historial' => $historial]);
+    echo json_encode([
+        'success' => true,
+        'registro' => $registro,
+        'historial' => $historial,
+        'total' => 1,
+        'page' => $page,
+        'limit' => $limit,
+        'total_pages' => 1
+    ]);
     
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);

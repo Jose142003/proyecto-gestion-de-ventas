@@ -45,6 +45,7 @@ try {
     $stmt = $pdo->prepare("DELETE FROM backups WHERE id = ?");
     $stmt->execute([$id]);
     
+    auditoriaRegistrar('eliminar_backup', 'backups', "Backup eliminado - ID: $id - Archivo: {$backup['ruta_archivo']}");
     echo json_encode(['success' => true, 'message' => 'Backup eliminado correctamente']);
     
 } catch (Exception $e) {

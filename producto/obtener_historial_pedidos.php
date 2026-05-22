@@ -14,8 +14,7 @@ if ($user_id <= 0) {
 }
 
 try {
-    $database = new Database();
-    $conn = $database->getConnection();
+    $conn = Database::getConnection();
 
     // Consulta para obtener los pedidos del usuario con detalles de productos
     $sql = "SELECT 

@@ -9,17 +9,34 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-$database = new Database();
-$db = $database->getConnection();
+try {
+    $db = Database::getConnection();
 
-$query = "SELECT * FROM proveedores ORDER BY id DESC";
-$stmt = $db->prepare($query);
-$stmt->execute();
+    $page = max(1, (int)($_GET['page'] ?? 1));
+    $limit = min(100, max(1, (int)($_GET['limit'] ?? 50)));
+    $offset = ($page - 1) * $limit;
 
-$proveedores = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $countStmt = $db->query("SELECT COUNT(*) FROM proveedores");
+    $total = (int)$countStmt->fetchColumn();
 
-echo json_encode([
-    'success' => true,
-    'data' => $proveedores
-]);
+    $query = "SELECT * FROM proveedores ORDER BY id DESC LIMIT ? OFFSET ?";
+    $stmt = $db->prepare($query);
+    $stmt->execute([$limit, $offset]);
+
+    $proveedores = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    echo json_encode([
+        'success' => true,
+        'data' => $proveedores,
+        'total' => $total,
+        'page' => $page,
+        'limit' => $limit,
+        'total_pages' => ceil($total / $limit)
+    ]);
+} catch (Exception $e) {
+    echo json_encode([
+        'success' => false,
+        'message' => 'Error interno del servidor'
+    ]);
+}
 ?>

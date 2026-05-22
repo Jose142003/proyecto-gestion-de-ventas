@@ -32,8 +32,7 @@ require_once dirname(__DIR__) . '/conexion/conexion.php';
 verificarCSRF();
 
 try {
-    $database = new Database();
-    $db = $database->getConnection();
+    $db = Database::getConnection();
     
     // Obtener la ruta de la foto actual
     $query = "SELECT foto_perfil FROM users WHERE id = :id";

@@ -142,6 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             if ($stmt->rowCount() > 0) {
                 $success = 'Producto actualizado correctamente';
+                auditoriaRegistrar('editar_producto', 'producto', "Producto ID $id editado: $nombre");
             } else {
                 $error = 'Error al actualizar el producto';
             }

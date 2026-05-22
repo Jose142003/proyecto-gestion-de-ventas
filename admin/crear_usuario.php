@@ -72,6 +72,7 @@ try {
     if ($insertStmt->execute($data)) {
         $userId = $pdo->lastInsertId();
         
+        auditoriaRegistrar('crear_usuario', 'usuarios', "Usuario creado: {$input['nombre']} ({$input['email']})");
         echo json_encode([
             'success' => true,
             'message' => 'Usuario creado exitosamente',

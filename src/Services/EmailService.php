@@ -37,7 +37,7 @@ class EmailService
             $this->mail->send();
             return ['success' => true, 'message' => 'Correo enviado correctamente'];
         } catch (Exception $e) {
-            $error = $this->mail->ErrorInfo;
+            $error = $this->mail->ErrorInfo ?: $e->getMessage();
             error_log("Error EmailService: " . $error);
             return ['success' => false, 'message' => $error];
         }

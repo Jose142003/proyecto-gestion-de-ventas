@@ -14,22 +14,40 @@ class StockService
 
     public function reduceStock(int $productId, int $quantity): bool
     {
-        $stmt = $this->pdo->prepare("
-            UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ?
-        ");
-        $stmt->execute([$quantity, $productId, $quantity]);
-        if ($stmt->rowCount() === 0) {
-            throw new \RuntimeException("Stock insuficiente para el producto ID: $productId");
+        $check = $this->pdo->prepare("SELECT id, stock FROM products WHERE id = ?");
+        $check->execute([$productId]);
+        $product = $check->fetch(PDO::FETCH_ASSOC);
+        if (!$product) {
+            throw new \RuntimeException("Producto ID $productId no existe");
         }
-        $this->logMovement($productId, $quantity, 'salida');
-        return true;
+        if ($product['stock'] < $quantity) {
+            throw new \RuntimeException("Stock insuficiente para el producto ID: $productId (disponible: {$product['stock']}, solicitado: $quantity)");
+        }
+        $this->pdo->beginTransaction();
+        try {
+            $stmt = $this->pdo->prepare("UPDATE products SET stock = stock - ? WHERE id = ?");
+            $stmt->execute([$quantity, $productId]);
+            $this->logMovement($productId, $quantity, 'salida');
+            $this->pdo->commit();
+            return true;
+        } catch (\Exception $e) {
+            $this->pdo->rollBack();
+            throw $e;
+        }
     }
 
     public function increaseStock(int $productId, int $quantity): void
     {
-        $stmt = $this->pdo->prepare("UPDATE products SET stock = stock + ? WHERE id = ?");
-        $stmt->execute([$quantity, $productId]);
-        $this->logMovement($productId, $quantity, 'entrada');
+        $this->pdo->beginTransaction();
+        try {
+            $stmt = $this->pdo->prepare("UPDATE products SET stock = stock + ? WHERE id = ?");
+            $stmt->execute([$quantity, $productId]);
+            $this->logMovement($productId, $quantity, 'entrada');
+            $this->pdo->commit();
+        } catch (\Exception $e) {
+            $this->pdo->rollBack();
+            throw $e;
+        }
     }
 
     private function logMovement(int $productId, int $quantity, string $type): void

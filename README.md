@@ -82,9 +82,9 @@ mysql -u root -p < sql/registro_usuarios.sql
 
 ## Base de datos
 
-El sistema utiliza 20 tablas:
+El sistema utiliza 28+ tablas, incluyendo:
 
-`users` — `products` — `admin_users` — `clientes` — `pedidos` — `pedido_detalles` — `facturas` — `factura_detalles` — `cart_items` — `historial_stock` — `movimientos_inventario` — `proveedores` — `compras` — `compra_detalles` — `caja_arqueos` — `caja_movimientos` — `configuracion_sistema` — `backups` — `auditoria_logs` — `secuencias_facturacion`
+`users` — `products` — `admin_users` — `clientes` — `pedidos` — `pedido_detalles` — `pedido_historial` — `facturas` — `factura_detalles` — `cart_items` — `historial_stock` — `movimientos_inventario` — `proveedores` — `compras` — `compra_detalles` — `caja_arqueos` — `caja_movimientos` — `configuracion_sistema` — `backups` — `auditoria_logs` — `secuencias_facturacion` — `predicciones_ventas` — `alertas_stock` — `sesiones_2fa` — `bi_metricas_diarias` — `formulas_tecnicas` — `compatibilidad_marcas` — `configuraciones_tablero` — `alertas_mantenimiento`
 
 ## Estructura del proyecto
 
@@ -119,5 +119,5 @@ El sistema utiliza 20 tablas:
 ## Tecnologías
 
 - **Backend:** PHP 8+, PDO, MySQL
-- **Frontend:** HTML5, CSS3, JavaScript, Bootstrap 5, jQuery
+- **Frontend:** HTML5, CSS3, JavaScript, Bootstrap 5.2.3, jQuery 3.6+, Font Awesome 6
 - **Entorno:** Laragon / XAMPP / WAMP

@@ -155,3 +155,36 @@ function logSistema(string $mensaje, string $nivel = 'INFO'): void {
     $linea = '[' . date('Y-m-d H:i:s') . '] [' . $nivel . '] ' . $mensaje . PHP_EOL;
     @file_put_contents($archivo, $linea, FILE_APPEND | LOCK_EX);
 }
+
+// ========== AUDITORÍA CENTRALIZADA ==========
+
+function auditoriaRegistrar(string $accion, string $modulo, string $descripcion, ?int $usuarioId = null, ?string $usuarioNombre = null): void {
+    try {
+        $pdo = Database::getConnection();
+        $usuarioId = $usuarioId ?? ($_SESSION['user_id'] ?? null);
+        $usuarioNombre = $usuarioNombre ?? ($_SESSION['user_nombre'] ?? 'sistema');
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+        $stmt = $pdo->prepare("INSERT INTO auditoria_logs (usuario_id, usuario_nombre, accion, modulo, descripcion, ip_address, fecha) VALUES (?, ?, ?, ?, ?, ?, NOW())");
+        $stmt->execute([$usuarioId, $usuarioNombre, $accion, $modulo, $descripcion, $ip]);
+    } catch (Exception $e) {
+        logSistema("Error registrando auditoría: " . $e->getMessage(), 'ERROR');
+    }
+}
+
+function auditoriaRegistrarConDetalle(string $accion, string $modulo, string $descripcion, mixed $datosAntes = null, mixed $datosDespues = null): void {
+    try {
+        $pdo = Database::getConnection();
+        $usuarioId = $_SESSION['user_id'] ?? null;
+        $usuarioNombre = $_SESSION['user_nombre'] ?? 'sistema';
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+        $stmt = $pdo->prepare("INSERT INTO auditoria_logs (usuario_id, usuario_nombre, accion, modulo, descripcion, datos_antes, datos_despues, ip_address, fecha) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+        $stmt->execute([
+            $usuarioId, $usuarioNombre, $accion, $modulo, $descripcion,
+            $datosAntes ? json_encode($datosAntes, JSON_UNESCAPED_UNICODE) : null,
+            $datosDespues ? json_encode($datosDespues, JSON_UNESCAPED_UNICODE) : null,
+            $ip
+        ]);
+    } catch (Exception $e) {
+        logSistema("Error registrando auditoría con detalle: " . $e->getMessage(), 'ERROR');
+    }
+}

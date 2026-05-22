@@ -130,8 +130,7 @@ $admin_info = null;
 $admin_rol = null;
 
 try {
-    $database = new Database();
-    $db = $database->getConnection();
+    $db = Database::getConnection();
     
     // ==============================================
     // VERIFICAR SESIÓN - Usando el mismo sistema que panel_admin.php
@@ -419,6 +418,7 @@ try {
         ];
     }
     
+    auditoriaRegistrar('eliminar_usuario', 'usuarios', "Usuario {$usuario_info['nombre']} ({$usuario_info['correo']}) - Acción: $action");
     echo json_encode($response);
     
 } catch (Exception $e) {

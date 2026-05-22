@@ -79,8 +79,8 @@ try {
         exit;
     }
 
-    // Validar tipo de archivo
-    $tipos_permitidos = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
+    // Validar tipo MIME real con finfo (evita falsificación de extensión)
+    $tipos_permitidos = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     $finfo = finfo_open(FILEINFO_MIME_TYPE);
     $mime_type = finfo_file($finfo, $archivo['tmp_name']);
     finfo_close($finfo);
@@ -90,9 +90,18 @@ try {
         exit;
     }
 
-    // Validar tamaño (max 5MB)
-    if ($archivo['size'] > 5 * 1024 * 1024) {
-        echo json_encode(['success' => false, 'message' => 'La imagen no puede superar los 5MB']);
+    // Validar extensión del archivo
+    $extensiones_permitidas = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    $extension = strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION));
+    if (!in_array($extension, $extensiones_permitidas)) {
+        echo json_encode(['success' => false, 'message' => 'Extensión de archivo no permitida']);
+        exit;
+    }
+
+    // Validar tamaño (max 2MB)
+    $max_size = 2 * 1024 * 1024;
+    if ($archivo['size'] > $max_size) {
+        echo json_encode(['success' => false, 'message' => 'La imagen no puede superar los 2MB']);
         exit;
     }
 
@@ -105,9 +114,10 @@ try {
         }
     }
 
-    // Generar nombre único
+    // Generar nombre único seguro (UUID v4-like)
     $extension = strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION));
-    $nombre_archivo = $tabla . '_' . $usuario_id . '_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $extension;
+    $uuid = bin2hex(random_bytes(16));
+    $nombre_archivo = $tabla . '_' . $usuario_id . '_' . $uuid . '.' . $extension;
     $ruta_relativa = '/uploads/perfiles/' . $nombre_archivo;
     $ruta_completa = $upload_dir . $nombre_archivo;
 

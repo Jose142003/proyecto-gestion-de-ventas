@@ -15,7 +15,7 @@ require_once __DIR__ . '/../conexion/conexion.php';
 verificarCSRF();
 
 try {
-    $pdo = getConexion();
+    $pdo = Database::getConnection();
 } catch (PDOException $e) {
     http_response_code(500);
     echo json_encode([
@@ -79,6 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         $pdo->commit();
         
+        auditoriaRegistrar('actualizar_stock', 'stock', "Stock actualizado: {$producto['nombre']} (ID: $producto_id) - Cantidad: $cantidad - Stock anterior: {$producto['stock']} - Stock actual: $nuevo_stock");
         echo json_encode([
             'success' => true,
             'message' => 'Stock actualizado correctamente',

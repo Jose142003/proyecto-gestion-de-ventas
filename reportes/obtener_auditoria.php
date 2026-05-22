@@ -6,6 +6,13 @@ requerirAdmin();
 
 try {
     $pdo = conectarDB();
+
+    $page = max(1, (int)($_GET['page'] ?? 1));
+    $limit = min(100, max(1, (int)($_GET['limit'] ?? 50)));
+    $offset = ($page - 1) * $limit;
+
+    $countStmt = $pdo->query("SELECT COUNT(*) FROM auditoria_logs");
+    $total = (int)$countStmt->fetchColumn();
     
     $sql = "SELECT 
                 id,
@@ -24,10 +31,10 @@ try {
                 last_edit_at
             FROM auditoria_logs 
             ORDER BY fecha_creacion DESC 
-            LIMIT 200";
+            LIMIT ? OFFSET ?";
     
     $stmt = $pdo->prepare($sql);
-    $stmt->execute();
+    $stmt->execute([$limit, $offset]);
     $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     foreach ($data as &$row) {
@@ -39,9 +46,16 @@ try {
         unset($row['fecha_creacion']);
     }
     
-    echo json_encode($data);
+    echo json_encode([
+        'success' => true,
+        'data' => $data,
+        'total' => $total,
+        'page' => $page,
+        'limit' => $limit,
+        'total_pages' => ceil($total / $limit)
+    ]);
     
 } catch(PDOException $e) {
-    echo json_encode(['error' => 'Error interno del servidor']);
+    echo json_encode(['success' => false, 'error' => 'Error interno del servidor']);
 }
 ?>

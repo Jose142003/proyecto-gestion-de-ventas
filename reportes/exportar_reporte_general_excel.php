@@ -12,8 +12,7 @@ function formatMoney($value) {
     return number_format($value, 2, ',', '.');
 }
 
-$database = new Database();
-$db = $database->getConnection();
+$db = Database::getConnection();
 
 // Obtener todos los datos - CORREGIDO: usa pedido_detalles
 $query = "SELECT 

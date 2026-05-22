@@ -6,12 +6,11 @@ require_once '../conexion/conexion.php';
 header('Content-Type: application/json');
 
 // ========== CONFIGURACIÓN ==========
-define('REGISTRO_ADMIN_PERMITIDO', true);
-define('REQUERIR_TOKEN_ADMIN', false);
+define('REGISTRO_ADMIN_PERMITIDO', false);
+define('REQUERIR_TOKEN_ADMIN', true);
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $database = new Database();
-    $db = $database->getConnection();
+    $db = Database::getConnection();
     
     // ========== RECOLECTAR DATOS ==========
     $nombre = trim($_POST['nombre'] ?? '');

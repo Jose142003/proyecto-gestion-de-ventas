@@ -3,14 +3,9 @@
 # ============================================================================
 
 # Proteger archivos sensibles
-<FilesMatch "\.(sql|log|env|lock|md|gitignore|json)$">
+<FilesMatch "\.(sql|log|env|lock|md|gitignore)$">
     Require all denied
 </FilesMatch>
-
-# Excepción: manifest.json para PWA
-<Files "manifest.json">
-    Require all granted
-</Files>
 
 # Proteger directorios sensibles
 RedirectMatch 404 /\.git

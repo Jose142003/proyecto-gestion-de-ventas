@@ -20,8 +20,7 @@ if (!$data || empty($data['nombre']) || empty($data['telefono']) || empty($data[
 }
 
 try {
-    $database = new Database();
-    $db = $database->getConnection();
+    $db = Database::getConnection();
 
     // Generar código de proveedor
     $codigo = 'PROV-' . strtoupper(substr(uniqid(), -6));
@@ -39,6 +38,7 @@ try {
         $data['contacto'] ?? '',
         $data['direccion'] ?? ''
     ])) {
+        auditoriaRegistrar('crear_proveedor', 'proveedores', "Proveedor creado: {$data['nombre']}");
         echo json_encode(['success' => true, 'message' => 'Proveedor creado correctamente']);
     } else {
         echo json_encode(['success' => false, 'message' => 'Error al crear proveedor']);

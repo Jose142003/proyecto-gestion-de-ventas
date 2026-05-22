@@ -50,8 +50,8 @@ class Product
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
         ");
         $stmt->execute([
-            $data['name'], $data['sku'], $data['description'] ?? '',
-            $data['price'], $data['stock'] ?? 0, $data['category'] ?? '',
+            $data['name'] ?? '', $data['sku'] ?? '', $data['description'] ?? '',
+            $data['price'] ?? 0, $data['stock'] ?? 0, $data['category'] ?? '',
             $data['image_url'] ?? '', $data['rating'] ?? 0, $data['specs'] ?? '',
             $data['weight'] ?? 0, $data['dimensions'] ?? '', $data['currency'] ?? 'USD',
             $data['is_featured'] ?? 0
@@ -68,7 +68,7 @@ class Product
             WHERE id = ?
         ");
         $stmt->execute([
-            $data['name'], $data['sku'], $data['description'] ?? '', $data['price'],
+            $data['name'] ?? '', $data['sku'] ?? '', $data['description'] ?? '', $data['price'] ?? 0,
             $data['stock'] ?? 0, $data['category'] ?? '', $data['image_url'] ?? '',
             $data['rating'] ?? 0, $data['specs'] ?? '', $data['weight'] ?? 0,
             $data['dimensions'] ?? '', $data['currency'] ?? 'USD', $data['is_featured'] ?? 0, $id

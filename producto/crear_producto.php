@@ -8,9 +8,15 @@ session_start();
 $isAdmin = false;
 if (isset($_SESSION['user_id']) && isset($_SESSION['user_rol']) && $_SESSION['user_rol'] === 'admin') {
     $isAdmin = true;
-} elseif (isset($_SESSION['user_correo']) && (stripos($_SESSION['user_correo'], 'picca.ventas@gmail.com') !== false || stripos($_SESSION['user_correo'], 'admin') !== false)) {
-    $isAdmin = true;
-    $_SESSION['user_rol'] = 'admin';
+} elseif (isset($_SESSION['user_correo'])) {
+    $tmpPdo = Database::getConnection();
+    $tmpStmt = $tmpPdo->prepare("SELECT es_admin FROM admin_users WHERE correo = ?");
+    $tmpStmt->execute([$_SESSION['user_correo']]);
+    $tmpUser = $tmpStmt->fetch(PDO::FETCH_ASSOC);
+    if ($tmpUser && $tmpUser['es_admin']) {
+        $isAdmin = true;
+        $_SESSION['user_rol'] = 'admin';
+    }
 }
 
 if (!$isAdmin) {
@@ -19,6 +25,11 @@ if (!$isAdmin) {
 }
 
 require_once __DIR__ . '/../conexion/conexion.php';
+
+$pdo = Database::getConnection();
+$palabras_prohibidas = ['spam', 'violencia', 'prueba', 'test', 'demo', 'xxxx', 'basura', 'eliminar'];
+$usuario_id = $_SESSION['user_id'] ?? null;
+$usuario_nombre = $_SESSION['user_nombre'] ?? '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verificarCSRF();
@@ -52,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'stock' => $stock,
                 'descripcion' => $descripcion
             ];
-                    $resultado = crearProducto($pdo, $datos, $usuario_id, $usuario_nombre);
+            $resultado = crearProducto($pdo, $datos, $usuario_id, $usuario_nombre);
             if ($resultado['success']) {
                 $importados[] = $resultado;
                 $mensaje = "✅ Producto importado correctamente. SKU: " . $resultado['sku'];
@@ -125,10 +136,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+function productoExiste(PDO $pdo, string $nombre): bool {
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM products WHERE name = ?");
+    $stmt->execute([$nombre]);
+    return $stmt->fetchColumn() > 0;
+}
+
+function crearProducto(PDO $pdo, array $datos, ?int $usuario_id, ?string $usuario_nombre): array {
+    try {
+        $stmt = $pdo->prepare("INSERT INTO products (name, price, image_url, category, stock, description, active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, 1, NOW(), NOW())");
+        $stmt->execute([$datos['nombre'], $datos['precio'], $datos['imagen'], $datos['categoria'], $datos['stock'], $datos['descripcion']]);
+        $productoId = $pdo->lastInsertId();
+        $sku = 'PROD-' . str_pad($productoId, 4, '0', STR_PAD_LEFT);
+        $pdo->prepare("UPDATE products SET sku = ? WHERE id = ?")->execute([$sku, $productoId]);
+        return ['success' => true, 'sku' => $sku, 'id' => $productoId];
+    } catch (PDOException $e) {
+        error_log("Error creando producto: " . $e->getMessage());
+        return ['success' => false, 'error' => 'Error al crear el producto: ' . $e->getMessage()];
+    }
+}
+
 // Obtener productos existentes
 $productos_existentes = [];
-$stmt = $pdo->query("SELECT id, sku, name, price, active FROM products ORDER BY id DESC LIMIT 20");
-$productos_existentes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+try {
+    $stmt = $pdo->query("SELECT id, sku, name, price, active FROM products ORDER BY id DESC LIMIT 20");
+    $productos_existentes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $productos_existentes = [];
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
