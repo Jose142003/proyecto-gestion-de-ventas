@@ -59,23 +59,54 @@ function tablaExiste($pdo, string $tabla): bool {
 
 function kpis($pdo) {
     $r = [];
-    $r['ventas_hoy'] = (float)q1($pdo, "SELECT COALESCE(SUM(total), 0) FROM facturas WHERE DATE(fecha_emision) = CURDATE()");
-    $r['ventas_mes'] = (float)q1($pdo, "SELECT COALESCE(SUM(total), 0) FROM facturas WHERE MONTH(fecha_emision) = MONTH(CURRENT_DATE) AND YEAR(fecha_emision) = YEAR(CURRENT_DATE)");
-    $r['ventas_totales'] = (float)q1($pdo, "SELECT COALESCE(SUM(total), 0) FROM facturas");
+    $r['ventas_hoy'] = (float)q1($pdo, "SELECT COALESCE(SUM(total), 0) FROM facturas WHERE DATE(fecha_emision) = CURDATE() AND estado != 'anulada'");
+    if ($r['ventas_hoy'] == 0) {
+        $r['ventas_hoy'] = (float)q1($pdo, "SELECT COALESCE(SUM(total), 0) FROM pedidos WHERE DATE(fecha_pedido) = CURDATE() AND estado NOT IN ('cancelado')");
+    }
+    $r['ventas_mes'] = (float)q1($pdo, "SELECT COALESCE(SUM(total), 0) FROM facturas WHERE MONTH(fecha_emision) = MONTH(CURRENT_DATE) AND YEAR(fecha_emision) = YEAR(CURRENT_DATE) AND estado != 'anulada'");
+    if ($r['ventas_mes'] == 0) {
+        $r['ventas_mes'] = (float)q1($pdo, "SELECT COALESCE(SUM(total), 0) FROM pedidos WHERE MONTH(fecha_pedido) = MONTH(CURRENT_DATE) AND YEAR(fecha_pedido) = YEAR(CURRENT_DATE) AND estado NOT IN ('cancelado')");
+    }
+    $r['ventas_totales'] = (float)q1($pdo, "SELECT COALESCE(SUM(total), 0) FROM facturas WHERE estado != 'anulada'");
+    if ($r['ventas_totales'] == 0) {
+        $r['ventas_totales'] = (float)q1($pdo, "SELECT COALESCE(SUM(total), 0) FROM pedidos WHERE estado NOT IN ('cancelado')");
+    }
     $r['pedidos_pendientes'] = (int)q1($pdo, "SELECT COUNT(*) FROM pedidos WHERE estado = 'pendiente'");
     $r['clientes_activos'] = (int)q1($pdo, "SELECT COUNT(*) FROM clientes WHERE estado = 'activo'");
     $r['stock_bajo'] = (int)q1($pdo, "SELECT COUNT(*) FROM products WHERE stock <= 5 AND stock > 0");
     $r['agotados'] = (int)q1($pdo, "SELECT COUNT(*) FROM products WHERE stock <= 0 AND active = 1");
-    $r['ticket_promedio'] = (float)q1($pdo, "SELECT COALESCE(ROUND(AVG(total), 2), 0) FROM facturas WHERE MONTH(fecha_emision) = MONTH(CURRENT_DATE) AND YEAR(fecha_emision) = YEAR(CURRENT_DATE)");
+    $r['ticket_promedio'] = (float)q1($pdo, "SELECT COALESCE(ROUND(AVG(total), 2), 0) FROM facturas WHERE MONTH(fecha_emision) = MONTH(CURRENT_DATE) AND YEAR(fecha_emision) = YEAR(CURRENT_DATE) AND estado != 'anulada'");
+    if ($r['ticket_promedio'] == 0) {
+        $r['ticket_promedio'] = (float)q1($pdo, "SELECT COALESCE(ROUND(AVG(total), 2), 0) FROM pedidos WHERE MONTH(fecha_pedido) = MONTH(CURRENT_DATE) AND YEAR(fecha_pedido) = YEAR(CURRENT_DATE) AND estado NOT IN ('cancelado')");
+    }
     $r['tasa_conversion'] = (float)q1($pdo, "SELECT COUNT(*) FROM pedidos WHERE MONTH(fecha_pedido) = MONTH(CURRENT_DATE) AND YEAR(fecha_pedido) = YEAR(CURRENT_DATE)");
     $ventasMes = $r['ventas_mes'];
-    $ventasMesAnt = (float)q1($pdo, "SELECT COALESCE(SUM(total), 0) FROM facturas WHERE MONTH(fecha_emision) = MONTH(DATE_SUB(CURRENT_DATE, INTERVAL 1 MONTH)) AND YEAR(fecha_emision) = YEAR(DATE_SUB(CURRENT_DATE, INTERVAL 1 MONTH))");
+    $ventasMesAnt = (float)q1($pdo, "SELECT COALESCE(SUM(total), 0) FROM facturas WHERE MONTH(fecha_emision) = MONTH(DATE_SUB(CURRENT_DATE, INTERVAL 1 MONTH)) AND YEAR(fecha_emision) = YEAR(DATE_SUB(CURRENT_DATE, INTERVAL 1 MONTH)) AND estado != 'anulada'");
+    if ($ventasMesAnt == 0) {
+        $ventasMesAnt = (float)q1($pdo, "SELECT COALESCE(SUM(total), 0) FROM pedidos WHERE MONTH(fecha_pedido) = MONTH(DATE_SUB(CURRENT_DATE, INTERVAL 1 MONTH)) AND YEAR(fecha_pedido) = YEAR(DATE_SUB(CURRENT_DATE, INTERVAL 1 MONTH)) AND estado NOT IN ('cancelado')");
+    }
     $r['crecimiento'] = $ventasMesAnt > 0 ? round((($ventasMes - $ventasMesAnt) / $ventasMesAnt) * 100, 1) : 0;
     return $r;
 }
 
 function ventasPorMes($pdo) {
-    return q($pdo, "SELECT DATE_FORMAT(fecha_emision, '%Y-%m') as mes, DATE_FORMAT(fecha_emision, '%M %Y') as mes_nombre, COUNT(*) as total_facturas, ROUND(SUM(total), 2) as total_ventas, ROUND(AVG(total), 2) as ticket_promedio FROM facturas WHERE fecha_emision >= DATE_SUB(CURRENT_DATE, INTERVAL 12 MONTH) GROUP BY DATE_FORMAT(fecha_emision, '%Y-%m') ORDER BY mes ASC");
+    $data = q($pdo, "SELECT DATE_FORMAT(fecha_emision, '%Y-%m') as mes, DATE_FORMAT(fecha_emision, '%M %Y') as mes_nombre, COUNT(*) as total_facturas, ROUND(SUM(total), 2) as total_ventas, ROUND(AVG(total), 2) as ticket_promedio FROM facturas WHERE fecha_emision >= DATE_SUB(CURRENT_DATE, INTERVAL 12 MONTH) AND estado != 'anulada' GROUP BY DATE_FORMAT(fecha_emision, '%Y-%m') ORDER BY mes ASC");
+    if (empty($data)) {
+        $data = q($pdo, "SELECT DATE_FORMAT(fecha_pedido, '%Y-%m') as mes, DATE_FORMAT(fecha_pedido, '%M %Y') as mes_nombre, COUNT(*) as total_facturas, ROUND(SUM(total), 2) as total_ventas, ROUND(AVG(total), 2) as ticket_promedio FROM pedidos WHERE fecha_pedido >= DATE_SUB(CURRENT_DATE, INTERVAL 12 MONTH) AND estado NOT IN ('cancelado') GROUP BY DATE_FORMAT(fecha_pedido, '%Y-%m') ORDER BY mes ASC");
+    }
+    $meses = [];
+    for ($i = 11; $i >= 0; $i--) {
+        $fecha = new DateTime();
+        $fecha->modify("-{$i} months");
+        $mesKey = $fecha->format('Y-m');
+        $meses[$mesKey] = ['mes' => $mesKey, 'mes_nombre' => ucfirst($fecha->format('F Y')), 'total_facturas' => 0, 'total_ventas' => 0, 'ticket_promedio' => 0];
+    }
+    foreach ($data as $row) {
+        if (isset($meses[$row['mes']])) {
+            $meses[$row['mes']] = $row;
+        }
+    }
+    return array_values($meses);
 }
 
 function topProductos($pdo) {
@@ -93,11 +124,18 @@ function ventasPorCategoria($pdo) {
 }
 
 function metodosPago($pdo) {
-    return q($pdo, "SELECT COALESCE(NULLIF(metodo_pago, ''), 'No especificado') as metodo_pago, COUNT(*) as total, ROUND(SUM(total), 2) as monto FROM facturas WHERE estado != 'anulada' GROUP BY metodo_pago ORDER BY monto DESC");
+    $data = q($pdo, "SELECT COALESCE(NULLIF(metodo_pago, ''), 'No especificado') as metodo_pago, COUNT(*) as total, ROUND(SUM(total), 2) as monto FROM facturas WHERE estado != 'anulada' GROUP BY metodo_pago ORDER BY monto DESC");
+    if (empty($data)) {
+        $data = q($pdo, "SELECT COALESCE(NULLIF(metodo_pago, ''), 'No especificado') as metodo_pago, COUNT(*) as total, ROUND(SUM(total), 2) as monto FROM pedidos WHERE estado NOT IN ('cancelado') GROUP BY metodo_pago ORDER BY monto DESC");
+    }
+    return $data;
 }
 
 function crecimiento($pdo) {
-    $filas = q($pdo, "SELECT DATE_FORMAT(fecha_emision, '%Y-%m') as mes, ROUND(SUM(total), 2) as ventas FROM facturas WHERE fecha_emision >= DATE_SUB(CURRENT_DATE, INTERVAL 6 MONTH) GROUP BY DATE_FORMAT(fecha_emision, '%Y-%m') ORDER BY mes ASC");
+    $filas = q($pdo, "SELECT DATE_FORMAT(fecha_emision, '%Y-%m') as mes, ROUND(SUM(total), 2) as ventas FROM facturas WHERE fecha_emision >= DATE_SUB(CURRENT_DATE, INTERVAL 6 MONTH) AND estado != 'anulada' GROUP BY DATE_FORMAT(fecha_emision, '%Y-%m') ORDER BY mes ASC");
+    if (empty($filas)) {
+        $filas = q($pdo, "SELECT DATE_FORMAT(fecha_pedido, '%Y-%m') as mes, ROUND(SUM(total), 2) as ventas FROM pedidos WHERE fecha_pedido >= DATE_SUB(CURRENT_DATE, INTERVAL 6 MONTH) AND estado NOT IN ('cancelado') GROUP BY DATE_FORMAT(fecha_pedido, '%Y-%m') ORDER BY mes ASC");
+    }
     $result = [];
     foreach ($filas as $i => $f) {
         $anterior = $i > 0 ? $filas[$i - 1]['ventas'] : 0;
