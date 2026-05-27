@@ -176,6 +176,13 @@ if (!$pedido_id) {
     $stmt_upd_ped->execute([':pedido_id' => $pedido_id]);
     
     $pdo->commit();
+
+    try {
+        require_once __DIR__ . '/../telegram/notificar_pedido.php';
+        telegramNotificarPedido($pdo, $pedido_id);
+    } catch (Throwable $e) {
+        error_log("Error notificando pedido por Telegram: " . $e->getMessage());
+    }
     
     echo json_encode([
         'success' => true,

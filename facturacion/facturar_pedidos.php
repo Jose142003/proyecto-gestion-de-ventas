@@ -182,6 +182,13 @@ try {
             
             $pdo->commit();
             $facturados[] = $pedido_id;
+
+            try {
+                require_once __DIR__ . '/../telegram/notificar_pedido.php';
+                telegramNotificarPedido($pdo, $pedido_id);
+            } catch (Throwable $e) {
+                error_log("Error notificando pedido por Telegram: " . $e->getMessage());
+            }
             
         } catch (PDOException $e) {
             $pdo->rollBack();

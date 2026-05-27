@@ -87,6 +87,76 @@ try {
     }
 
     $pdo->commit();
+
+    $alertasNuevas = $pdo->query("
+        SELECT COUNT(*) FROM alertas_stock WHERE resuelta = FALSE AND leida = FALSE
+    ")->fetchColumn();
+
+    if ($alertasNuevas > 0) {
+        $wspCfg = $pdo->query("SELECT clave, valor FROM configuracion_sistema WHERE clave LIKE 'whatsapp_%'")->fetchAll();
+        $wsp = [];
+        foreach ($wspCfg as $row) {
+            $wsp[str_replace('whatsapp_', '', $row['clave'])] = $row['valor'];
+        }
+        if (!empty($wsp['api_url']) && !empty($wsp['api_token']) && !empty($wsp['numero']) && ($wsp['notificaciones_stock'] ?? '0') === '1') {
+            $criticos = $pdo->query("SELECT COUNT(*) FROM alertas_stock WHERE tipo='critico' AND resuelta=FALSE")->fetchColumn();
+            $bajos = $pdo->query("SELECT COUNT(*) FROM alertas_stock WHERE tipo='bajo' AND resuelta=FALSE")->fetchColumn();
+            $wspMsg = "📊 *REPORTE IA - Alertas de Stock*\n\n";
+            $wspMsg .= "🔴 Críticos: $criticos\n";
+            $wspMsg .= "🟡 Bajos: $bajos\n";
+            $wspMsg .= "📦 Total: " . ($criticos + $bajos) . " productos\n\n";
+            $wspMsg .= "⚠️ _Revise el panel IA Predictiva para más detalles._";
+
+            $wspPayload = [
+                'messaging_product' => 'whatsapp',
+                'to' => $wsp['numero'],
+                'type' => 'text',
+                'text' => ['body' => $wspMsg]
+            ];
+            $ch = curl_init($wsp['api_url']);
+            curl_setopt_array($ch, [
+                CURLOPT_POST => true, CURLOPT_POSTFIELDS => json_encode($wspPayload),
+                CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'Authorization: Bearer ' . $wsp['api_token']],
+                CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 5
+            ]);
+            curl_exec($ch);
+            curl_close($ch);
+
+            $pdo->exec("UPDATE alertas_stock SET leida = TRUE WHERE leida = FALSE");
+        }
+
+        $tgCfg = $pdo->query("SELECT clave, valor FROM configuracion_sistema WHERE clave LIKE 'telegram_%'")->fetchAll();
+        $tg = [];
+        foreach ($tgCfg as $row) {
+            $tg[str_replace('telegram_', '', $row['clave'])] = $row['valor'];
+        }
+        if (!empty($tg['token']) && !empty($tg['chat_id'])) {
+            $criticos = $pdo->query("SELECT COUNT(*) FROM alertas_stock WHERE tipo='critico' AND resuelta=FALSE")->fetchColumn();
+            $bajos = $pdo->query("SELECT COUNT(*) FROM alertas_stock WHERE tipo='bajo' AND resuelta=FALSE")->fetchColumn();
+            $tgMsg = "📊 *REPORTE IA - Alertas de Stock*\n\n";
+            $tgMsg .= "🔴 Críticos: $criticos\n";
+            $tgMsg .= "🟡 Bajos: $bajos\n";
+            $tgMsg .= "📦 Total: " . ($criticos + $bajos) . " productos\n\n";
+            $tgMsg .= "⚠️ Revise el panel IA Predictiva para más detalles.";
+
+            $tgUrl = "https://api.telegram.org/bot{$tg['token']}/sendMessage";
+            $tgPayload = [
+                'chat_id' => $tg['chat_id'],
+                'text' => $tgMsg,
+                'parse_mode' => 'Markdown',
+                'disable_web_page_preview' => true
+            ];
+            $ch = curl_init($tgUrl);
+            curl_setopt_array($ch, [
+                CURLOPT_POST => true, CURLOPT_POSTFIELDS => json_encode($tgPayload),
+                CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+                CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 5
+            ]);
+            curl_exec($ch);
+            curl_close($ch);
+        }
+    }
+
     echo json_encode(['success' => true, 'message' => "Predicciones generadas para $prediccionesGeneradas productos", 'total' => $prediccionesGeneradas], JSON_UNESCAPED_UNICODE);
 
 } catch (Throwable $e) {

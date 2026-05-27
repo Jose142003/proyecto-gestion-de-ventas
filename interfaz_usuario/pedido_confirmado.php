@@ -374,6 +374,18 @@ if (!empty($factura_id)) {
     } catch (Exception $e) {
         error_log("Error enviando factura email: " . $e->getMessage());
     }
+
+    // Notificar nuevo pedido por Telegram
+    try {
+        if ($pedido_id) {
+            require_once __DIR__ . '/../conexion/conexion.php';
+            require_once __DIR__ . '/../telegram/notificar_pedido.php';
+            $pdoTelegram = Database::getConnection();
+            telegramNotificarPedido($pdoTelegram, $pedido_id);
+        }
+    } catch (Throwable $e) {
+        error_log("Error notificando pedido por Telegram: " . $e->getMessage());
+    }
 }
 
 // ============================================================================

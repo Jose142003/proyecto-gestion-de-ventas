@@ -207,6 +207,14 @@ try {
     } catch (Exception $e) {
         error_log("Error enviando factura email: " . $e->getMessage());
     }
+
+    // Notificar nuevo pedido por Telegram
+    try {
+        require_once __DIR__ . '/../telegram/notificar_pedido.php';
+        telegramNotificarPedido($pdo, $pedido_id);
+    } catch (Throwable $e) {
+        error_log("Error notificando pedido por Telegram: " . $e->getMessage());
+    }
     
 } catch (Exception $e) {
     if (isset($pdo) && $pdo instanceof PDO && $pdo->inTransaction()) {

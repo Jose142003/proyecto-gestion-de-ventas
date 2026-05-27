@@ -128,7 +128,9 @@ INSERT IGNORE INTO configuracion_sistema (clave, valor, tipo, grupo, descripcion
 ('whatsapp_api_token', '', 'password', 'whatsapp', 'Token de la API de WhatsApp', 1, 51),
 ('whatsapp_numero', '', 'text', 'whatsapp', 'Numero de WhatsApp de la empresa', 1, 52),
 ('whatsapp_notificaciones_pedido', '0', 'boolean', 'whatsapp', 'Notificar nuevos pedidos por WhatsApp', 1, 53),
-('whatsapp_notificaciones_stock', '0', 'boolean', 'whatsapp', 'Notificar stock bajo por WhatsApp', 1, 54);
+('whatsapp_notificaciones_stock', '0', 'boolean', 'whatsapp', 'Notificar stock bajo por WhatsApp', 1, 54),
+('telegram_token', '', 'password', 'telegram', 'Token del bot de Telegram', 1, 55),
+('telegram_chat_id', '', 'text', 'telegram', 'Chat ID de Telegram', 1, 56);
 
 -- ##########################################################################
 -- 5. DATOS DE EJEMPLO

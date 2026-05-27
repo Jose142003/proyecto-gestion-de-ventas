@@ -80,6 +80,98 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo->commit();
         
         auditoriaRegistrar('actualizar_stock', 'stock', "Stock actualizado: {$producto['nombre']} (ID: $producto_id) - Cantidad: $cantidad - Stock anterior: {$producto['stock']} - Stock actual: $nuevo_stock");
+
+        $stockBajo = $nuevo_stock < 5;
+        $agotado = $nuevo_stock <= 0;
+        $whatsappEnviado = false;
+        $telegramEnviado = false;
+
+        if (($stockBajo || $agotado) && $nuevo_stock < $producto['stock']) {
+            $wspConfig = $pdo->query("SELECT clave, valor FROM configuracion_sistema WHERE clave LIKE 'whatsapp_%'")->fetchAll();
+            $wsp = [];
+            foreach ($wspConfig as $row) {
+                $wsp[str_replace('whatsapp_', '', $row['clave'])] = $row['valor'];
+            }
+            if (!empty($wsp['api_url']) && !empty($wsp['api_token']) && !empty($wsp['numero']) && ($wsp['notificaciones_stock'] ?? '0') === '1') {
+                $wspMensaje = "⚠️ *ALERTA DE STOCK - PIC*\n\n";
+                $wspMensaje .= "📦 *Producto:* {$producto['nombre']}\n";
+                $wspMensaje .= $agotado ? "🚫 *Estado:* AGOTADO\n" : "🔴 *Estado:* Stock Crítico\n";
+                $wspMensaje .= "📉 *Stock anterior:* {$producto['stock']}\n";
+                $wspMensaje .= "📊 *Stock actual:* $nuevo_stock\n";
+                $wspMensaje .= "🔗 *Panel:* " . ($_SERVER['HTTP_ORIGIN'] ?? 'http://localhost') . "/proyecto/panel_admin/panel_admin.php\n\n";
+                $wspMensaje .= "_Revise el inventario para reabastecer._";
+
+                $wspPayload = [
+                    'messaging_product' => 'whatsapp',
+                    'to' => $wsp['numero'],
+                    'type' => 'text',
+                    'text' => ['body' => $wspMensaje]
+                ];
+
+                $wspCh = curl_init($wsp['api_url']);
+                curl_setopt_array($wspCh, [
+                    CURLOPT_POST => true,
+                    CURLOPT_POSTFIELDS => json_encode($wspPayload),
+                    CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'Authorization: Bearer ' . $wsp['api_token']],
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_TIMEOUT => 5,
+                    CURLOPT_CONNECTTIMEOUT => 3
+                ]);
+                curl_exec($wspCh);
+                $wspHttpCode = curl_getinfo($wspCh, CURLINFO_HTTP_CODE);
+                curl_close($wspCh);
+                $whatsappEnviado = $wspHttpCode >= 200 && $wspHttpCode < 300;
+                if ($whatsappEnviado) {
+                    auditoriaRegistrar('notificar_stock_automatico', 'whatsapp',
+                        "Notificación automática de stock bajo enviada para {$producto['nombre']} (ID: $producto_id) - Stock: $nuevo_stock"
+                    );
+                }
+            }
+
+            $tgConfig = $pdo->query("SELECT clave, valor FROM configuracion_sistema WHERE clave LIKE 'telegram_%'")->fetchAll();
+            $tg = [];
+            foreach ($tgConfig as $row) {
+                $tg[str_replace('telegram_', '', $row['clave'])] = $row['valor'];
+            }
+            if (!empty($tg['token']) && !empty($tg['chat_id'])) {
+                $tgMensaje = "⚠️ *ALERTA DE STOCK - PIC*\n\n";
+                $tgMensaje .= "📦 *Producto:* {$producto['nombre']}\n";
+                $tgMensaje .= $agotado ? "🚫 *Estado:* AGOTADO\n" : "🔴 *Estado:* Stock Crítico\n";
+                $tgMensaje .= "📉 *Stock anterior:* {$producto['stock']}\n";
+                $tgMensaje .= "📊 *Stock actual:* $nuevo_stock\n";
+                $tgMensaje .= "🆔 *ID:* $producto_id\n";
+                $tgMensaje .= "🔗 *Panel:* " . ($_SERVER['HTTP_ORIGIN'] ?? 'http://localhost') . "/proyecto/panel_admin/panel_admin.php";
+
+                $tgUrl = "https://api.telegram.org/bot{$tg['token']}/sendMessage";
+                $tgPayload = [
+                    'chat_id' => $tg['chat_id'],
+                    'text' => $tgMensaje,
+                    'parse_mode' => 'Markdown',
+                    'disable_web_page_preview' => true
+                ];
+
+                $tgCh = curl_init($tgUrl);
+                curl_setopt_array($tgCh, [
+                    CURLOPT_POST => true,
+                    CURLOPT_POSTFIELDS => json_encode($tgPayload),
+                    CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_TIMEOUT => 5,
+                    CURLOPT_CONNECTTIMEOUT => 3
+                ]);
+                $tgResponse = curl_exec($tgCh);
+                $tgHttpCode = curl_getinfo($tgCh, CURLINFO_HTTP_CODE);
+                curl_close($tgCh);
+                $tgData = json_decode($tgResponse, true);
+                $telegramEnviado = ($tgData['ok'] ?? false) === true;
+                if ($telegramEnviado) {
+                    auditoriaRegistrar('notificar_stock_automatico', 'telegram',
+                        "Notificación automática de stock bajo enviada por Telegram para {$producto['nombre']} (ID: $producto_id) - Stock: $nuevo_stock"
+                    );
+                }
+            }
+        }
+
         echo json_encode([
             'success' => true,
             'message' => 'Stock actualizado correctamente',
@@ -89,8 +181,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'cantidad_vendida' => $cantidad,
                 'stock_anterior' => $producto['stock'],
                 'stock_actual' => $nuevo_stock,
-                'stock_bajo' => $nuevo_stock < 5,
-                'agotado' => $nuevo_stock <= 0
+                'stock_bajo' => $stockBajo,
+                'agotado' => $agotado,
+                'whatsapp_notificado' => $whatsappEnviado,
+                'telegram_notificado' => $telegramEnviado
             ]
         ]);
         

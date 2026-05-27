@@ -127,6 +127,7 @@ try {
     <title>Panel de Administrador - PIC</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" type="image/png" href="/proyecto/img/pic.png">
+    <meta name="csrf-token" content="<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>">
     <link rel="shortcut icon" href="/proyecto/img/pic.png">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
@@ -1722,7 +1723,7 @@ try {
                 <div class="menu-section-title">Sistema</div>
                 <div class="menu-item" data-section="ceoSection"><i class="fas fa-crown"></i> Panel CEO</div>
                 <div class="menu-item" data-section="configuracionSection"><i class="fas fa-cog"></i> Configuracion</div>
-                <div class="menu-item" data-section="whatsappSection"><i class="fab fa-whatsapp"></i> WhatsApp</div>
+                <div class="menu-item" data-section="telegramSection"><i class="fab fa-telegram"></i> Telegram</div>
                 <div class="menu-item" data-section="backupSection"><i class="fas fa-database"></i> Backup</div>
                 <div class="menu-item" data-section="reporteStockSection"><i class="fas fa-chart-simple"></i> Reporte de Stock</div>
                 <div class="menu-section-title">Seguridad</div>
@@ -2057,6 +2058,7 @@ try {
                             <button class="btn-primary" id="btnFiltrarStock"><i class="fas fa-filter"></i> Filtrar</button>
                             <button class="btn-primary" id="btnExportarStock" style="background: var(--success);"><i class="fas fa-file-excel"></i> Exportar</button>
                             <button class="btn-primary" id="btnActualizarStock" style="background: var(--info);"><i class="fas fa-sync-alt"></i> Actualizar</button>
+                            <button class="btn-primary" id="btnNotificarTelegramStock" style="background: var(--danger);"><i class="fab fa-telegram"></i> Notificar por Telegram</button>
                         </div>
                     </div>
                     <div class="table-content">
@@ -2314,34 +2316,33 @@ try {
                 </div>
             </div>
 
-            <!-- WhatsApp Section -->
-            <div id="whatsappSection" class="content-section">
+
+            <!-- Telegram Section -->
+            <div id="telegramSection" class="content-section">
                 <div class="header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-                    <h3><i class="fab fa-whatsapp"></i> Integración WhatsApp Business</h3>
+                    <h3><i class="fab fa-telegram"></i> Integración Telegram</h3>
                 </div>
                 <div class="card" style="margin-bottom:20px">
                     <div class="card-header"><h3 class="card-title"><i class="fas fa-cog"></i> Configuración de API</h3></div>
                     <div class="card-body" style="padding:20px">
                         <div class="filtros-avanzados" style="grid-template-columns:1fr 1fr">
-                            <div class="filtro-group"><label>URL de la API de WhatsApp</label><input type="text" id="whatsappApiUrl" class="form-control" placeholder="https://graph.facebook.com/v17.0/123456789/messages"></div>
-                            <div class="filtro-group"><label>Token de Acceso</label><input type="password" id="whatsappApiToken" class="form-control" placeholder="EAAT..."></div>
-                            <div class="filtro-group"><label>Número de WhatsApp (código de país + número)</label><input type="text" id="whatsappNumero" class="form-control" placeholder="584141234567"></div>
-                            <div class="filtro-group"><label>Notificar nuevos pedidos</label><select id="whatsappNotifPedido" class="form-control"><option value="0">No</option><option value="1">Sí</option></select></div>
-                            <div class="filtro-group"><label>Notificar stock bajo</label><select id="whatsappNotifStock" class="form-control"><option value="0">No</option><option value="1">Sí</option></select></div>
+                            <div class="filtro-group"><label>Token del Bot</label><input type="password" id="telegramToken" class="form-control" placeholder="7234567890:AAHdskfjsdfkj234234..."></div>
+                            <div class="filtro-group"><label>Chat ID</label><input type="text" id="telegramChatId" class="form-control" placeholder="123456789"></div>
                         </div>
                         <div class="form-actions" style="margin-top:15px">
-                            <button class="btn-primary" id="btnGuardarWhatsApp"><i class="fas fa-save"></i> Guardar Configuración</button>
-                            <button class="btn-primary" id="btnProbarWhatsApp" style="background:var(--success);margin-left:10px"><i class="fab fa-whatsapp"></i> Enviar Mensaje de Prueba</button>
+                            <button class="btn-primary" id="btnGuardarTelegram"><i class="fas fa-save"></i> Guardar Configuración</button>
+                            <button class="btn-primary" id="btnProbarTelegram" style="background:var(--success);margin-left:10px"><i class="fab fa-telegram"></i> Enviar Mensaje de Prueba</button>
+                            <button class="btn-primary" id="btnProbarTelegramStock" style="background:var(--danger);margin-left:10px"><i class="fas fa-box"></i> Notificar Stock Bajo</button>
                         </div>
                     </div>
                 </div>
                 <div class="card">
-                    <div class="card-header"><h3 class="card-title"><i class="fas fa-info-circle"></i> Información de la Integración</h3></div>
+                    <div class="card-header"><h3 class="card-title"><i class="fas fa-info-circle"></i> Estado de la Integración</h3></div>
                     <div class="card-body" style="padding:20px">
-                        <div class="profile-info-row"><div class="profile-info-label">Estado</div><div class="profile-info-value" id="whatsappEstado"><span class="badge badge-pending"><i class="fas fa-clock"></i> No configurado</span></div></div>
-                        <div class="profile-info-row"><div class="profile-info-label">Número</div><div class="profile-info-value" id="whatsappNumeroDisplay">-</div></div>
-                        <div class="profile-info-row"><div class="profile-info-label">Notificaciones de pedidos</div><div class="profile-info-value" id="whatsappNotifPedidoDisplay">Desactivado</div></div>
-                        <div class="profile-info-row"><div class="profile-info-label">Notificaciones de stock</div><div class="profile-info-value" id="whatsappNotifStockDisplay">Desactivado</div></div>
+                        <div class="profile-info-row"><div class="profile-info-label">Estado</div><div class="profile-info-value" id="telegramEstado"><span class="badge badge-pending"><i class="fas fa-clock"></i> No configurado</span></div></div>
+                        <div class="profile-info-row"><div class="profile-info-label">Chat ID</div><div class="profile-info-value" id="telegramChatIdDisplay">-</div></div>
+                        <div class="profile-info-row"><div class="profile-info-label">Bot</div><div class="profile-info-value" id="telegramBotDisplay">-</div></div>
+                        <div class="profile-info-row" style="border-bottom:none"><div class="profile-info-label">Notificaciones</div><div class="profile-info-value"><span style="color:var(--success)"><i class="fas fa-check-circle"></i> Pedidos + Stock</span></div></div>
                     </div>
                 </div>
             </div>
@@ -2511,6 +2512,7 @@ try {
         let biClientesChartInstance = null;
         let biStockCategoriasChartInstance = null;
         let prediccionesChartInstance = null;
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
         // ====================================================================
         // FUNCIONES DE BÚSQUEDA EN TIEMPO REAL
@@ -5120,80 +5122,69 @@ async function cambiarPasswordRecuperacion(event) {
         }
 
         // ====================================================================
-        // WHATSAPP - FUNCIONES
+        // TELEGRAM - FUNCIONES
         // ====================================================================
-        async function cargarWhatsAppConfig() {
+        async function cargarTelegramConfig() {
             try {
                 const response = await fetch('/proyecto/admin/obtener_configuracion.php', { credentials: 'include' });
                 const data = await response.json();
                 if (data.success && data.data) {
                     const config = data.data;
                     const getVal = (key) => { const item = config.find(c => c.clave === key); return item ? item.valor : ''; };
-                    document.getElementById('whatsappApiUrl').value = getVal('whatsapp_api_url');
-                    document.getElementById('whatsappApiToken').value = getVal('whatsapp_api_token');
-                    document.getElementById('whatsappNumero').value = getVal('whatsapp_numero');
-                    document.getElementById('whatsappNotifPedido').value = getVal('whatsapp_notificaciones_pedido') || '0';
-                    document.getElementById('whatsappNotifStock').value = getVal('whatsapp_notificaciones_stock') || '0';
-
-                    const apiUrl = getVal('whatsapp_api_url');
-                    const apiToken = getVal('whatsapp_api_token');
-                    const numero = getVal('whatsapp_numero');
-                    const isConfigured = apiUrl && apiToken && numero;
-
-                    document.getElementById('whatsappEstado').innerHTML = isConfigured ?
-                        '<span class="badge badge-active"><i class="fas fa-check-circle"></i> Configurado</span>' :
-                        '<span class="badge badge-pending"><i class="fas fa-clock"></i> No configurado</span>';
-                    document.getElementById('whatsappNumeroDisplay').textContent = numero || '-';
-                    document.getElementById('whatsappNotifPedidoDisplay').textContent = getVal('whatsapp_notificaciones_pedido') === '1' ? 'Activado' : 'Desactivado';
-                    document.getElementById('whatsappNotifStockDisplay').textContent = getVal('whatsapp_notificaciones_stock') === '1' ? 'Activado' : 'Desactivado';
+                    const token = getVal('telegram_token');
+                    const chatId = getVal('telegram_chat_id');
+                    document.getElementById('telegramToken').value = token;
+                    document.getElementById('telegramChatId').value = chatId;
+                    document.getElementById('telegramChatIdDisplay').textContent = chatId || '-';
+                    document.getElementById('telegramBotDisplay').textContent = token ? token.substring(0, 20) + '...' : '-';
+                    if (token && chatId) {
+                        document.getElementById('telegramEstado').innerHTML = '<span class="badge badge-active"><i class="fas fa-check-circle"></i> Configurado</span>';
+                    } else {
+                        document.getElementById('telegramEstado').innerHTML = '<span class="badge badge-pending"><i class="fas fa-clock"></i> No configurado</span>';
+                    }
                 }
             } catch (e) {
-                console.error('Error cargarWhatsApp:', e);
+                console.error('Error al cargar config Telegram', e);
             }
         }
 
-        async function guardarWhatsApp() {
-            const payload = {};
-            payload['whatsapp_api_url'] = document.getElementById('whatsappApiUrl').value;
-            payload['whatsapp_api_token'] = document.getElementById('whatsappApiToken').value;
-            payload['whatsapp_numero'] = document.getElementById('whatsappNumero').value;
-            payload['whatsapp_notificaciones_pedido'] = document.getElementById('whatsappNotifPedido').value;
-            payload['whatsapp_notificaciones_stock'] = document.getElementById('whatsappNotifStock').value;
-
+        async function guardarTelegram() {
+            const token = document.getElementById('telegramToken').value.trim();
+            const chatId = document.getElementById('telegramChatId').value.trim();
+            if (!token) { mostrarNotificacion('❌ Ingresa el Token del Bot', 'error'); return; }
+            if (!chatId) { mostrarNotificacion('❌ Ingresa el Chat ID', 'error'); return; }
             try {
                 const response = await fetch('/proyecto/admin/guardar_configuracion.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload),
+                    body: JSON.stringify({ telegram_token: token, telegram_chat_id: chatId }),
                     credentials: 'include'
                 });
                 const data = await response.json();
                 if (data.success) {
-                    mostrarNotificacion('Configuración de WhatsApp guardada', 'success');
-                    await cargarWhatsAppConfig();
+                    mostrarNotificacion('✅ Configuración de Telegram guardada', 'success');
+                    cargarTelegramConfig();
                 } else {
-                    mostrarNotificacion(data.message || 'Error al guardar', 'warning');
+                    mostrarNotificacion('❌ ' + (data.message || 'Error al guardar'), 'error');
                 }
             } catch (e) {
-                mostrarNotificacion('Error al guardar configuración', 'error');
+                mostrarNotificacion('Error al guardar configuración de Telegram', 'error');
             }
         }
 
-        async function probarWhatsApp() {
+        async function probarTelegram() {
             const mensaje = prompt('Ingresa el mensaje de prueba:', '🧪 Mensaje de prueba desde PIC - Sistema de Gestión Comercial');
             if (!mensaje) return;
             try {
-                const response = await fetch('/proyecto/whatsapp/enviar_notificacion.php', {
+                const response = await fetch('/proyecto/telegram/enviar.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ tipo: 'prueba', destinatario: document.getElementById('whatsappNumero').value, mensaje }),
+                    body: JSON.stringify({ tipo: 'prueba', mensaje }),
                     credentials: 'include'
                 });
                 const data = await response.json();
                 if (data.success) {
-                    mostrarNotificacion('✅ Mensaje de prueba enviado', 'success');
-                } else if (data.demo_mode) {
-                    mostrarNotificacion('⚠️ ' + data.message, 'warning');
+                    mostrarNotificacion('✅ Mensaje de prueba enviado por Telegram', 'success');
                 } else {
                     mostrarNotificacion('❌ ' + (data.message || 'Error al enviar'), 'error');
                 }
@@ -5202,9 +5193,27 @@ async function cambiarPasswordRecuperacion(event) {
             }
         }
 
+        async function probarTelegramStock() {
+            try {
+                mostrarNotificacion('🔍 Verificando stock bajo...', 'info');
+                const response = await fetch('/proyecto/telegram/notificar_stock.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                if (data.success) {
+                    mostrarNotificacion('✅ ' + (data.message || 'Stock notificado por Telegram'), 'success');
+                } else {
+                    mostrarNotificacion('❌ ' + (data.message || 'Error al notificar stock'), 'error');
+                }
+            } catch (e) {
+                mostrarNotificacion('Error al notificar stock por Telegram', 'error');
+            }
+        }
+
         // ====================================================================
         // 2FA - FUNCIONES
-        // ====================================================================
         let current2faSecret = '';
         let current2faBackupCodes = [];
 
@@ -5498,7 +5507,7 @@ async function cambiarPasswordRecuperacion(event) {
                 'reporteEspecificoSection': () => { cargarReporteEspecifico(); },
                 'prediccionesSection': cargarPredicciones,
                 'biDashboardSection': cargarBIDashboard,
-                'whatsappSection': cargarWhatsAppConfig,
+                'telegramSection': cargarTelegramConfig,
                 'seguridad2faSection': cargar2FA
             };
             const loader = loaders[sectionId];
@@ -5570,8 +5579,10 @@ async function cambiarPasswordRecuperacion(event) {
             document.getElementById('btnActualizarProductos')?.addEventListener('click', cargarProductos);
             document.getElementById('btnGenerarPredicciones')?.addEventListener('click', generarPredicciones);
             document.getElementById('btnActualizarBI')?.addEventListener('click', cargarBIDashboard);
-            document.getElementById('btnGuardarWhatsApp')?.addEventListener('click', guardarWhatsApp);
-            document.getElementById('btnProbarWhatsApp')?.addEventListener('click', probarWhatsApp);
+            document.getElementById('btnGuardarTelegram')?.addEventListener('click', guardarTelegram);
+            document.getElementById('btnProbarTelegram')?.addEventListener('click', probarTelegram);
+            document.getElementById('btnProbarTelegramStock')?.addEventListener('click', probarTelegramStock);
+            document.getElementById('btnNotificarTelegramStock')?.addEventListener('click', probarTelegramStock);
             document.getElementById('btnConfigurar2FA')?.addEventListener('click', configurar2FA);
             document.getElementById('btnVerificar2FA')?.addEventListener('click', verificar2FA);
             document.getElementById('btnDesactivar2FA')?.addEventListener('click', desactivar2FA);
