@@ -64,6 +64,28 @@ $correo = trim($_POST['correo'] ?? '');
 $password = $_POST['password'] ?? '';
 $tipo_usuario = trim($_POST['tipo_usuario'] ?? '');
 
+// ========== VERIFICACIÓN COMPATIBLE CON HASHES LEGACY (SHA-256) ==========
+function verificarPassword(string $password, string $storedHash, PDO $pdo, ?int $userId = null, string $tabla = 'admin_users'): bool {
+    // Primero intentar con password_verify (bcrypt)
+    if (password_verify($password, $storedHash)) {
+        return true;
+    }
+    // Fallback para hashes SHA-256 legacy (sin sal)
+    $lowerSha256 = hash('sha256', $password);
+    $upperSha256 = strtoupper($lowerSha256);
+    if (hash_equals($storedHash, $lowerSha256) || hash_equals($storedHash, $upperSha256)) {
+        // Actualizar a bcrypt automáticamente
+        if ($userId !== null) {
+            $newHash = password_hash($password, PASSWORD_DEFAULT);
+            $columna = ($tabla === 'admin_users') ? 'contrasena' : 'password';
+            $stmt = $pdo->prepare("UPDATE $tabla SET $columna = ? WHERE id = ?");
+            $stmt->execute([$newHash, $userId]);
+        }
+        return true;
+    }
+    return false;
+}
+
 if (empty($correo) || empty($password)) {
     echo json_encode(["success" => false, "message" => "Correo y contraseña son obligatorios"]);
     exit;
@@ -90,7 +112,7 @@ try {
             $tabla_origen = 'admin_users';
             $es_admin = true;
             
-                if (!password_verify($password, $user['password'])) {
+                if (!verificarPassword($password, $user['password'], $pdo, $user['id'], 'admin_users')) {
                     $attempts['count']++;
                     echo json_encode(["success" => false, "message" => "Credenciales de administrador incorrectas"]);
                     exit;
@@ -142,7 +164,7 @@ try {
             $tabla_origen = 'admin_users';
             $es_admin = true;
             
-                if (!password_verify($password, $user['password'])) {
+                if (!verificarPassword($password, $user['password'], $pdo, $user['id'], 'admin_users')) {
                     $attempts['count']++;
                     echo json_encode(["success" => false, "message" => "Credenciales incorrectas"]);
                     exit;
@@ -226,6 +248,14 @@ try {
     } else {
         session_name('CLIENTSESSID'); // Sesión separada para clientes
     }
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'domain' => '',
+        'secure' => false,
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
     session_start();
     $_SESSION = array();
     session_regenerate_id(true);

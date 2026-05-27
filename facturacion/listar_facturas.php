@@ -10,6 +10,8 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $pdo = conectarDB();
+$pdo->exec("SET time_zone = '-04:00'");
+date_default_timezone_set('America/Caracas');
 
 // Obtener el rol del usuario - PRIMERO verificar en admin_users
 $user_id = $_SESSION['user_id'] ?? 0;

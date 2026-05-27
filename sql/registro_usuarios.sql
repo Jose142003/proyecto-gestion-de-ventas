@@ -296,6 +296,7 @@ CREATE TABLE facturas (
     subtotal DECIMAL(10, 2) DEFAULT 0,
     iva DECIMAL(10, 2) DEFAULT 0,
     total DECIMAL(10, 2) NOT NULL DEFAULT 0,
+    observaciones TEXT NULL,
     metodo_pago VARCHAR(50) NULL,
     estado ENUM('pendiente', 'pagada', 'anulada') DEFAULT 'pendiente',
     usuario_id INT NULL,
@@ -347,7 +348,21 @@ CREATE TABLE IF NOT EXISTS cart_items (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ##########################################################################
--- 7. TABLA DE PROVEEDORES
+-- 7. TABLA DE FAVORITOS
+-- ##########################################################################
+
+CREATE TABLE IF NOT EXISTS favoritos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    producto_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_favorito (usuario_id, producto_id),
+    FOREIGN KEY (usuario_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (producto_id) REFERENCES products(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ##########################################################################
+-- 8. TABLA DE PROVEEDORES
 -- ##########################################################################
 
 DROP TABLE IF EXISTS proveedores;

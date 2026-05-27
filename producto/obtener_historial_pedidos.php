@@ -16,7 +16,7 @@ if ($user_id <= 0) {
 try {
     $conn = Database::getConnection();
 
-    // Consulta para obtener los pedidos del usuario con detalles de productos
+    // Consulta para obtener los pedidos del usuario con detalles de productos y factura
     $sql = "SELECT 
                 p.id,
                 p.numero_pedido as order_number,
@@ -24,13 +24,17 @@ try {
                 p.iva,
                 p.total,
                 p.metodo_pago as payment_method,
+                p.observaciones,
                 p.estado as status,
                 p.created_at,
+                f.numero_factura as invoice_number,
+                f.estado as invoice_status,
                 pd.cantidad as quantity,
                 pd.precio_unitario as unit_price,
                 pd.subtotal as item_subtotal,
                 pd.producto_nombre as product_name
             FROM pedidos p
+            LEFT JOIN facturas f ON p.id = f.pedido_id
             LEFT JOIN pedido_detalles pd ON p.id = pd.pedido_id
             WHERE p.usuario_id = :user_id
             ORDER BY p.created_at DESC, pd.producto_nombre ASC";
@@ -46,15 +50,44 @@ try {
         
         // Si es un nuevo pedido, crear estructura
         if (!isset($historial[$pedidoId])) {
+            $method = strtolower(trim($row['payment_method'] ?? ''));
+            $obs = $row['observaciones'] ?? '';
+            
+            // Detectar pago mixto desde observaciones
+            $es_mixto = ($method === 'mixto');
+            $monto_transferencia = 0;
+            $monto_efectivo = 0;
+            
+            if ($es_mixto && !empty($obs)) {
+                if (preg_match('/Transferencia:\s*Bs\.?\s*([\d.,]+)/i', $obs, $m)) {
+                    $monto_transferencia = floatval(str_replace(',', '', $m[1]));
+                }
+                if (preg_match('/Efectivo:\s*Bs\.?\s*([\d.,]+)/i', $obs, $m)) {
+                    $monto_efectivo = floatval(str_replace(',', '', $m[1]));
+                }
+            }
+            
+            // Determinar estado de visualización
+            $display_status = $row['status'];
+            if (in_array($row['status'], ['facturado', 'completado', 'pagada'])) {
+                $display_status = 'Pagado';
+            } elseif ($row['status'] === 'pendiente') {
+                $display_status = $es_mixto ? 'Pagado' : 'Pendiente';
+            }
+            
             $historial[$pedidoId] = [
-            'id' => $pedidoId,
+                'id' => $pedidoId,
                 'order_number' => $row['order_number'],
-                'invoice_number' => null, // No hay número de factura
+                'invoice_number' => $row['invoice_number'],
                 'subtotal' => $row['subtotal'],
                 'iva' => $row['iva'],
                 'total' => $row['total'],
-            'payment_method' => $row['payment_method'],
-            'status' => $row['status'],
+                'payment_method' => $method,
+                'status' => $row['status'],
+                'display_status' => $display_status,
+                'es_mixto' => $es_mixto,
+                'monto_transferencia' => $monto_transferencia,
+                'monto_efectivo' => $monto_efectivo,
                 'created_at' => date('Y-m-d H:i:s', strtotime($row['created_at'])),
                 'items' => []
             ];

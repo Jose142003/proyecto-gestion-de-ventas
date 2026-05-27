@@ -21,27 +21,29 @@ if (!$factura_id) {
 
 // Obtener información de la factura
 try {
-    $stmt = $pdo->prepare("
-        SELECT f.*, 
-               c.nombre as cliente_nombre, 
-               c.documento as cliente_documento,
-               c.email as cliente_email,
-               c.telefono as cliente_telefono,
-               c.direccion as cliente_direccion,
-               c.ciudad as cliente_ciudad,
-               u.nombre as vendedor_nombre,
-               u.correo as vendedor_email,
-               p.numero_pedido,
-               p.metodo_pago as pedido_metodo_pago,
-               p.created_at as fecha_pedido,
-               p.notas_internas as pedido_notas,
-               p.observaciones
-        FROM facturas f
-        LEFT JOIN clientes c ON f.cliente_id = c.id
-        LEFT JOIN users u ON f.usuario_id = u.id
-        LEFT JOIN pedidos p ON f.pedido_id = p.id
-        WHERE f.id = ?
-    ");
+     $stmt = $pdo->prepare("
+           SELECT f.*, 
+                f.observaciones as factura_observaciones,
+                c.nombre as cliente_nombre, 
+                c.documento as cliente_documento,
+                c.email as cliente_email,
+                c.telefono as cliente_telefono,
+                c.direccion as cliente_direccion,
+                c.ciudad as cliente_ciudad,
+                a.nombre as vendedor_nombre,
+                a.correo as vendedor_email,
+                p.numero_pedido,
+                p.metodo_pago as pedido_metodo_pago,
+                p.created_at as fecha_pedido,
+                p.notas_internas as pedido_notas,
+                p.observaciones as pedido_observaciones,
+                p.referencia_pago as pedido_referencia_pago
+          FROM facturas f
+          LEFT JOIN clientes c ON f.cliente_id = c.id
+          LEFT JOIN admin_users a ON f.usuario_id = a.id
+          LEFT JOIN pedidos p ON f.pedido_id = p.id
+          WHERE f.id = ?
+      ");
     $stmt->execute([$factura_id]);
     $factura = $stmt->fetch();
     
@@ -58,8 +60,9 @@ try {
     // Verificar pago mixto
     $es_pago_mixto = false;
     $detalles_mixto = null;
-    if (!empty($factura['observaciones'])) {
-        $notas = json_decode($factura['observaciones'], true);
+    $obs_factura = $factura['factura_observaciones'] ?? $factura['observaciones'] ?? null;
+    if (!empty($obs_factura)) {
+        $notas = json_decode($obs_factura, true);
         if ($notas && isset($notas['transferencia']) && isset($notas['efectivo'])) {
             $es_pago_mixto = true;
             $detalles_mixto = $notas;
@@ -162,6 +165,7 @@ $empresa_rif = "J-12345678-9";
 $empresa_direccion = "Av. Principal, Zona Industrial, Caracas, Venezuela";
 $empresa_telefono = "0212-5551234 / 0424-8393902";
 $empresa_email = "picca.ventas@gmail.com";
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -173,15 +177,7 @@ $empresa_email = "picca.ventas@gmail.com";
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Factura <?php echo htmlspecialchars($factura['numero_factura']); ?> - PIC</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-      <!-- PWA Meta Tags -->
-    <link rel="manifest" href="/proyecto/manifest.json">
-    <meta name="theme-color" content="#050C18">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="PIC Industrial">
-    <link rel="apple-touch-icon" href="/proyecto/img/pic.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="/proyecto/img/pic.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="/proyecto/img/pic.png">
+    <meta name="csrf-token" content="<?php echo htmlspecialchars(generarTokenCSRF()); ?>">
     <style>
         * {
             margin: 0;
@@ -213,19 +209,14 @@ $empresa_email = "picca.ventas@gmail.com";
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
             background: var(--gray-100);
-            padding: 0;
-            margin: 0;
             min-height: 100vh;
+            overflow-x: hidden;
         }
         
-        /* Contenedor principal - ancho completo en móvil */
         .invoice-container {
             max-width: 100%;
-            margin: 0;
-            padding: 0;
         }
         
-        /* Botón volver - flotante en móvil */
         .back-button {
             position: sticky;
             top: 10px;
@@ -247,23 +238,16 @@ $empresa_email = "picca.ventas@gmail.com";
             transition: all 0.2s ease;
         }
         
-        .back-button i {
-            font-size: 0.9rem;
-        }
-        
         .back-button:active {
             transform: scale(0.96);
         }
         
-        /* Tarjeta principal de factura */
         .invoice {
             background: white;
             border-radius: 0;
             overflow: hidden;
-            box-shadow: none;
         }
         
-        /* HEADER - Compacto y claro */
         .invoice-header {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: white;
@@ -279,12 +263,15 @@ $empresa_email = "picca.ventas@gmail.com";
             font-size: 1rem;
             font-weight: 600;
             margin-bottom: 6px;
+            word-break: break-word;
         }
         
         .company-info p {
             font-size: 0.65rem;
             opacity: 0.9;
             margin: 3px 0;
+            word-break: break-word;
+            overflow-wrap: break-word;
         }
         
         .invoice-title {
@@ -297,6 +284,7 @@ $empresa_email = "picca.ventas@gmail.com";
             font-size: 1.3rem;
             font-weight: 700;
             margin-bottom: 5px;
+            word-break: break-word;
         }
         
         .invoice-number {
@@ -307,6 +295,7 @@ $empresa_email = "picca.ventas@gmail.com";
             border-radius: 20px;
             display: inline-block;
             margin-top: 5px;
+            word-break: break-all;
         }
         
         .badge {
@@ -323,7 +312,6 @@ $empresa_email = "picca.ventas@gmail.com";
         .badge-warning { background: var(--warning); color: var(--gray-900); }
         .badge-danger { background: var(--danger); color: white; }
         
-        /* Secciones de información - diseño vertical */
         .info-sections {
             padding: 16px;
             background: white;
@@ -349,12 +337,11 @@ $empresa_email = "picca.ventas@gmail.com";
             font-weight: 600;
         }
         
-        .info-block h3 i {
-            font-size: 0.85rem;
-        }
+        .info-block h3 i { font-size: 0.85rem; }
         
         .info-row {
             display: flex;
+            flex-wrap: wrap;
             margin-bottom: 8px;
             font-size: 0.7rem;
             line-height: 1.4;
@@ -365,16 +352,17 @@ $empresa_email = "picca.ventas@gmail.com";
             color: var(--gray-600);
             min-width: 80px;
             font-size: 0.7rem;
+            flex-shrink: 0;
         }
         
         .info-value {
             color: var(--gray-800);
             flex: 1;
+            min-width: 0;
             word-break: break-word;
             font-size: 0.7rem;
         }
         
-        /* Productos - estilo lista limpia */
         .products-section {
             padding: 16px;
             background: white;
@@ -411,6 +399,8 @@ $empresa_email = "picca.ventas@gmail.com";
             justify-content: space-between;
             align-items: flex-start;
             margin-bottom: 8px;
+            flex-wrap: wrap;
+            gap: 8px;
         }
         
         .product-name {
@@ -418,6 +408,7 @@ $empresa_email = "picca.ventas@gmail.com";
             font-size: 0.8rem;
             color: var(--gray-800);
             flex: 1;
+            word-break: break-word;
         }
         
         .product-sku {
@@ -435,6 +426,7 @@ $empresa_email = "picca.ventas@gmail.com";
             font-weight: 600;
             min-width: 40px;
             text-align: center;
+            flex-shrink: 0;
         }
         
         .product-footer {
@@ -444,6 +436,8 @@ $empresa_email = "picca.ventas@gmail.com";
             margin-top: 8px;
             padding-top: 6px;
             border-top: 1px solid var(--gray-200);
+            flex-wrap: wrap;
+            gap: 8px;
         }
         
         .product-price {
@@ -457,11 +451,61 @@ $empresa_email = "picca.ventas@gmail.com";
             color: var(--primary);
         }
         
-        /* Totales - claro y legible */
+        .products-table-container {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 0;
+        }
+        
+        .products-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.7rem;
+            min-width: 380px;
+        }
+        
+        .products-table th {
+            background: var(--primary);
+            color: white;
+            padding: 8px 6px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.65rem;
+            white-space: nowrap;
+        }
+        
+        .products-table td {
+            padding: 8px 6px;
+            border-bottom: 1px solid var(--gray-200);
+            word-break: break-word;
+        }
+        
+        .products-table th:first-child,
+        .products-table td:first-child {
+            width: 28px;
+            text-align: center;
+        }
+        
+        .products-table th:nth-child(4),
+        .products-table td:nth-child(4) {
+            text-align: center;
+            white-space: nowrap;
+        }
+        
+        .products-table th:nth-child(5),
+        .products-table td:nth-child(5),
+        .products-table th:nth-child(6),
+        .products-table td:nth-child(6) {
+            text-align: right;
+            white-space: nowrap;
+        }
+        
         .totals-section {
             padding: 16px;
             background: var(--gray-50);
             border-top: 1px solid var(--gray-200);
+            overflow: hidden;
         }
         
         .total-line {
@@ -470,6 +514,8 @@ $empresa_email = "picca.ventas@gmail.com";
             align-items: center;
             padding: 8px 0;
             border-bottom: 1px solid var(--gray-200);
+            flex-wrap: wrap;
+            gap: 4px;
         }
         
         .total-line:last-child {
@@ -485,15 +531,15 @@ $empresa_email = "picca.ventas@gmail.com";
             font-size: 0.8rem;
             font-weight: 600;
             color: var(--gray-800);
+            text-align: right;
+            word-break: break-word;
         }
         
         .total-line.grand-total {
             margin-top: 8px;
-            padding-top: 12px;
+            padding: 12px 16px;
             border-top: 2px solid var(--gray-300);
             background: var(--primary);
-            margin: 8px -8px -8px -8px;
-            padding: 12px 16px;
             border-radius: 10px;
         }
         
@@ -509,6 +555,25 @@ $empresa_email = "picca.ventas@gmail.com";
             font-weight: 700;
         }
         
+        .total-line.saldo-pendiente {
+            background: var(--warning);
+            padding: 10px 16px;
+            border-radius: 10px;
+            margin-top: 8px;
+        }
+        
+        .total-line.saldo-pendiente span {
+            color: var(--gray-900);
+        }
+        
+        .total-line.saldo-pendiente span:first-child {
+            font-weight: 600;
+        }
+        
+        .total-line.saldo-pendiente span:last-child {
+            font-weight: 700;
+        }
+        
         .amount-words {
             background: white;
             padding: 10px;
@@ -519,7 +584,6 @@ $empresa_email = "picca.ventas@gmail.com";
             word-break: break-word;
         }
         
-        /* Footer */
         .invoice-footer {
             padding: 16px;
             background: var(--gray-800);
@@ -531,6 +595,7 @@ $empresa_email = "picca.ventas@gmail.com";
             font-size: 0.65rem;
             margin-bottom: 8px;
             line-height: 1.4;
+            word-break: break-word;
         }
         
         .footer-copyright {
@@ -538,7 +603,6 @@ $empresa_email = "picca.ventas@gmail.com";
             opacity: 0.7;
         }
         
-        /* Botones de acción - fijos en móvil */
         .action-buttons {
             position: fixed;
             bottom: 0;
@@ -551,15 +615,17 @@ $empresa_email = "picca.ventas@gmail.com";
             border-top: 1px solid var(--gray-200);
             box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
             z-index: 100;
+            flex-wrap: wrap;
         }
         
         .btn {
             flex: 1;
+            min-width: calc(50% - 8px);
             padding: 12px;
             border-radius: 30px;
             border: none;
             font-weight: 600;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -568,26 +634,17 @@ $empresa_email = "picca.ventas@gmail.com";
             transition: all 0.2s ease;
         }
         
-        .btn:active {
-            transform: scale(0.97);
-        }
-        
+        .btn:active { transform: scale(0.97); }
         .btn-primary { background: var(--primary); color: white; }
         .btn-success { background: var(--success); color: white; }
         .btn-danger { background: var(--danger); color: white; }
         .btn-warning { background: var(--warning); color: var(--gray-900); }
+        .btn:disabled { opacity: 0.6; transform: none; }
         
-        .btn:disabled {
-            opacity: 0.6;
-            transform: none;
-        }
-        
-        /* Espacio para el footer fijo */
         .action-buttons-spacer {
-            height: 70px;
+            height: 80px;
         }
         
-        /* Media query para tablets y desktop */
         @media (min-width: 768px) {
             body {
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -624,33 +681,107 @@ $empresa_email = "picca.ventas@gmail.com";
             }
         }
         
-        /* Impresión */
-        @media print {
-            body {
-                background: white;
-                padding: 0;
+        @media (max-width: 480px) {
+            .info-label {
+                min-width: 70px;
+                font-size: 0.65rem;
             }
+            
+            .info-value { font-size: 0.65rem; }
+            .info-block { padding: 12px; }
+            .invoice-header { padding: 14px 10px; }
+            .company-info h1 { font-size: 0.85rem; }
+            .invoice-title h2 { font-size: 1rem; }
+            .invoice-number { font-size: 0.65rem; }
+            .badge { font-size: 0.6rem; }
+            
+            .btn {
+                font-size: 0.6rem;
+                padding: 10px 6px;
+                min-width: calc(50% - 4px);
+            }
+            
+            .btn i { font-size: 0.7rem; }
+            .product-name { font-size: 0.75rem; }
+            .product-subtotal { font-size: 0.75rem; }
+            
+            .total-line.grand-total span:first-child { font-size: 0.75rem; }
+            .total-line.grand-total span:last-child { font-size: 0.85rem; }
+            
+            .products-table-container {
+                margin: 0;
+            }
+            
+            .products-table {
+                min-width: 300px;
+                font-size: 0.6rem;
+            }
+            
+            .products-table th,
+            .products-table td { padding: 5px 3px; }
+            .products-table th:nth-child(1),
+            .products-table td:nth-child(1) { width: 20px; }
+            .products-table th:nth-child(3),
+            .products-table td:nth-child(3) { display: none; }
+            .products-table th:nth-child(5),
+            .products-table td:nth-child(5),
+            .products-table th:nth-child(6),
+            .products-table td:nth-child(6) { font-size: 0.55rem; }
+            
+            .action-buttons { padding: 8px; gap: 6px; }
+        }
+        
+        @media (max-width: 360px) {
+            .info-label {
+                min-width: 60px;
+                font-size: 0.6rem;
+            }
+            
+            .info-value { font-size: 0.6rem; }
+            .info-block { padding: 8px; }
+            .invoice-header { padding: 10px 8px; }
+            .company-info h1 { font-size: 0.75rem; }
+            .invoice-title h2 { font-size: 0.9rem; }
+            .invoice-number { font-size: 0.6rem; }
+            .badge { font-size: 0.55rem; padding: 2px 6px; }
+            
+            .products-table {
+                min-width: 260px;
+                font-size: 0.55rem;
+            }
+            
+            .products-table th,
+            .products-table td { padding: 4px 2px; }
+            .products-table th:nth-child(5),
+            .products-table td:nth-child(5),
+            .products-table th:nth-child(6),
+            .products-table td:nth-child(6) { font-size: 0.5rem; }
+            
+            .btn { font-size: 0.55rem; padding: 8px 6px; }
+            .product-name { font-size: 0.7rem; }
+            .product-subtotal { font-size: 0.7rem; }
+            
+            .total-line.grand-total span:first-child { font-size: 0.7rem; }
+            .total-line.grand-total span:last-child { font-size: 0.8rem; }
+            
+            .action-buttons { padding: 6px; gap: 4px; }
+        }
+        
+        @media print {
+            body { background: white; padding: 0; }
             
             .back-button,
             .action-buttons,
-            .action-buttons-spacer {
-                display: none !important;
-            }
+            .action-buttons-spacer { display: none !important; }
             
-            .invoice {
-                border-radius: 0;
-                box-shadow: none;
-            }
+            .invoice { border-radius: 0; box-shadow: none; }
             
             .invoice-header {
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
             
-            @page {
-                size: A4;
-                margin: 1cm;
-            }
+            @page { size: A4; margin: 1cm; }
         }
     </style>
 </head>
@@ -678,28 +809,55 @@ $empresa_email = "picca.ventas@gmail.com";
                 </div>
             </div>
             
-            <!-- INFORMACIÓN - VENDEDOR ARRIBA, CLIENTE ABAJO -->
+            <!-- INFORMACIÓN -->
             <div class="info-sections">
                 <!-- VENDEDOR -->
                 <div class="info-block">
                     <h3><i class="fas fa-user-check"></i> VENDEDOR</h3>
                     <div class="info-row">
                         <span class="info-label">Nombre:</span>
-                        <span class="info-value"><?php echo htmlspecialchars($factura['vendedor_nombre'] ?? 'Sistema'); ?></span>
+                        <span class="info-value"><?php echo htmlspecialchars($factura['vendedor_nombre'] ?: 'Sistema'); ?></span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Email:</span>
-                        <span class="info-value"><?php echo htmlspecialchars($factura['vendedor_email'] ?? 'No especificado'); ?></span>
+                        <span class="info-value"><?php echo htmlspecialchars(!empty($factura['vendedor_email']) ? $factura['vendedor_email'] : 'No especificado'); ?></span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Fecha:</span>
                         <span class="info-value"><?php echo formatearFecha($factura['fecha_emision']); ?></span>
                     </div>
-                    <div class="info-row">
-                        <span class="info-label">Pago:</span>
-                        <span class="info-value"><?php echo $metodo_pago_mostrar; ?></span>
-                    </div>
-                    <?php if (!empty($factura['numero_pedido'])): ?>
+                     <div class="info-row">
+                         <span class="info-label">Pago:</span>
+                         <span class="info-value"><?php echo $metodo_pago_mostrar; ?></span>
+                     </div>
+                      <?php 
+                      $referencia_pago = null;
+                      $metodo_check = strtolower(trim($metodo_pago_real));
+                      if (!empty($factura['pedido_referencia_pago'])) {
+                          $referencia_pago = $factura['pedido_referencia_pago'];
+                      } else {
+                          $obs_a_buscar = [
+                              $factura['pedido_observaciones'] ?? null,
+                              $factura['factura_observaciones'] ?? $factura['observaciones'] ?? null
+                          ];
+                          foreach ($obs_a_buscar as $obs) {
+                              if ($referencia_pago === null && !empty($obs)) {
+                                  if (preg_match('/Referencia[:\s]+([^\s]+)/i', $obs, $matches)) {
+                                      $referencia_pago = $matches[1];
+                                  } elseif (preg_match('/Ref[:\s]+([^\s]+)/i', $obs, $matches)) {
+                                      $referencia_pago = $matches[1];
+                                  }
+                              }
+                          }
+                      }
+                      if (($metodo_check === 'pago_movil' || $metodo_check === 'pago movil' || $metodo_check === 'transferencia' || $metodo_check === 'transferencia_bancaria') && $referencia_pago): 
+                      ?>
+                     <div class="info-row">
+                         <span class="info-label" style="color:#3498db; font-weight:bold;"><i class="fas fa-hashtag"></i> Referencia:</span>
+                         <span class="info-value" style="font-weight:bold; font-size:0.8rem;"><?php echo htmlspecialchars($referencia_pago); ?></span>
+                     </div>
+                     <?php endif; ?>
+                     <?php if (!empty($factura['numero_pedido'])): ?>
                     <div class="info-row">
                         <span class="info-label">Pedido:</span>
                         <span class="info-value"><?php echo htmlspecialchars($factura['numero_pedido']); ?></span>
@@ -716,19 +874,19 @@ $empresa_email = "picca.ventas@gmail.com";
                     </div>
                     <div class="info-row">
                         <span class="info-label">Documento:</span>
-                        <span class="info-value"><?php echo htmlspecialchars($factura['cliente_documento'] ?? 'No especificado'); ?></span>
+                        <span class="info-value"><?php echo htmlspecialchars($factura['cliente_documento'] ?: 'No especificado'); ?></span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Email:</span>
-                        <span class="info-value"><?php echo htmlspecialchars($factura['cliente_email'] ?? 'No especificado'); ?></span>
+                        <span class="info-value"><?php echo htmlspecialchars($factura['cliente_email'] ?: 'No especificado'); ?></span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Teléfono:</span>
-                        <span class="info-value"><?php echo htmlspecialchars($factura['cliente_telefono'] ?? 'No especificado'); ?></span>
+                        <span class="info-value"><?php echo htmlspecialchars(!empty($factura['cliente_telefono']) ? $factura['cliente_telefono'] : 'No especificado'); ?></span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Dirección:</span>
-                        <span class="info-value"><?php echo htmlspecialchars($factura['cliente_direccion'] ?? 'No especificada'); ?></span>
+                        <span class="info-value"><?php echo htmlspecialchars(!empty($factura['cliente_direccion']) ? $factura['cliente_direccion'] : 'No especificada'); ?></span>
                     </div>
                 </div>
             </div>
@@ -736,13 +894,15 @@ $empresa_email = "picca.ventas@gmail.com";
             <!-- PRODUCTOS -->
             <div class="products-section">
                 <h3 class="section-title"><i class="fas fa-boxes"></i> PRODUCTOS</h3>
-                <div class="products-list">
-                    <?php if (empty($detalles)): ?>
+                
+                <?php if (empty($detalles)): ?>
                     <div style="text-align: center; padding: 30px; color: var(--gray-500);">
                         <i class="fas fa-box-open" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
                         Sin productos registrados
                     </div>
-                    <?php else: ?>
+                <?php elseif (count($detalles) <= 5): ?>
+                    <!-- Vista de lista para pocos productos -->
+                    <div class="products-list">
                         <?php foreach ($detalles as $index => $detalle): ?>
                         <div class="product-item">
                             <div class="product-header">
@@ -760,8 +920,29 @@ $empresa_email = "picca.ventas@gmail.com";
                             </div>
                         </div>
                         <?php endforeach; ?>
-                    <?php endif; ?>
-                </div>
+                    </div>
+                <?php else: ?>
+                    <!-- Tabla para muchos productos (con scroll horizontal) -->
+                    <div class="products-table-container">
+                        <table class="products-table">
+                            <thead>
+                                <tr><th>#</th><th>Producto</th><th>SKU</th><th>Cant.</th><th>Precio</th><th>Subtotal</th></tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($detalles as $index => $detalle): ?>
+                                <tr>
+                                    <td><?php echo $index + 1; ?></td>
+                                    <td><?php echo htmlspecialchars($detalle['producto_nombre'] ?? 'Producto no disponible'); ?></td>
+                                    <td><?php echo htmlspecialchars($detalle['sku'] ?? 'N/A'); ?></td>
+                                    <td><?php echo number_format($detalle['cantidad'] ?? 0); ?></td>
+                                    <td>Bs. <?php echo number_format($detalle['precio_unitario'] ?? 0, 2); ?></td>
+                                    <td>Bs. <?php echo number_format($detalle['subtotal'] ?? 0, 2); ?></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endif; ?>
             </div>
             
             <!-- TOTALES -->
@@ -783,9 +964,9 @@ $empresa_email = "picca.ventas@gmail.com";
                     <span>Bs. <?php echo number_format($total_pagado, 2); ?></span>
                 </div>
                 <?php if ($factura['estado'] === 'pendiente' && $saldo_pendiente > 0): ?>
-                <div class="total-line" style="background: var(--warning); margin: 8px -8px -8px -8px; padding: 10px 16px; border-radius: 10px;">
-                    <span style="font-weight: 600; color: var(--gray-900);">SALDO PENDIENTE</span>
-                    <span style="font-weight: 700; color: var(--gray-900);">Bs. <?php echo number_format($saldo_pendiente, 2); ?></span>
+                <div class="total-line saldo-pendiente">
+                    <span>SALDO PENDIENTE</span>
+                    <span>Bs. <?php echo number_format($saldo_pendiente, 2); ?></span>
                 </div>
                 <?php endif; ?>
                 
@@ -793,6 +974,16 @@ $empresa_email = "picca.ventas@gmail.com";
                     <i class="fas fa-file-signature"></i> <strong>SON:</strong> <?php echo numeroALetras($factura['total'] ?? 0); ?>
                 </div>
             </div>
+            
+            <!-- OBSERVACIONES si existen -->
+            <?php if (!empty($factura['observaciones'])): ?>
+            <div style="padding: 0 16px 16px 16px;">
+                <div style="background: #fff3cd; padding: 12px; border-radius: 8px; border-left: 3px solid var(--warning);">
+                    <strong style="font-size: 0.7rem;"><i class="fas fa-comment"></i> OBSERVACIONES:</strong>
+                    <p style="font-size: 0.7rem; margin-top: 5px; word-break: break-word;"><?php echo nl2br(htmlspecialchars($factura['observaciones'])); ?></p>
+                </div>
+            </div>
+            <?php endif; ?>
             
             <!-- FOOTER -->
             <div class="invoice-footer">
@@ -834,6 +1025,18 @@ $empresa_email = "picca.ventas@gmail.com";
 
     <script>
     const facturaId = <?php echo $factura_id; ?>;
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+    function fetchConCSRF(url, body) {
+        return fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': csrfToken
+            },
+            body: JSON.stringify(body)
+        });
+    }
 
     function marcarComoPagada(id) {
         if (!confirm('¿Marcar esta factura como PAGADA?')) return;
@@ -842,11 +1045,7 @@ $empresa_email = "picca.ventas@gmail.com";
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
         btn.disabled = true;
         
-        fetch('procesar_factura.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ accion: 'marcar_pagada', factura_id: id })
-        })
+        fetchConCSRF('procesar_factura.php', { accion: 'marcar_pagada', factura_id: id })
         .then(response => response.json())
         .then(data => {
             alert(data.success ? '✅ ' + data.message : '❌ ' + data.message);
@@ -866,11 +1065,7 @@ $empresa_email = "picca.ventas@gmail.com";
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
         btn.disabled = true;
         
-        fetch('procesar_factura.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ accion: 'anular', factura_id: id, motivo: motivo })
-        })
+        fetchConCSRF('procesar_factura.php', { accion: 'anular', factura_id: id, motivo: motivo })
         .then(response => response.json())
         .then(data => {
             alert(data.success ? '✅ ' + data.message : '❌ ' + data.message);
@@ -892,11 +1087,7 @@ $empresa_email = "picca.ventas@gmail.com";
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
         btn.disabled = true;
         
-        fetch('/proyecto/usuarios/enviar_factura_email.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ factura_id: id, email: emailCliente })
-        })
+        fetchConCSRF('/proyecto/usuarios/enviar_factura_email.php', { factura_id: id, email: emailCliente })
         .then(response => response.json())
         .then(data => { alert(data.success ? '✅ ' + data.message : '❌ ' + data.message); })
         .catch(() => { alert('❌ Error de conexión'); })

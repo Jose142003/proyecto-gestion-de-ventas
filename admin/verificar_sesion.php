@@ -1,5 +1,6 @@
 ﻿<?php
 // /proyecto/admin/verificar_sesion.php
+require_once __DIR__ . '/../config/database.php';
 session_start();
 
 header('Content-Type: application/json');

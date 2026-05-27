@@ -305,6 +305,16 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
             }
         }
 
+        .favorites-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .modal-lg .favorites-grid {
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        }
+
         .product-card {
             background-color: var(--card-bg);
             border-radius: 12px;
@@ -316,6 +326,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
             flex-direction: column;
             cursor: pointer;
             transition: transform 0.3s;
+            position: relative;
         }
 
         .product-card:hover {
@@ -328,12 +339,41 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
             justify-content: center;
             align-items: center;
             margin-bottom: 15px;
+            position: relative;
         }
 
         .product-img-container img {
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
+        }
+
+        /* Estilo solo para el botón de favorito dentro de la tarjeta del producto */
+        .product-favorite-btn {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            cursor: pointer;
+            font-size: 1.4rem;
+            color: rgba(255,255,255,0.9);
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+            transition: all 0.2s;
+            z-index: 10;
+            background: rgba(0,0,0,0.3);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .product-favorite-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .product-favorite-btn.favorito-activo {
+            color: #ff4757;
         }
 
         .product-card .category {
@@ -696,6 +736,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                             <a class="dropdown-item" href="#" data-target="#contactModal" data-toggle="modal"><i class="fas fa-envelope"></i> Contáctanos</a>
                             <a class="dropdown-item" href="#" data-target="#changePasswordModal" data-toggle="modal"><i class="fas fa-lock"></i> Cambiar Contraseña</a>
                             <a class="dropdown-item" href="#" id="viewHistoryBtn"><i class="fas fa-history"></i> Historial</a>
+                            <a class="dropdown-item" href="#" id="viewFavoritesBtn"><i class="fas fa-heart"></i> Favoritos</a>
                             <a class="dropdown-item" href="#" onclick="cerrarSesion()"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
                             <div class="dropdown-divider"></div>
                             <a class="dropdown-item" href="#" onclick="eliminarCuenta()"><i class="fas fa-trash-alt"></i> Eliminar Cuenta</a>
@@ -835,6 +876,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                             <button class="quantity-btn" id="qty-plus">+</button>
                         </div>
                         <button class="btn btn-primary w-100" id="modal-add-to-cart-btn">Añadir al Carrito</button>
+                        <button class="btn btn-outline-danger w-100 mt-2" id="modal-fav-btn"><i class="far fa-heart"></i> Añadir a Favoritos</button>
                     </div>
                 </div>
             </div>
@@ -950,6 +992,20 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     </div>
 </div>
 
+<div class="modal fade" id="favoritesModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-heart" style="color:#ff4757;"></i> Mis Favoritos</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body" id="favoritesContent">
+                <p class="text-center">Cargando...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
@@ -961,6 +1017,7 @@ const itemsPerPage = 8;
 let CURRENT_USER = null;
 let tasaBCVActual = 68.50;
 let cartItems = [];
+let favoritosSet = new Set();
 
 let currentFilters = {
     searchTerm: '',
@@ -1203,10 +1260,9 @@ function initDarkMode() {
     }
 }
 
-// ===== OBTENER USUARIO ACTUAL - VERSIÓN CORREGIDA (NO TRANSFORMA ADMIN) =====
+// ===== OBTENER USUARIO ACTUAL =====
 async function obtenerUsuarioActual() {
     try {
-        // CRÍTICO: Usar el endpoint específico para clientes
         const response = await fetch('/proyecto/usuarios/verificar_sesion_cliente.php', { 
             credentials: 'include',
             headers: { 'Cache-Control': 'no-cache' }
@@ -1215,12 +1271,10 @@ async function obtenerUsuarioActual() {
         
         console.log('Verificación de cliente:', data);
         
-        // ========== CASO 1: ADMIN detectado - NO REDIRIGIR, solo mostrar mensaje ==========
         if (data.role === 'admin' || data.is_admin === true) {
             console.log('⚠️ ADMINISTRADOR detectado - NO puede comprar en tienda');
             showNotification('⚠️ Esta cuenta es de Administrador. Los administradores no pueden realizar compras.', 'warning');
             
-            // Modo "invitado" (no puede comprar)
             CURRENT_USER = { 
                 id: null, 
                 nombre: 'Invitado', 
@@ -1234,7 +1288,6 @@ async function obtenerUsuarioActual() {
                 usuarioNombreSpan.textContent = 'Invitado';
             }
             
-            // Resetear foto de perfil
             const profileImage = document.getElementById('profileImage');
             const defaultProfileIcon = document.getElementById('defaultProfileIcon');
             if (profileImage) profileImage.style.display = 'none';
@@ -1243,7 +1296,6 @@ async function obtenerUsuarioActual() {
             return false;
         }
         
-        // ========== CASO 2: CLIENTE VÁLIDO ==========
         if (data.role === 'cliente' && data.success === true && data.can_purchase !== false) {
             console.log('✅ CLIENTE autenticado:', data.user.nombre);
             
@@ -1255,7 +1307,6 @@ async function obtenerUsuarioActual() {
                 can_purchase: true
             };
             
-            // Actualizar UI
             const usuarioNombreSpan = document.getElementById('usuarioNombre');
             if (usuarioNombreSpan) {
                 usuarioNombreSpan.textContent = CURRENT_USER.nombre;
@@ -1266,13 +1317,11 @@ async function obtenerUsuarioActual() {
                 usuarioCorreoSpan.textContent = CURRENT_USER.correo;
             }
             
-            // Cargar foto de perfil
             await cargarFotoPerfil();
             
             return true;
         }
         
-        // ========== CASO 3: FORCE_LOGOUT (sesión corrupta que debe limpiarse) ==========
         if (data.force_logout === true) {
             console.log('🔄 Sesión corrupta detectada - Forzando logout local');
             showNotification('Sesión inválida. Por favor inicia sesión nuevamente.', 'warning');
@@ -1290,7 +1339,6 @@ async function obtenerUsuarioActual() {
                 usuarioNombreSpan.textContent = 'Invitado';
             }
             
-            // Limpiar foto de perfil
             const profileImage = document.getElementById('profileImage');
             const defaultProfileIcon = document.getElementById('defaultProfileIcon');
             if (profileImage) profileImage.style.display = 'none';
@@ -1299,7 +1347,6 @@ async function obtenerUsuarioActual() {
             return false;
         }
         
-        // ========== CASO 4: USUARIO INACTIVO ==========
         if (data.role === 'inactive') {
             console.log('⚠️ Usuario inactivo');
             showNotification('Tu cuenta está inactiva. Contacta al administrador.', 'error');
@@ -1309,10 +1356,8 @@ async function obtenerUsuarioActual() {
             return false;
         }
         
-        // ========== CASO 5: INVITADO (sin sesión) ==========
         console.log('👤 Modo invitado - Sin sesión activa');
         
-        // Si el servidor indica redirect (sesión perdida), redirigir al login
         if (data.redirect) {
             window.location.href = data.redirect;
             return false;
@@ -1331,7 +1376,6 @@ async function obtenerUsuarioActual() {
             usuarioNombreSpan.textContent = 'Invitado';
         }
         
-        // Mostrar botón de inicio de sesión en el menú
         const dropdownMenu = document.querySelector('.dropdown-menu');
         if (dropdownMenu && !document.querySelector('.login-guest-item')) {
             const loginItem = document.createElement('a');
@@ -1341,7 +1385,6 @@ async function obtenerUsuarioActual() {
             dropdownMenu.insertBefore(loginItem, dropdownMenu.firstChild);
         }
         
-        // Resetear foto de perfil para invitado
         const profileImage = document.getElementById('profileImage');
         const defaultProfileIcon = document.getElementById('defaultProfileIcon');
         if (profileImage) profileImage.style.display = 'none';
@@ -1352,7 +1395,6 @@ async function obtenerUsuarioActual() {
     } catch (error) {
         console.error('Error verificando cliente:', error);
         
-        // Modo invitado por defecto
         CURRENT_USER = { id: null, nombre: 'Invitado', correo: '', rol: 'guest', can_purchase: false };
         
         const usuarioNombreSpan = document.getElementById('usuarioNombre');
@@ -1364,9 +1406,7 @@ async function obtenerUsuarioActual() {
     }
 }
 
-// ===== VERIFICACIÓN PERIÓDICA DE SESIÓN - VERSIÓN SEGURA (NO REDIRIGE ADMIN) =====
 function iniciarVerificacionSesionPeriodica() {
-    // Verificar cada 60 segundos (más seguro que 30)
     setInterval(async () => {
         try {
             const response = await fetch('/proyecto/usuarios/verificar_sesion_cliente.php', {
@@ -1376,7 +1416,6 @@ function iniciarVerificacionSesionPeriodica() {
             });
             const data = await response.json();
             
-            // Si la sesión se corrompió o es admin, limpiar estado local
             if (data.force_logout === true || (data.role === 'admin' && CURRENT_USER && CURRENT_USER.rol !== 'admin')) {
                 console.log('⚠️ Sesión inválida para cliente - Limpiando estado');
                 showNotification('Tu sesión ha cambiado. Por favor inicia sesión nuevamente.', 'warning');
@@ -1388,18 +1427,15 @@ function iniciarVerificacionSesionPeriodica() {
                     usuarioNombreSpan.textContent = 'Invitado';
                 }
                 
-                // Recargar página para limpiar estado completamente
                 setTimeout(() => {
                     window.location.reload();
                 }, 2000);
             }
-            // Si el servidor indica redirect (sesión perdida)
             if (data.redirect) {
                 window.location.href = data.redirect;
                 return;
             }
             
-            // Si la sesión se perdió completamente
             if (!data.success && !data.is_authenticated && CURRENT_USER && CURRENT_USER.id) {
                 console.log('⚠️ Sesión expirada');
                 showNotification('Sesión expirada. Por favor inicia sesión nuevamente.', 'warning');
@@ -1410,10 +1446,9 @@ function iniciarVerificacionSesionPeriodica() {
         } catch (error) {
             console.error('Error en verificación periódica:', error);
         }
-    }, 60000); // 60 segundos
+    }, 60000);
 }
 
-// ===== FUNCIÓN PARA FORMATEAR TASA =====
 function formatearTasa(tasa, decimales = 4) {
     return tasa.toLocaleString('es-VE', {
         minimumFractionDigits: 2,
@@ -1442,7 +1477,6 @@ function actualizarPreciosConTasa() {
     }
 }
 
-// ===== TASA BCV =====
 async function cargarTasaBCV() {
     const tasaElement = document.getElementById('tasaBcvValue');
     const fechaElement = document.getElementById('tasaBcvFecha');
@@ -1523,7 +1557,6 @@ async function cargarTasaBCV() {
     }
 }
 
-// ===== CARGAR PRODUCTOS =====
 async function loadProductsFromDB() {
     if (!productList) return;
     
@@ -1568,7 +1601,6 @@ async function loadProductsFromDB() {
     }
 }
 
-// ===== APLICAR FILTROS =====
 function applyFilters() {
     filteredProducts = [...allProducts];
     
@@ -1603,7 +1635,6 @@ function applyFilters() {
     updateActiveFilters();
 }
 
-// ===== MOSTRAR PRODUCTOS =====
 function displayProducts() {
     if (!productList) return;
     
@@ -1623,6 +1654,7 @@ function displayProducts() {
     currentProducts.forEach(product => {
         const precioVES = (product.price * tasaBCVActual).toFixed(2);
         const inactivo = product.active === 0;
+        const esFavorito = favoritosSet.has(product.id);
         
         const card = document.createElement('div');
         card.className = 'product-card';
@@ -1630,7 +1662,10 @@ function displayProducts() {
         card.innerHTML = `
             <div class="product-img-container" data-id="${product.id}">
                 <img src="${product.image}" alt="${escapeHtml(product.name)}" data-id="${product.id}">
-                ${inactivo ? '<span style="position:absolute; top:5px; right:5px; background:#dc3545; color:white; padding:2px 6px; border-radius:4px;">NO DISP</span>' : ''}
+                ${inactivo ? '<span style="position:absolute; top:5px; right:5px; background:#dc3545; color:white; padding:2px 6px; border-radius:4px; font-size:11px;">NO DISP</span>' : ''}
+                <div class="product-favorite-btn ${esFavorito ? 'favorito-activo' : ''}" data-id="${product.id}">
+                    <i class="${esFavorito ? 'fas' : 'far'} fa-heart"></i>
+                </div>
             </div>
             <div class="category">${escapeHtml(product.category)}</div>
             <h5 data-id="${product.id}">${escapeHtml(product.name)}</h5>
@@ -1690,6 +1725,14 @@ function attachProductEvents() {
             addToCart(id, 1);
         });
     });
+
+    document.querySelectorAll('.product-favorite-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const id = parseInt(btn.getAttribute('data-id'));
+            toggleFavorito(id);
+        });
+    });
 }
 
 function openProductModal(product) {
@@ -1706,10 +1749,20 @@ function openProductModal(product) {
     modalBtn.disabled = product.stock === 0 || product.active === 0;
     modalBtn.textContent = (product.stock === 0 || product.active === 0) ? 'No disponible' : 'Añadir al Carrito';
     
+    const favBtn = document.getElementById('modal-fav-btn');
+    const esFav = favoritosSet.has(product.id);
+    favBtn.innerHTML = esFav ? '<i class="fas fa-heart"></i> Quitar de Favoritos' : '<i class="far fa-heart"></i> Añadir a Favoritos';
+    favBtn.className = `btn ${esFav ? 'btn-danger' : 'btn-outline-danger'} w-100 mt-2`;
+    favBtn.onclick = async () => {
+        await toggleFavorito(product.id);
+        const nowFav = favoritosSet.has(product.id);
+        favBtn.innerHTML = nowFav ? '<i class="fas fa-heart"></i> Quitar de Favoritos' : '<i class="far fa-heart"></i> Añadir a Favoritos';
+        favBtn.className = `btn ${nowFav ? 'btn-danger' : 'btn-outline-danger'} w-100 mt-2`;
+    };
+    
     $('#productModal').modal('show');
 }
 
-// ===== CARRITO =====
 async function addToCart(productId, quantity) {
     if (CURRENT_USER && (CURRENT_USER.rol === 'admin' || CURRENT_USER.rol === 'administrador')) {
         showNotification('⚠️ Los administradores no pueden realizar compras. Inicia sesión como cliente.', true);
@@ -1899,6 +1952,125 @@ async function removeFromCart(productId) {
     }
 }
 
+async function toggleFavorito(productoId) {
+    if (!CURRENT_USER || !CURRENT_USER.id) {
+        showNotification('Debes iniciar sesión', true);
+        setTimeout(() => window.location.href = '/proyecto/interfaz_usuario/login.html', 1500);
+        return;
+    }
+
+    try {
+        const response = await fetch('/proyecto/producto/agregar_favorito.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: CURRENT_USER.id, producto_id: productoId })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            if (data.favorito) {
+                favoritosSet.add(productoId);
+                showNotification('Añadido a favoritos');
+            } else {
+                favoritosSet.delete(productoId);
+                showNotification('Eliminado de favoritos');
+            }
+            actualizarIconosFavoritos();
+        } else {
+            showNotification(data.message || 'Error', true);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showNotification('Error de conexión', true);
+    }
+}
+
+function actualizarIconosFavoritos() {
+    document.querySelectorAll('.product-favorite-btn').forEach(btn => {
+        const id = parseInt(btn.getAttribute('data-id'));
+        const icon = btn.querySelector('i');
+        if (favoritosSet.has(id)) {
+            icon.className = 'fas fa-heart';
+            btn.classList.add('favorito-activo');
+        } else {
+            icon.className = 'far fa-heart';
+            btn.classList.remove('favorito-activo');
+        }
+    });
+}
+
+async function cargarFavoritos() {
+    if (!CURRENT_USER || !CURRENT_USER.id) return;
+    try {
+        const response = await fetch(`/proyecto/producto/obtener_favoritos.php?user_id=${CURRENT_USER.id}`);
+        const data = await response.json();
+        if (data.success && data.ids) {
+            favoritosSet = new Set(data.ids);
+        }
+    } catch (error) {
+        console.error('Error al cargar favoritos:', error);
+    }
+}
+
+async function mostrarFavoritos() {
+    $('#favoritesModal').modal('show');
+    document.getElementById('favoritesContent').innerHTML = '<p class="text-center">Cargando...</p>';
+    try {
+        const response = await fetch(`/proyecto/producto/obtener_favoritos.php?user_id=${CURRENT_USER?.id || 0}`);
+        const data = await response.json();
+        if (data.success && data.favoritos && data.favoritos.length > 0) {
+            let html = '<div class="favorites-grid">';
+            data.favoritos.forEach(f => {
+                const precioVES = (parseFloat(f.price) * tasaBCVActual).toFixed(2);
+                const inactivo = f.active === 0;
+                html += `
+                    <div class="product-card" data-id="${f.id}" style="margin-bottom:0;">
+                        <div class="product-img-container" style="height:140px; position:relative;" data-id="${f.id}">
+                            <img src="${f.image || ''}" alt="${escapeHtml(f.name)}" data-id="${f.id}" style="max-height:120px;">
+                            <div class="product-favorite-btn favorito-activo" data-id="${f.producto_id}" style="position:absolute; top:5px; left:5px; cursor:pointer; font-size:1.3rem; z-index:2;">
+                                <i class="fas fa-heart"></i>
+                            </div>
+                        </div>
+                        <div class="category" style="font-size:0.7rem;">${escapeHtml(f.category || '')}</div>
+                        <h5 data-id="${f.id}" style="font-size:0.9rem;">${escapeHtml(f.name)}</h5>
+                        <div class="price" style="font-size:1rem;">$${parseFloat(f.price).toFixed(2)}<small class="ves-price">(≈ ${precioVES} Bs)</small></div>
+                        <button class="add-to-cart-btn ${(f.stock === 0 || inactivo) ? 'stock-disabled' : ''}" data-id="${f.id}" ${(f.stock === 0 || inactivo) ? 'disabled' : ''} style="font-size:0.75rem; padding:4px 12px;">
+                            <i class="fas fa-shopping-cart"></i> ${inactivo ? 'No disponible' : (f.stock === 0 ? 'Agotado' : 'Añadir')}
+                        </button>
+                    </div>`;
+            });
+            html += '</div>';
+            document.getElementById('favoritesContent').innerHTML = html;
+            document.querySelectorAll('#favoritesContent .product-favorite-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const id = parseInt(btn.getAttribute('data-id'));
+                    await toggleFavorito(id);
+                    await mostrarFavoritos();
+                });
+            });
+            document.querySelectorAll('#favoritesContent .add-to-cart-btn:not([disabled])').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    addToCart(parseInt(btn.getAttribute('data-id')), 1);
+                });
+            });
+            document.querySelectorAll('#favoritesContent .product-img-container, #favoritesContent h5').forEach(el => {
+                el.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const id = parseInt(el.getAttribute('data-id'));
+                    const product = allProducts.find(p => p.id === id);
+                    if (product) openProductModal(product);
+                });
+            });
+        } else {
+            document.getElementById('favoritesContent').innerHTML = '<p class="text-center" style="opacity:0.7; padding:40px;">No tienes productos favoritos</p>';
+        }
+    } catch (error) {
+        document.getElementById('favoritesContent').innerHTML = '<p class="text-center" style="color:#ff4757; padding:40px;">Error al cargar favoritos</p>';
+    }
+}
+
 function updateActiveFilters() {
     const container = document.getElementById('active-filters');
     if (!container) return;
@@ -1931,7 +2103,6 @@ function updateActiveFilters() {
     });
 }
 
-// ===== CAMBIAR CONTRASEÑA =====
 document.getElementById('submitPasswordChange')?.addEventListener('click', async () => {
     const currentPassword = document.getElementById('currentPassword').value;
     const newPassword = document.getElementById('newPassword').value;
@@ -1980,7 +2151,6 @@ document.getElementById('submitPasswordChange')?.addEventListener('click', async
     }
 });
 
-// ===== CONTACTO =====
 document.getElementById('submitContact')?.addEventListener('click', async () => {
     const nombre = document.getElementById('contactName').value;
     const email = document.getElementById('contactEmail').value;
@@ -2025,7 +2195,6 @@ document.getElementById('submitContact')?.addEventListener('click', async () => 
     }
 });
 
-// ===== EVENTOS =====
 function setupEventListeners() {
     if (searchBtn) {
         searchBtn.addEventListener('click', () => {
@@ -2132,6 +2301,10 @@ function setupEventListeners() {
         }
     });
     
+    document.getElementById('viewFavoritesBtn')?.addEventListener('click', async () => {
+        await mostrarFavoritos();
+    });
+
     document.getElementById('viewHistoryBtn')?.addEventListener('click', async () => {
         $('#historyModal').modal('show');
         document.getElementById('historyContent').innerHTML = '<p class="text-center">Cargando...</p>';
@@ -2139,17 +2312,85 @@ function setupEventListeners() {
             const response = await fetch(`/proyecto/producto/obtener_historial_pedidos.php?user_id=${CURRENT_USER?.id || 1}`);
             const data = await response.json();
             if (data.success && data.historial && data.historial.length > 0) {
-                let html = '<div class="list-group">';
+                let html = '';
                 data.historial.forEach(p => {
-                    html += `<div class="list-group-item"><strong>Pedido #${p.id}</strong><br>Total: $${parseFloat(p.total).toFixed(2)}<br>Fecha: ${new Date(p.created_at).toLocaleDateString()}</div>`;
+                    const fecha = new Date(p.created_at).toLocaleString('es-ES');
+                    const displayStatus = p.display_status || p.status || 'pendiente';
+                    
+                    const estadoBadge = displayStatus === 'Pagado' ? 'background:#2ed573' :
+                                       displayStatus === 'Pendiente' ? 'background:#ffa502' :
+                                       displayStatus === 'cancelado' ? 'background:#ff4757' : 'background:#6c757d';
+                    
+                    let metodoBadge = 'background:#6c757d';
+                    let metodoLabel = p.payment_method || 'N/A';
+                    
+                    if (p.es_mixto) {
+                        metodoBadge = 'background:#f39c12';
+                        metodoLabel = 'Mixto (Efvo + Transf)';
+                    } else if (p.payment_method === 'efectivo') {
+                        metodoBadge = 'background:#2ed573';
+                        metodoLabel = 'Efectivo';
+                    } else if (p.payment_method === 'transferencia') {
+                        metodoBadge = 'background:#3498db';
+                        metodoLabel = 'Transferencia';
+                    } else if (p.payment_method === 'pago_movil') {
+                        metodoBadge = 'background:#9b59b6';
+                        metodoLabel = 'Pago Móvil';
+                    }
+                    
+                    let itemsHtml = '';
+                    if (p.items && p.items.length > 0) {
+                        itemsHtml = '<div style="margin-top:12px;">';
+                        p.items.forEach(it => {
+                            itemsHtml += `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed var(--light-color);">
+                                <span>${escapeHtml(it.product_name)} <small style="opacity:0.7;">x${it.quantity}</small></span>
+                                <span style="font-weight:500;">$${parseFloat(it.item_subtotal || 0).toFixed(2)}</span>
+                            </div>`;
+                        });
+                        itemsHtml += '</div>';
+                    }
+                    
+                    let detallesPagoHtml = '';
+                    if (p.es_mixto) {
+                        detallesPagoHtml = `<div style="margin-top:8px; padding:8px 12px; background:rgba(243,156,18,0.1); border-radius:8px; font-size:0.85rem;">
+                            <div style="display:flex; justify-content:space-between;">
+                                <span>🔄 Transferencia:</span>
+                                <span><strong>$${parseFloat(p.monto_transferencia || 0).toFixed(2)}</strong></span>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; margin-top:4px;">
+                                <span>💵 Efectivo:</span>
+                                <span><strong>$${parseFloat(p.monto_efectivo || 0).toFixed(2)}</strong></span>
+                            </div>
+                        </div>`;
+                    }
+                    
+                    html += `<div style="background:var(--card-bg); border:1px solid var(--light-color); border-radius:12px; padding:16px; margin-bottom:16px;">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
+                            <div>
+                                <strong style="font-size:1.1rem; color:var(--text-color);">Pedido #${p.order_number || p.id}</strong><br>
+                                <small style="opacity:0.7;">${fecha}</small>
+                                ${p.invoice_number ? `<br><small style="opacity:0.5;">Factura: ${escapeHtml(p.invoice_number)}</small>` : ''}
+                            </div>
+                            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                                <span style="${estadoBadge}; color:white; padding:4px 10px; border-radius:20px; font-size:0.75rem;">${escapeHtml(displayStatus)}</span>
+                                <span style="${metodoBadge}; color:white; padding:4px 10px; border-radius:20px; font-size:0.75rem;">${metodoLabel}</span>
+                            </div>
+                        </div>
+                        ${detallesPagoHtml}
+                        ${itemsHtml}
+                        <div style="text-align:right; margin-top:12px; padding-top:12px; border-top:2px solid #3C91ED;">
+                            <div style="color:var(--text-color); opacity:0.8;">Subtotal: $${parseFloat(p.subtotal || 0).toFixed(2)}</div>
+                            <div style="color:var(--text-color); opacity:0.8;">IVA (16%): $${parseFloat(p.iva || 0).toFixed(2)}</div>
+                            <div style="font-size:1.2rem; font-weight:bold; color:var(--accent-color); margin-top:5px;">TOTAL: $${parseFloat(p.total || 0).toFixed(2)}</div>
+                        </div>
+                    </div>`;
                 });
-                html += '</div>';
                 document.getElementById('historyContent').innerHTML = html;
             } else {
-                document.getElementById('historyContent').innerHTML = '<p class="text-center">No hay pedidos</p>';
+                document.getElementById('historyContent').innerHTML = '<p class="text-center" style="color:var(--text-color); opacity:0.7; padding:40px;">No hay pedidos registrados</p>';
             }
         } catch(error) {
-            document.getElementById('historyContent').innerHTML = '<p class="text-center text-danger">Error al cargar historial</p>';
+            document.getElementById('historyContent').innerHTML = '<p class="text-center" style="color:#ff4757; padding:40px;">Error al cargar historial</p>';
         }
     });
     
@@ -2202,11 +2443,11 @@ function setupEventListeners() {
     }
 }
 
-// ===== INICIALIZACIÓN =====
 async function init() {
     initDarkMode();
     await obtenerUsuarioActual();
     await loadProductsFromDB();
+    await cargarFavoritos();
     await updateCartUI();
     setupEventListeners();
     cargarTasaBCV();

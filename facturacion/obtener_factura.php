@@ -56,7 +56,7 @@ $sql = "SELECT f.*,
                p.metodo_pago as pedido_metodo_pago,
                p.observaciones as pedido_observaciones,
                p.created_at as pedido_fecha,
-               p.referencia_pago,
+               p.referencia_pago as pedido_referencia_pago,
                p.estado as pedido_estado,
                u.nombre as usuario_nombre
         FROM facturas f

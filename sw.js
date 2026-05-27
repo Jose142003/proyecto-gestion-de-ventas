@@ -86,8 +86,9 @@ self.addEventListener('fetch', function(event) {
   var request = event.request;
   var url = request.url;
 
-  // Ignorar requests no HTTP
+  // Ignorar requests no HTTP y no GET (no se pueden cachear POST, etc.)
   if (!url.startsWith('http')) return;
+  if (request.method !== 'GET') return;
 
   // Estrategia: Network First para paginas (navegacion)
   if (request.mode === 'navigate') {

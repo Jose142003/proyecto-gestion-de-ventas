@@ -17,12 +17,16 @@ if (!$pedido_id) {
     exit;
 }
 
-require_once __DIR__ . '/../conexion/conexion.php';
+  require_once __DIR__ . '/../conexion/conexion.php';
 
-try {
-    $pdo = conectarDB();
-    
-    $pdo->beginTransaction();
+ try {
+     $pdo = conectarDB();
+     $pdo->exec("SET time_zone = '-04:00'");
+     
+     // Establecer zona horaria de PHP para fechas generadas con PHP
+     date_default_timezone_set('America/Caracas'); // GMT-4
+     
+     $pdo->beginTransaction();
     
     // 1. Obtener información del pedido
     $query_pedido = "
@@ -73,27 +77,40 @@ try {
     // Si no tienes generador de números, usa este:
     $numero_factura = 'FAC-' . date('Y') . '-' . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
     
-    // 4. Crear factura
+    // 4. Crear factura - usar PHP para fechas con zona horaria correcta
+    $usuario_id_factura = $_SESSION['user_id'] ?? $_SESSION['usuario_id'] ?? 1;
+    
+    // Generar fechas con PHP en zona horaria -04:00
+    $fecha_emision = date('Y-m-d H:i:s'); // Incluye hora para mayor precisión
+    $fecha_vencimiento = date('Y-m-d H:i:s', strtotime('+30 days'));
+    
     $insert_factura = "
         INSERT INTO facturas (numero_factura, cliente_id, fecha_emision, fecha_vencimiento, 
-                             subtotal, iva, total, metodo_pago, estado, usuario_id, observaciones)
-        VALUES (:numero_factura, :cliente_id, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 30 DAY),
-                :subtotal, :iva, :total, :metodo_pago, 'pagada', 1, 
-                CONCAT('Factura generada desde pedido: ', :numero_pedido))
+                             subtotal, iva, total, metodo_pago, estado, usuario_id, observaciones, pedido_id)
+        VALUES (:numero_factura, :cliente_id, :fecha_emision, :fecha_vencimiento,
+                :subtotal, :iva, :total, :metodo_pago, :estado, :usuario_id, 
+                CONCAT('Factura generada desde pedido: ', :numero_pedido), :pedido_id)
     ";
     
-    $subtotal = $pedido['total'] / 1.16; // Asumiendo 16% de IVA
-    $iva = $pedido['total'] - $subtotal;
+    $subtotal_calc = $pedido['subtotal'] ?? ($pedido['total'] / 1.16);
+    $iva_calc = $pedido['iva'] ?? ($pedido['total'] - $subtotal_calc);
     
+    $estado_factura = 'pendiente';
+
     $stmt_factura = $pdo->prepare($insert_factura);
     $stmt_factura->execute([
         ':numero_factura' => $numero_factura,
         ':cliente_id' => $cliente_id,
-        ':subtotal' => $subtotal,
-        ':iva' => $iva,
+        ':fecha_emision' => $fecha_emision,
+        ':fecha_vencimiento' => $fecha_vencimiento,
+        ':subtotal' => $subtotal_calc,
+        ':iva' => $iva_calc,
         ':total' => $pedido['total'],
         ':metodo_pago' => $pedido['metodo_pago'],
-        ':numero_pedido' => $pedido['numero_pedido']
+        ':estado' => $estado_factura,
+        ':usuario_id' => $usuario_id_factura,
+        ':numero_pedido' => $pedido['numero_pedido'],
+        ':pedido_id' => $pedido_id
     ]);
     
     $factura_id = $pdo->lastInsertId();
@@ -135,15 +152,28 @@ try {
         ]);
     }
     
-    // 8. Actualizar estado del pedido a "facturado"
-    $update_pedido = "UPDATE pedidos SET estado = 'facturado' WHERE id = :pedido_id";
-    $stmt_update = $pdo->prepare($update_pedido);
-    $stmt_update->execute([':pedido_id' => $pedido_id]);
+    // 8. Actualizar estado del pedido a "facturado" y guardar factura_id
+    try {
+        $check_col = $pdo->query("SHOW COLUMNS FROM pedidos LIKE 'factura_id'");
+        if ($check_col->rowCount() > 0) {
+            $update_pedido = "UPDATE pedidos SET estado = 'facturado', factura_id = :factura_id WHERE id = :pedido_id";
+            $stmt_update = $pdo->prepare($update_pedido);
+            $stmt_update->execute([':factura_id' => $factura_id, ':pedido_id' => $pedido_id]);
+        } else {
+            $update_pedido = "UPDATE pedidos SET estado = 'facturado' WHERE id = :pedido_id";
+            $stmt_update = $pdo->prepare($update_pedido);
+            $stmt_update->execute([':pedido_id' => $pedido_id]);
+        }
+    } catch (Exception $e) {
+        $update_pedido = "UPDATE pedidos SET estado = 'facturado' WHERE id = :pedido_id";
+        $stmt_update = $pdo->prepare($update_pedido);
+        $stmt_update->execute([':pedido_id' => $pedido_id]);
+    }
     
-    // 9. Marcar factura como pagada (el pago queda registrado en los metadatos de la factura)
-    $update_factura = "UPDATE facturas SET estado = 'pagada' WHERE id = :factura_id";
-    $stmt_upd = $pdo->prepare($update_factura);
-    $stmt_upd->execute([':factura_id' => $factura_id]);
+    // 9. Actualizar estado del pedido
+    $update_pedido_estado = "UPDATE pedidos SET fecha_facturacion = NOW() WHERE id = :pedido_id";
+    $stmt_upd_ped = $pdo->prepare($update_pedido_estado);
+    $stmt_upd_ped->execute([':pedido_id' => $pedido_id]);
     
     $pdo->commit();
     

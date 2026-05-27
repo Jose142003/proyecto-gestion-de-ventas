@@ -132,7 +132,7 @@ try {
                     subtotal, iva, total, metodo_pago, estado, usuario_id
                 ) VALUES (
                     :numero_factura, :cliente_id, :pedido_id, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 30 DAY), 
-                    :subtotal, :iva, :total, :metodo_pago, 'pagada', :usuario_id
+                    :subtotal, :iva, :total, :metodo_pago, 'pendiente', :usuario_id
                 )
             ");
             

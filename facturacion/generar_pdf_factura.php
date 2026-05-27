@@ -20,16 +20,22 @@ try {
     // Obtener información de la factura
     $stmt = $pdo->prepare("
         SELECT f.*, 
+               f.observaciones as factura_observaciones,
                c.nombre as cliente_nombre, 
                c.documento as cliente_documento,
                c.email as cliente_email,
                c.telefono as cliente_telefono,
                c.direccion as cliente_direccion,
                c.ciudad as cliente_ciudad,
-               u.nombre as vendedor_nombre
+               u.nombre as vendedor_nombre,
+               p.metodo_pago as pedido_metodo_pago,
+               p.referencia_pago as pedido_referencia_pago,
+               p.observaciones as pedido_observaciones,
+               p.numero_pedido
         FROM facturas f
         LEFT JOIN clientes c ON f.cliente_id = c.id
         LEFT JOIN users u ON f.usuario_id = u.id
+        LEFT JOIN pedidos p ON f.pedido_id = p.id
         WHERE f.id = ?
     ");
     $stmt->execute([$factura_id]);
@@ -38,6 +44,34 @@ try {
     if (!$factura) {
         die("<h2>Error: Factura no encontrada</h2>");
     }
+
+    // Determinar método de pago real
+    $metodo_pago_real = $factura['metodo_pago'];
+    if (!empty($factura['pedido_metodo_pago']) && $factura['pedido_metodo_pago'] !== 'transferencia') {
+        $metodo_pago_real = $factura['pedido_metodo_pago'];
+    }
+
+    // Extraer referencia de pago
+    $referencia_pago = null;
+    $metodo_check = strtolower(trim($metodo_pago_real));
+    if (!empty($factura['pedido_referencia_pago'])) {
+        $referencia_pago = $factura['pedido_referencia_pago'];
+    } else {
+        $obs_a_buscar = [
+            $factura['pedido_observaciones'] ?? null,
+            $factura['factura_observaciones'] ?? $factura['observaciones'] ?? null
+        ];
+        foreach ($obs_a_buscar as $obs) {
+            if ($referencia_pago === null && !empty($obs)) {
+                if (preg_match('/Referencia[:\s]+([^\s]+)/i', $obs, $matches)) {
+                    $referencia_pago = $matches[1];
+                } elseif (preg_match('/Ref[:\s]+([^\s]+)/i', $obs, $matches)) {
+                    $referencia_pago = $matches[1];
+                }
+            }
+        }
+    }
+    $mostrar_referencia = ($metodo_check === 'pago_movil' || $metodo_check === 'pago movil' || $metodo_check === 'transferencia' || $metodo_check === 'transferencia_bancaria') && $referencia_pago;
     
     // Obtener detalles de la factura
     $stmt = $pdo->prepare("
@@ -370,8 +404,20 @@ header('Content-Type: text/html; charset=utf-8');
                 </div>
                 <div class="info-row">
                     <span class="info-label">Método Pago:</span>
-                    <span class="info-value"><?php echo strtoupper($factura['metodo_pago'] ?? 'No especificado'); ?></span>
+                    <span class="info-value"><?php echo strtoupper($metodo_pago_real ?? 'No especificado'); ?></span>
                 </div>
+                <?php if ($mostrar_referencia): ?>
+                <div class="info-row">
+                    <span class="info-label" style="color:#3498db; font-weight:bold;"><i class="fas fa-hashtag"></i> Referencia:</span>
+                    <span class="info-value" style="font-weight:bold; font-size:0.8rem;"><?php echo htmlspecialchars($referencia_pago); ?></span>
+                </div>
+                <?php endif; ?>
+                <?php if (!empty($factura['numero_pedido'])): ?>
+                <div class="info-row">
+                    <span class="info-label">Pedido:</span>
+                    <span class="info-value"><?php echo htmlspecialchars($factura['numero_pedido']); ?></span>
+                </div>
+                <?php endif; ?>
                 <div class="info-row">
                     <span class="info-label">Vendedor:</span>
                     <span class="info-value"><?php echo htmlspecialchars($factura['vendedor_nombre'] ?? 'Sistema'); ?></span>

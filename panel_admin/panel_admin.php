@@ -1,12 +1,57 @@
 ﻿<?php
 // panel_admin.php - Verificación de sesión ADMIN
 
+require_once __DIR__ . '/../config/database.php';
+
+// Intentar restaurar sesión desde persist_token si no hay sesión activa
 session_start();
+if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+    if (isset($_COOKIE['persist_token'])) {
+        $token_value = base64_decode($_COOKIE['persist_token']);
+        if ($token_value !== false) {
+            $parts = explode('|', $token_value);
+            if (count($parts) >= 4) {
+                $token_id = $parts[0];
+                $token_nombre = $parts[1];
+                $token_tabla = $parts[2];
+                $token_sig = $parts[3];
+                $expected_sig = hash_hmac('sha256', $parts[0] . '|' . $parts[1] . '|' . $parts[2], BASE_URL);
+                if (hash_equals($expected_sig, $token_sig) && $token_tabla === 'admin_users') {
+                    try {
+                        $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8", DB_USER, DB_PASS);
+                        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                        $stmt = $pdo->prepare("SELECT id, nombre, correo, rol, activo FROM admin_users WHERE id = ? AND activo = 1");
+                        $stmt->execute([$token_id]);
+                        $admin = $stmt->fetch(PDO::FETCH_ASSOC);
+                        if ($admin) {
+                            session_regenerate_id(true);
+                            $_SESSION['loggedin'] = true;
+                            $_SESSION['user_id'] = $admin['id'];
+                            $_SESSION['user_nombre'] = $admin['nombre'];
+                            $_SESSION['user_correo'] = $admin['correo'];
+                            $_SESSION['user_rol'] = $admin['rol'];
+                            $_SESSION['tabla_origen'] = 'admin_users';
+                            $_SESSION['es_admin'] = true;
+                            $_SESSION['is_admin'] = true;
+                            $_SESSION['user_tipo'] = 'admin';
+                            $_SESSION['2fa_verified'] = true;
+                        }
+                    } catch (PDOException $e) {
+                        error_log("panel_admin.php: Error restaurando persist_token: " . $e->getMessage());
+                    }
+                }
+            }
+        }
+    }
+}
+
+error_log("panel_admin.php - SESSION: " . print_r($_SESSION, true));
 
 // ========== VERIFICACIÓN ESTRICTA DE ADMIN ==========
 
 // 1. Verificar autenticación
 if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+    error_log("panel_admin.php: Check 1 FALLÓ - loggedin=" . (isset($_SESSION['loggedin']) ? ($_SESSION['loggedin'] ? 'true' : 'false') : 'NOT SET'));
     header('Location: /proyecto/interfaz_usuario/login.html');
     exit;
 }
@@ -2592,7 +2637,11 @@ try {
         
         function cerrarModales() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
         function cerrarModalDetalle() { document.getElementById('verDetalleModal').style.display = 'none'; }
-        function cerrarDetallePedidoModal() { document.getElementById('detallePedidoModal').style.display = 'none'; }
+        function cerrarDetallePedidoModal() {
+            document.getElementById('detallePedidoModal').style.display = 'none';
+            currentDetallePedido = null;
+            window.currentProductosList = [];
+        }
 
         function getEstadoBadge(estado) {
             const estados = {
@@ -4449,6 +4498,8 @@ function renderConfiguracion() {
         }
         
         async function verDetallePedido(pedidoId) {
+            currentDetallePedido = null;
+            window.currentProductosList = [];
             mostrarLoading('Cargando detalles del pedido...');
             try {
                 const response = await fetch(`/proyecto/proceso_compra/obtener_detalles_pedido.php?id=${pedidoId}`, { credentials: 'include' });
@@ -4456,8 +4507,13 @@ function renderConfiguracion() {
                     const data = await response.json();
                     if(data.success) {
                         currentDetallePedido = data.pedido;
-                        window.currentProductosList = data.productos || [];
-                        if(window.currentProductosList.length > 0) currentDetallePedido.productos = window.currentProductosList;
+                        if (data.productos && Array.isArray(data.productos)) {
+                            currentDetallePedido.productos = data.productos;
+                            window.currentProductosList = data.productos;
+                        } else {
+                            currentDetallePedido.productos = [];
+                            window.currentProductosList = [];
+                        }
                         renderDetallePedidoModal();
                         document.getElementById('detallePedidoModal').style.display = 'flex';
                     } else { mostrarNotificacion(data.message || 'Error al cargar detalles del pedido', 'error'); }
@@ -4470,12 +4526,14 @@ function renderConfiguracion() {
             const container = document.getElementById('detallePedidoContent');
             if(!container || !currentDetallePedido) return;
             const pedido = currentDetallePedido;
-            let productos = window.currentProductosList || pedido.productos || pedido.data || [];
+            let productos = pedido.productos || window.currentProductosList || pedido.data || [];
+            if (!Array.isArray(productos)) productos = [];
             let productosHtml = '';
-            if(!productos || productos.length === 0) productosHtml = '<tr><td colspan="4" style="text-align:center; padding:40px;">No hay productos</tbody>';
+            if(productos.length === 0) productosHtml = '<tr><td colspan="4" style="text-align:center; padding:40px;">No hay productos registrados</td></tr>';
             else {
                 for(let idx = 0; idx < productos.length; idx++) {
                     const prod = productos[idx];
+                    if (!prod) continue;
                     let nombre = prod.nombre || prod.producto_nombre || prod.product_name || prod.name || `Producto #${idx+1}`;
                     let cantidad = parseInt(prod.cantidad) || 1;
                     let precio = parseFloat(prod.precio_unitario || prod.precio || 0);
@@ -4489,7 +4547,7 @@ function renderConfiguracion() {
             const html = `<div class="factura-header"><i class="fas fa-shopping-cart" style="font-size:2rem;"></i><h3>Detalle del Pedido</h3><p><strong>N° Pedido:</strong> ${escapeHtml(pedido.numero_pedido)}</p><p><strong>Fecha:</strong> ${fechaFormateada}</p></div>
             <div class="cliente-info"><h4><i class="fas fa-user"></i> Información del Cliente</h4><div class="info-row"><span class="info-label">Nombre:</span><span>${escapeHtml(pedido.cliente_nombre || 'N/A')}</span></div><div class="info-row"><span class="info-label">Email:</span><span>${escapeHtml(pedido.cliente_email || 'N/A')}</span></div><div class="info-row"><span class="info-label">Teléfono:</span><span>${escapeHtml(pedido.cliente_telefono || 'N/A')}</span></div></div>
             <h4><i class="fas fa-boxes"></i> Productos</h4><div style="overflow-x:auto;"><table style="width:100%; border-collapse:collapse;"><thead><tr style="background:#3C91ED; color:white;"><th>Producto</th><th>Cantidad</th><th>Precio Unitario</th><th>Subtotal</th></tr></thead><tbody>${productosHtml}</tbody></table></div>
-            <div style="text-align:right; padding:15px; background:#f0f9ff; margin-top:15px;"><div><strong>Subtotal:</strong> ${formatMoney(pedido.subtotal)}</div><div><strong>IVA (16%):</strong> ${formatMoney(pedido.iva)}</div><div style="font-size:1.2rem; border-top:2px solid #3C91ED; margin-top:10px; padding-top:10px;"><strong>TOTAL:</strong> ${formatMoney(pedido.total)}</div></div>
+            <div style="text-align:right; padding:20px; background:#f8f9fa; margin-top:15px; border-radius:8px;"><div style="padding:5px 0; color:#050C18;"><strong>Subtotal:</strong> ${formatMoney(pedido.subtotal)}</div><div style="padding:5px 0; color:#050C18;"><strong>IVA (16%):</strong> ${formatMoney(pedido.iva)}</div><div style="font-size:1.2rem; border-top:2px solid #3C91ED; margin-top:10px; padding-top:10px; color:#050C18; font-weight:bold;"><strong>TOTAL:</strong> ${formatMoney(pedido.total)}</div></div>
             <div style="margin-top:15px;"><h4><i class="fas fa-info-circle"></i> Información Adicional</h4><div class="info-row"><span class="info-label">Estado:</span><span>${estadoBadge}</span></div><div class="info-row"><span class="info-label">Método de Pago:</span><span>${getMetodoPagoBadge(pedido.metodo_pago)}</span></div></div>`;
             container.innerHTML = html;
         }

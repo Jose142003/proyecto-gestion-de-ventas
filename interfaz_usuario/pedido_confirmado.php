@@ -2,6 +2,8 @@
 // /proyecto/interfaz_usuario/pedido_confirmado.php
 // VERSIÓN CORREGIDA - MANTIENE SESIÓN DE CLIENTE
 
+require_once __DIR__ . '/../config/database.php';
+
 session_name('CLIENTSESSID');
 session_start();
 
@@ -296,6 +298,81 @@ if (!$pedido_id && !empty($productosDesdeURL)) {
         mysqli_stmt_bind_param($stmt_clear, 'i', $usuario_id);
         mysqli_stmt_execute($stmt_clear);
         mysqli_stmt_close($stmt_clear);
+        
+        // ====================================================================
+        // CREAR FACTURA AUTOMÁTICAMENTE
+        // ====================================================================
+        $anio_act = date('Y');
+        $seq_fact = mysqli_query($conn, "SELECT numero_factura FROM facturas WHERE numero_factura LIKE 'FAC-{$anio_act}-%' ORDER BY id DESC LIMIT 1");
+        $last_fact = mysqli_fetch_assoc($seq_fact);
+        if ($last_fact) {
+            preg_match('/FAC-' . $anio_act . '-(\d+)/', $last_fact['numero_factura'], $matches);
+            $sig = isset($matches[1]) ? intval($matches[1]) + 1 : 1;
+        } else {
+            $sig = 1;
+        }
+        $num_factura = "FAC-{$anio_act}-" . str_pad($sig, 6, '0', STR_PAD_LEFT);
+        
+        $check_f = mysqli_query($conn, "SELECT id FROM facturas WHERE numero_factura = '$num_factura'");
+        while (mysqli_fetch_assoc($check_f)) {
+            $sig++;
+            $num_factura = "FAC-{$anio_act}-" . str_pad($sig, 6, '0', STR_PAD_LEFT);
+            $check_f = mysqli_query($conn, "SELECT id FROM facturas WHERE numero_factura = '$num_factura'");
+        }
+        
+        $estado_fact = 'pendiente';
+        $obs_fact = "Pedido por {$metodo_normalizado}" . ($referencia ? " - Ref: {$referencia}" : "");
+        
+        $ins_fact = "INSERT INTO facturas (numero_factura, cliente_id, pedido_id, fecha_emision, fecha_vencimiento, subtotal, iva, total, metodo_pago, estado, usuario_id, observaciones) VALUES (?, ?, ?, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 30 DAY), ?, ?, ?, ?, ?, ?, ?)";
+        $stmt_fact = mysqli_prepare($conn, $ins_fact);
+        mysqli_stmt_bind_param($stmt_fact, 'siidddssis', $num_factura, $cliente_id, $pedido_id, $subtotal_calc, $iva_calc, $total, $metodo_normalizado, $estado_fact, $usuario_id, $obs_fact);
+        mysqli_stmt_execute($stmt_fact);
+        $factura_id = mysqli_insert_id($conn);
+        mysqli_stmt_close($stmt_fact);
+        
+        // Copiar detalles
+        $ins_det_fact = "INSERT INTO factura_detalles (factura_id, producto_id, cantidad, precio_unitario, subtotal) SELECT ?, producto_id, cantidad, precio_unitario, subtotal FROM pedido_detalles WHERE pedido_id = ?";
+        $stmt_det_fact = mysqli_prepare($conn, $ins_det_fact);
+        mysqli_stmt_bind_param($stmt_det_fact, 'ii', $factura_id, $pedido_id);
+        mysqli_stmt_execute($stmt_det_fact);
+        mysqli_stmt_close($stmt_det_fact);
+        
+        // Marcar pedido como facturado
+        $upd_ped = "UPDATE pedidos SET estado = 'facturado', fecha_facturacion = NOW() WHERE id = ?";
+        $stmt_upd = mysqli_prepare($conn, $upd_ped);
+        mysqli_stmt_bind_param($stmt_upd, 'i', $pedido_id);
+        mysqli_stmt_execute($stmt_upd);
+        mysqli_stmt_close($stmt_upd);
+    }
+}
+
+// Enviar factura por correo si se creó
+if (!empty($factura_id)) {
+    try {
+        $query_f = "SELECT f.*, c.nombre as cliente_nombre, c.email as cliente_email, c.documento as cliente_documento, c.telefono as cliente_telefono, c.direccion as cliente_direccion, p.metodo_pago as pedido_metodo_pago, p.referencia_pago as pedido_referencia_pago, p.observaciones as pedido_observaciones, a.nombre as vendedor_nombre, a.correo as vendedor_email FROM facturas f LEFT JOIN clientes c ON f.cliente_id = c.id LEFT JOIN admin_users a ON f.usuario_id = a.id LEFT JOIN pedidos p ON f.pedido_id = p.id WHERE f.id = ?";
+        $stmt_f = mysqli_prepare($conn, $query_f);
+        mysqli_stmt_bind_param($stmt_f, 'i', $factura_id);
+        mysqli_stmt_execute($stmt_f);
+        $res_f = mysqli_stmt_get_result($stmt_f);
+        $factura_data = mysqli_fetch_assoc($res_f);
+        mysqli_stmt_close($stmt_f);
+        
+        if ($factura_data && !empty($factura_data['cliente_email'])) {
+            $query_d = "SELECT fd.*, p.name as producto_nombre, p.sku FROM factura_detalles fd LEFT JOIN products p ON fd.producto_id = p.id WHERE fd.factura_id = ?";
+            $stmt_d = mysqli_prepare($conn, $query_d);
+            mysqli_stmt_bind_param($stmt_d, 'i', $factura_id);
+            mysqli_stmt_execute($stmt_d);
+            $res_d = mysqli_stmt_get_result($stmt_d);
+            $detalles_data = mysqli_fetch_all($res_d, MYSQLI_ASSOC);
+            mysqli_stmt_close($stmt_d);
+            
+            require_once __DIR__ . '/../usuarios/enviar_factura_email.php';
+            
+            $html = generarHTMLFacturaEmail($factura_data, $detalles_data);
+            enviarCorreo($factura_data['cliente_email'], 'Factura Electrónica #' . $factura_data['numero_factura'] . ' - PIC Sistema', $html, 'PIC Sistema de Facturación');
+        }
+    } catch (Exception $e) {
+        error_log("Error enviando factura email: " . $e->getMessage());
     }
 }
 
@@ -432,6 +509,13 @@ $return_url = '/proyecto/interfaz_usuario/pagina_modernizada.html';
             <p>Hemos recibido tu pedido y lo estamos procesando.</p>
         </div>
         
+        <?php if (in_array($metodo_final, ['efectivo', 'mixto'])): ?>
+        <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 10px; padding: 15px; margin-bottom: 20px; color: #856404;">
+            <i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>
+            <strong>Pago pendiente:</strong> Como el método de pago es <strong><?php echo strtoupper($metodo_final); ?></strong>, debes culminar el pago en la empresa para recibir tu producto. De lo contrario no se entregará el pedido.
+        </div>
+        <?php endif; ?>
+
         <div class="info-card">
             <h3><i class="fas fa-receipt"></i> Detalles del Pedido</h3>
             <div class="info-row"><span class="info-label">Número de Pedido:</span><span class="info-value"><strong><?php echo escapeHtml($numero_pedido); ?></strong></span></div>
