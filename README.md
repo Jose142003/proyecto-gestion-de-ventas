@@ -39,10 +39,10 @@
 - Verificación obligatoria en inicio de sesión admin
 - Activar/desactivar desde el panel de seguridad
 
-### 💬 WhatsApp Business (Nuevo)
-- Integración con WhatsApp Business API (Meta/Cloud API)
+### 💬 Telegram (Nuevo)
+- Integración con Telegram Bot API
 - Notificaciones automáticas de nuevos pedidos
-- Alertas de stock bajo por WhatsApp
+- Alertas de stock bajo por Telegram
 - Configuración desde el panel administrativo
 - Mensajes de prueba para validar la integración
 
@@ -113,7 +113,7 @@ El sistema utiliza 28+ tablas, incluyendo:
 ├── predicciones/       # IA Predictiva - pronósticos y alertas
 ├── 2fa/                # Autenticación de dos factores
 ├── bi/                 # Business Intelligence - analítica avanzada
-└── whatsapp/           # Integración con WhatsApp Business
+└── telegram/           # Integración con Telegram Bot
 ```
 
 ## Tecnologías
