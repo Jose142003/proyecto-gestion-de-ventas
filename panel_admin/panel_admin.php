@@ -2,9 +2,15 @@
 // panel_admin.php - Verificación de sesión ADMIN
 
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../conexion/seguridad.php';
+
+seguridadConfigurarCookies();
+seguridadEnviarHeaders();
 
 // Intentar restaurar sesión desde persist_token si no hay sesión activa
 session_start();
+seguridadVerificarTimeoutSesion();
+seguridadRegenerarSesion();
 if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     if (isset($_COOKIE['persist_token'])) {
         $token_value = base64_decode($_COOKIE['persist_token']);
@@ -34,6 +40,8 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                             $_SESSION['es_admin'] = true;
                             $_SESSION['is_admin'] = true;
                             $_SESSION['user_tipo'] = 'admin';
+                            $_SESSION['_ultimo_acceso'] = time();
+                            $_SESSION['_regenerado_en'] = time();
                             $_SESSION['2fa_verified'] = true;
                         }
                     } catch (PDOException $e) {

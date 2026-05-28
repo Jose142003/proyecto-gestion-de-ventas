@@ -26,6 +26,8 @@ class Database {
     }
 
     public static function setHeaders(): void {
+        seguridadInit();
+
         header('Content-Type: application/json; charset=utf-8');
         header('Access-Control-Allow-Origin: http://localhost');
         header('Access-Control-Allow-Credentials: true');
@@ -68,11 +70,15 @@ function errorResponse(string $message, int $status = 400): void {
 function iniciarSesion(): void {
     if (session_status() !== PHP_SESSION_NONE) return;
 
+    seguridadConfigurarCookies();
+
     $referer = $_SERVER['HTTP_REFERER'] ?? '';
 
     // Si la llamada viene del panel admin, usar sesión por defecto (PHPSESSID)
     if (strpos($referer, '/panel_admin/') !== false || strpos($referer, '/admin/') !== false) {
         @session_start();
+        seguridadVerificarTimeoutSesion();
+        seguridadRegenerarSesion();
         return;
     }
 
@@ -80,12 +86,18 @@ function iniciarSesion(): void {
     if (isset($_COOKIE['CLIENTSESSID'])) {
         session_name('CLIENTSESSID');
         @session_start();
-        if (isset($_SESSION['user_id'])) return;
+        if (isset($_SESSION['user_id'])) {
+            seguridadVerificarTimeoutSesion();
+            seguridadRegenerarSesion();
+            return;
+        }
         @session_write_close();
     }
 
     // Fallback a sesión por defecto (admin/PHPSESSID)
     @session_start();
+    seguridadVerificarTimeoutSesion();
+    seguridadRegenerarSesion();
 }
 
 // ========== CSRF PROTECTION ==========
@@ -213,3 +225,6 @@ function auditoriaRegistrarConDetalle(string $accion, string $modulo, string $de
         logSistema("Error registrando auditoría con detalle: " . $e->getMessage(), 'ERROR');
     }
 }
+
+// ========== SEGURIDAD CENTRALIZADA ==========
+require_once __DIR__ . '/seguridad.php';

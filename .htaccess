@@ -3,14 +3,22 @@
 # ============================================================================
 
 # Proteger archivos sensibles
-<FilesMatch "\.(sql|log|env|lock|md|gitignore)$">
+<FilesMatch "\.(sql|log|env|lock|md|gitignore|json|yml|yaml|xml|dist)$">
+    Require all denied
+</FilesMatch>
+
+# Proteger archivos de configuración y código fuente sensible
+<FilesMatch "^(composer\.(json|lock)|package\.json|tsconfig\.json|phpunit\.xml)">
     Require all denied
 </FilesMatch>
 
 # Proteger directorios sensibles
 RedirectMatch 404 /\.git
+RedirectMatch 404 /\.env
 RedirectMatch 404 /vendor/phpunit
 RedirectMatch 404 /src
+RedirectMatch 404 /node_modules
+RedirectMatch 404 /\.phpunit
 
 # Desactivar listado de directorios
 Options -Indexes
@@ -22,6 +30,7 @@ Options -Indexes
     Header always set X-XSS-Protection "1; mode=block"
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
     Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
 </IfModule>
 
 # Forzar UTF-8
@@ -44,6 +53,17 @@ AddDefaultCharset UTF-8
 # PHP - Desactivar exposición de versión
 <IfModule mod_php.c>
     php_flag expose_php Off
+    php_flag display_errors Off
+    php_flag log_errors On
+</IfModule>
+
+# Prevenir hotlinking de imágenes
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{HTTP_REFERER} !^$
+    RewriteCond %{HTTP_REFERER} !^https?://(localhost|127\.0\.0\.1) [NC]
+    RewriteCond %{HTTP_REFERER} !^https?://([a-z0-9-]+\.)*github\.io [NC]
+    RewriteRule \.(jpg|jpeg|png|gif|webp|svg|ico)$ - [NC,F,L]
 </IfModule>
 
 # Permitir PHP en pagina_modernizada.html
@@ -51,3 +71,8 @@ AddDefaultCharset UTF-8
     RewriteEngine On
     RewriteRule ^interfaz_usuario/pagina_modernizada\.html$ /proyecto/interfaz_usuario/pagina_modernizada_check.php [L,QSA]
 </IfModule>
+
+# Negar acceso a archivos que empiezan con punto (_.gitignore, .htaccess, etc.)
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>

@@ -8,13 +8,18 @@ ini_set('display_errors', 0);
 
 header('Content-Type: application/json');
 
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../conexion/seguridad.php';
+
+// Verificar bloqueo por IP y rate limit antes de procesar login
+seguridadVerificarBloqueoIp();
+seguridadVerificarRateLimit();
+
 // Configurar sesión para persistencia
 ini_set('session.cookie_httponly', 1);
 ini_set('session.use_only_cookies', 1);
 ini_set('session.cookie_secure', 0);
 ini_set('session.cookie_samesite', 'Lax');
-
-require_once __DIR__ . '/../config/database.php';
 
 try {
     $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8", DB_USER, DB_PASS);
@@ -114,6 +119,7 @@ try {
             
                 if (!verificarPassword($password, $user['password'], $pdo, $user['id'], 'admin_users')) {
                     $attempts['count']++;
+                    seguridadRegistrarIntentoFallido('login_admin');
                     echo json_encode(["success" => false, "message" => "Credenciales de administrador incorrectas"]);
                     exit;
                 }
@@ -135,12 +141,14 @@ try {
             
             if (!$user['is_active'] || $user['estado'] !== 'activo') {
                     $attempts['count']++;
+                    seguridadRegistrarIntentoFallido('login_cliente_inactivo');
                     echo json_encode(["success" => false, "message" => "Usuario inactivo"]);
                     exit;
                 }
                 
                 if (!password_verify($password, $user['password'])) {
                     $attempts['count']++;
+                    seguridadRegistrarIntentoFallido('login_cliente');
                     echo json_encode(["success" => false, "message" => "Credenciales incorrectas"]);
                     exit;
                 }
@@ -166,6 +174,7 @@ try {
             
                 if (!verificarPassword($password, $user['password'], $pdo, $user['id'], 'admin_users')) {
                     $attempts['count']++;
+                    seguridadRegistrarIntentoFallido('login_admin');
                     echo json_encode(["success" => false, "message" => "Credenciales incorrectas"]);
                     exit;
                 }
@@ -200,6 +209,7 @@ try {
     
     if (!$user) {
         $attempts['count']++;
+        seguridadRegistrarIntentoFallido('login_no_encontrado');
         echo json_encode(["success" => false, "message" => "Credenciales incorrectas"]);
         exit;
     }
@@ -261,6 +271,8 @@ try {
     session_regenerate_id(true);
 
     // ========== VARIABLES OBLIGATORIAS ==========
+    $_SESSION['_ultimo_acceso'] = time();
+    $_SESSION['_regenerado_en'] = time();
     $_SESSION['loggedin'] = true;
     $_SESSION['user_id'] = $user['id'];
     $_SESSION['user_nombre'] = $user['nombre'];
