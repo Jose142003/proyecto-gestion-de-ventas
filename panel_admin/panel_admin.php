@@ -1706,6 +1706,7 @@ try {
                 <div class="menu-item" data-section="comprasSection"><i class="fas fa-shopping-cart"></i> Compras</div>
                 <div class="menu-section-title">Ventas</div>
                 <div class="menu-item" data-section="pedidosSection"><i class="fas fa-clipboard-list"></i> Pedidos</div>
+                <div class="menu-item" data-section="cotizacionesSection"><i class="fas fa-file-signature"></i> Cotizaciones</div>
                 <div class="menu-item" data-section="facturacionSection"><i class="fas fa-file-invoice-dollar"></i> Facturacion</div>
                 <div class="menu-item" data-section="cajaSection"><i class="fas fa-cash-register"></i> Caja / Arqueo</div>
                 <div class="menu-section-title">Herramientas</div>
@@ -1725,6 +1726,7 @@ try {
                 <div class="menu-item" data-section="configuracionSection"><i class="fas fa-cog"></i> Configuracion</div>
                 <div class="menu-item" data-section="telegramSection"><i class="fab fa-telegram"></i> Telegram</div>
                 <div class="menu-item" data-section="backupSection"><i class="fas fa-database"></i> Backup</div>
+                <div class="menu-item" data-section="marketingSection"><i class="fas fa-bullhorn"></i> Marketing</div>
                 <div class="menu-item" data-section="reporteStockSection"><i class="fas fa-chart-simple"></i> Reporte de Stock</div>
                 <div class="menu-section-title">Seguridad</div>
                 <div class="menu-item" data-section="seguridad2faSection"><i class="fas fa-shield-alt"></i> Autenticación 2FA</div>
@@ -1741,7 +1743,7 @@ try {
                     <div class="card"><div class="card-header"><h3 class="card-title">Usuarios</h3><div class="card-icon" style="background: var(--info);"><i class="fas fa-users"></i></div></div><div class="card-content" id="totalUsers">0</div><div class="card-footer">Usuarios registrados</div></div>
                     <div class="card"><div class="card-header"><h3 class="card-title">Productos</h3><div class="card-icon" style="background: var(--success);"><i class="fas fa-boxes"></i></div></div><div class="card-content" id="totalProducts">0</div><div class="card-footer">Productos en inventario</div></div>
                     <div class="card"><div class="card-header"><h3 class="card-title">Pedidos</h3><div class="card-icon" style="background: var(--purple);"><i class="fas fa-shopping-cart"></i></div></div><div class="card-content" id="totalPedidos">0</div><div class="card-footer">Pendientes: <span id="pedidosPendientes">0</span></div></div>
-                    <div class="card"><div class="card-header"><h3 class="card-title">Ventas Hoy</h3><div class="card-icon" style="background: var(--orange);"><i class="fas fa-chart-line"></i></div></div><div class="card-content" id="ventasHoy">Bs. 0</div><div class="card-footer">Facturas emitidas</div></div>
+                    <div class="card"><div class="card-header"><h3 class="card-title">Facturas Emitidas</h3><div class="card-icon" style="background: var(--orange);"><i class="fas fa-file-invoice"></i></div></div><div class="card-content" id="facturasHoy">0</div><div class="card-footer">Facturas emitidas hoy</div></div>
                 </div>
                 <div class="dashboard-stats">
                     <div class="stat-card"><div class="stat-value" id="totalVentas">Bs. 0</div><div class="stat-label">Ventas Totales</div></div>
@@ -1822,8 +1824,10 @@ try {
                 <div class="table-container">
                     <div class="table-header">
                         <h3><i class="fas fa-users"></i> Gestión de Usuarios</h3>
-                        <div style="display: flex; gap: 10px;">
-                            <input type="text" id="searchUsers" placeholder="Buscar usuario..." class="form-control" style="width: 250px;">
+                        <div style="display: flex; gap: 8px; align-items:center;">
+                            <input type="text" id="searchUsers" placeholder="Buscar usuario..." class="form-control" style="width: 200px;">
+                            <button class="btn-primary" onclick="imprimirTabla('usersList')" style="background:var(--purple);padding:6px 10px;font-size:0.8rem"><i class="fas fa-print"></i></button>
+                            <button class="btn-primary" onclick="exportarExcel('usersList','Usuarios')" style="background:var(--success);padding:6px 10px;font-size:0.8rem"><i class="fas fa-file-excel"></i></button>
                             <button class="btn-primary" id="addUserBtn" style="margin-left:0"><i class="fas fa-plus"></i> Nuevo</button>
                         </div>
                     </div>
@@ -1836,13 +1840,15 @@ try {
                 <div class="table-container">
                     <div class="table-header">
                         <h3><i class="fas fa-boxes"></i> Gestión de Productos</h3>
-                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                            <input type="text" id="searchProducts" placeholder="Buscar producto..." class="form-control" style="width: 200px;">
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items:center;">
+                            <input type="text" id="searchProducts" placeholder="Buscar producto..." class="form-control" style="width: 180px;">
                             <div class="filtro-botones">
                                 <button class="btn-filtro btn-filtro-active" id="filtroTodos" data-filtro="todos"><i class="fas fa-list"></i> Todos</button>
                                 <button class="btn-filtro btn-filtro-inactive" id="filtroVisibles" data-filtro="visibles"><i class="fas fa-eye"></i> Visibles</button>
                                 <button class="btn-filtro btn-filtro-inactive" id="filtroOcultos" data-filtro="ocultos"><i class="fas fa-eye-slash"></i> Ocultos</button>
                             </div>
+                            <button class="btn-primary" onclick="imprimirTabla('productsList')" style="background:var(--purple);padding:6px 10px;font-size:0.8rem"><i class="fas fa-print"></i></button>
+                            <button class="btn-primary" onclick="exportarExcel('productsList','Productos')" style="background:var(--success);padding:6px 10px;font-size:0.8rem"><i class="fas fa-file-excel"></i></button>
                             <button class="btn-primary" id="addProductBtn"><i class="fas fa-plus"></i> Nuevo Producto</button>
                             <button class="btn-primary" id="btnActualizarProductos" style="background: var(--info);"><i class="fas fa-sync-alt"></i> Actualizar</button>
                         </div>
@@ -1861,8 +1867,10 @@ try {
                 <div class="table-container">
                     <div class="table-header">
                         <h3><i class="fas fa-truck"></i> Proveedores</h3>
-                        <div style="display: flex; gap: 10px;">
-                            <input type="text" id="searchProveedores" placeholder="Buscar proveedor..." class="form-control" style="width: 250px;">
+                        <div style="display: flex; gap: 8px; align-items:center;">
+                            <input type="text" id="searchProveedores" placeholder="Buscar proveedor..." class="form-control" style="width: 200px;">
+                            <button class="btn-primary" onclick="imprimirTabla('proveedoresList')" style="background:var(--purple);padding:6px 10px;font-size:0.8rem"><i class="fas fa-print"></i></button>
+                            <button class="btn-primary" onclick="exportarExcel('proveedoresList','Proveedores')" style="background:var(--success);padding:6px 10px;font-size:0.8rem"><i class="fas fa-file-excel"></i></button>
                             <button class="btn-primary" id="addProveedorBtn"><i class="fas fa-plus"></i> Nuevo</button>
                         </div>
                     </div>
@@ -1875,8 +1883,10 @@ try {
                 <div class="table-container">
                     <div class="table-header">
                         <h3><i class="fas fa-shopping-cart"></i> Ordenes de Compra</h3>
-                        <div style="display: flex; gap: 10px;">
-                            <input type="text" id="searchCompras" placeholder="Buscar compra..." class="form-control" style="width: 250px;">
+                        <div style="display: flex; gap: 8px; align-items:center;">
+                            <input type="text" id="searchCompras" placeholder="Buscar compra..." class="form-control" style="width: 200px;">
+                            <button class="btn-primary" onclick="imprimirTabla('comprasList')" style="background:var(--purple);padding:6px 10px;font-size:0.8rem"><i class="fas fa-print"></i></button>
+                            <button class="btn-primary" onclick="exportarExcel('comprasList','Compras')" style="background:var(--success);padding:6px 10px;font-size:0.8rem"><i class="fas fa-file-excel"></i></button>
                             <button class="btn-primary" id="addCompraBtn"><i class="fas fa-plus"></i> Nueva Compra</button>
                         </div>
                     </div>
@@ -1907,14 +1917,16 @@ try {
                 <div class="table-container">
                     <div class="table-header">
                         <h3><i class="fas fa-clipboard-list"></i> Pedidos</h3>
-                        <div class="filtros">
-                            <select id="filtroEstadoPedido" class="form-control">
+                        <div class="filtros" style="display:flex;gap:8px;align-items:center">
+                            <select id="filtroEstadoPedido" class="form-control" style="width:auto">
                                 <option value="">Todos</option>
                                 <option value="pendiente">Pendientes</option>
                                 <option value="facturado">Facturados</option>
                                 <option value="completado">Completados</option>
                                 <option value="cancelado">Cancelados</option>
                             </select>
+                            <button class="btn-primary" onclick="imprimirTabla('pedidosList')" style="background:var(--purple);padding:6px 10px;font-size:0.8rem"><i class="fas fa-print"></i></button>
+                            <button class="btn-primary" onclick="exportarExcel('pedidosList','Pedidos')" style="background:var(--success);padding:6px 10px;font-size:0.8rem"><i class="fas fa-file-excel"></i></button>
                             <button class="btn-primary" id="btnFacturarPedido" style="background:var(--success)"><i class="fas fa-file-invoice"></i> Facturar Seleccionado</button>
                         </div>
                     </div>
@@ -1929,17 +1941,148 @@ try {
                 </div>
             </div>
 
+            <!-- COTIZACIONES Section -->
+            <div id="cotizacionesSection" class="content-section">
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3><i class="fas fa-file-signature"></i> Cotizaciones - CRM</h3>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap">
+                            <input type="text" id="buscarCotizacion" placeholder="Buscar cotización..." class="form-control" style="width:200px">
+                            <select id="filtroEstadoCotizacion" class="form-control">
+                                <option value="">Todos los estados</option>
+                                <option value="pendiente">Pendiente</option>
+                                <option value="aprobada">Aprobada</option>
+                                <option value="rechazada">Rechazada</option>
+                                <option value="vencida">Vencida</option>
+                                <option value="convertida">Convertida</option>
+                            </select>
+                            <input type="date" id="cotizacionFechaDesde" class="form-control">
+                            <input type="date" id="cotizacionFechaHasta" class="form-control">
+                            <button class="btn-primary" id="btnFiltrarCotizaciones" style="background:var(--info)"><i class="fas fa-filter"></i> Filtrar</button>
+                            <button class="btn-primary" id="btnNuevaCotizacion"><i class="fas fa-plus"></i> Nueva Cotización</button>
+                            <button class="btn-primary" onclick="imprimirTabla('cotizacionesBody')" style="background:var(--purple)"><i class="fas fa-print"></i></button>
+                            <button class="btn-primary" onclick="exportarExcel('cotizacionesBody','Cotizaciones')" style="background:var(--success)"><i class="fas fa-file-excel"></i></button>
+                        </div>
+                    </div>
+                    <div class="table-content">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>N° Cotización</th><th>Cliente</th><th>Email</th><th>Teléfono</th><th>Total</th><th>Estado</th><th>Vendedor</th><th>Fecha</th><th>Vencimiento</th><th>Acciones</th></tr>
+                            </thead>
+                            <tbody id="cotizacionesBody"><tr><td colspan="10" style="text-align:center">Cargando...</tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Cotización -->
+            <div id="cotizacionModal" class="modal" style="display:none">
+                <div class="modal-content" style="max-width:800px">
+                    <div class="modal-header">
+                        <h3 id="cotizacionModalTitle"><i class="fas fa-file-signature"></i> Nueva Cotización</h3>
+                        <span class="modal-close" onclick="cerrarModalCotizacion()">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="editCotizacionId">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:15px">
+                            <div>
+                                <label>Nombre del Cliente *</label>
+                                <input type="text" id="cotClienteNombre" class="form-control" required>
+                            </div>
+                            <div>
+                                <label>Email</label>
+                                <input type="email" id="cotClienteEmail" class="form-control">
+                            </div>
+                            <div>
+                                <label>Teléfono</label>
+                                <input type="text" id="cotClienteTelefono" class="form-control">
+                            </div>
+                            <div>
+                                <label>Fecha de Vencimiento</label>
+                                <input type="date" id="cotFechaVencimiento" class="form-control">
+                            </div>
+                            <div style="grid-column:1/-1">
+                                <label>Dirección</label>
+                                <input type="text" id="cotClienteDireccion" class="form-control">
+                            </div>
+                        </div>
+
+                        <h4 style="margin-bottom:10px">Productos</h4>
+                        <div style="display:flex;gap:8px;margin-bottom:10px">
+                            <select id="cotProductoSelect" class="form-control" style="flex:2">
+                                <option value="">Seleccionar producto existente...</option>
+                            </select>
+                            <input type="text" id="cotProductoNombre" class="form-control" placeholder="O escribir nombre..." style="flex:2">
+                            <input type="number" id="cotProductoCantidad" class="form-control" placeholder="Cantidad" value="1" min="1" style="width:80px">
+                            <input type="number" id="cotProductoPrecio" class="form-control" placeholder="Precio Bs." step="0.01" min="0" style="width:120px">
+                            <button class="btn-primary" id="btnAgregarItemCotizacion" style="background:var(--success)"><i class="fas fa-plus"></i></button>
+                        </div>
+                        <table class="data-table" style="margin-bottom:15px">
+                            <thead><tr><th>Producto</th><th>Cantidad</th><th>Precio Unit.</th><th>Subtotal</th><th>Acción</th></tr></thead>
+                            <tbody id="cotizacionItemsBody"></tbody>
+                        </table>
+                        <div style="text-align:right;margin-bottom:15px">
+                            <div>Subtotal: <strong id="cotSubtotal">Bs. 0.00</strong></div>
+                            <div>IVA: <strong id="cotIva">Bs. 0.00</strong></div>
+                            <div style="font-size:1.2rem">Total: <strong id="cotTotal">Bs. 0.00</strong></div>
+                        </div>
+                        <div>
+                            <label>Notas</label>
+                            <textarea id="cotNotas" class="form-control" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-primary" onclick="cerrarModalCotizacion()" style="background:var(--danger)">Cancelar</button>
+                        <button class="btn-primary" id="btnGuardarCotizacion" style="background:var(--success)"><i class="fas fa-save"></i> Guardar Cotización</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Seguimiento Cotización -->
+            <div id="seguimientoModal" class="modal" style="display:none">
+                <div class="modal-content" style="max-width:500px">
+                    <div class="modal-header">
+                        <h3><i class="fas fa-history"></i> Seguimiento de Cotización</h3>
+                        <span class="modal-close" onclick="document.getElementById('seguimientoModal').style.display='none'">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="segCotizacionId">
+                        <div style="margin-bottom:15px">
+                            <label>Cambiar Estado</label>
+                            <select id="segNuevoEstado" class="form-control">
+                                <option value="pendiente">Pendiente</option>
+                                <option value="aprobada">Aprobada</option>
+                                <option value="rechazada">Rechazada</option>
+                                <option value="vencida">Vencida</option>
+                                <option value="convertida">Convertida</option>
+                            </select>
+                        </div>
+                        <div style="margin-bottom:15px">
+                            <label>Nota de seguimiento</label>
+                            <textarea id="segNota" class="form-control" rows="3" placeholder="Agregar nota sobre esta cotización..."></textarea>
+                        </div>
+                        <div id="segHistorial" style="max-height:200px;overflow-y:auto;background:var(--secondary-color);padding:10px;border-radius:6px;font-size:0.85rem"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-primary" onclick="document.getElementById('seguimientoModal').style.display='none'" style="background:var(--danger)">Cerrar</button>
+                        <button class="btn-primary" id="btnGuardarSeguimiento" style="background:var(--info)"><i class="fas fa-save"></i> Actualizar Estado</button>
+                    </div>
+                </div>
+            </div>
+
             <!-- FACTURACION Section -->
             <div id="facturacionSection" class="content-section">
                 <div class="table-container">
                     <div class="table-header">
                         <h3><i class="fas fa-file-invoice-dollar"></i> Facturas</h3>
-                        <div style="display: flex; gap: 10px;">
-                            <input type="text" id="searchFacturas" placeholder="Buscar factura..." class="form-control" style="width: 250px;">
-                            <div>
-                                <button class="btn-primary" id="btnListarFacturas" style="background: var(--info);"><i class="fas fa-list"></i> Listar Facturas</button>
-                                <button class="btn-primary" id="btnNuevaFactura"><i class="fas fa-plus"></i> Nueva Factura</button>
-                                <button class="btn-primary" id="btnActualizarFacturas" style="margin-left:10px"><i class="fas fa-sync"></i> Actualizar</button>
+                        <div style="display: flex; gap: 8px; align-items:center; flex-wrap:wrap;">
+                            <input type="text" id="searchFacturas" placeholder="Buscar factura..." class="form-control" style="width: 180px;">
+                            <button class="btn-primary" onclick="imprimirTabla('facturasList')" style="background:var(--purple);padding:6px 10px;font-size:0.8rem"><i class="fas fa-print"></i></button>
+                            <button class="btn-primary" onclick="exportarExcel('facturasList','Facturas')" style="background:var(--success);padding:6px 10px;font-size:0.8rem"><i class="fas fa-file-excel"></i></button>
+                            <div style="display:flex;gap:5px;flex-wrap:wrap">
+                                <button class="btn-primary" id="btnListarFacturas" style="background: var(--info);"><i class="fas fa-list"></i> Listar</button>
+                                <button class="btn-primary" id="btnNuevaFactura"><i class="fas fa-plus"></i> Nueva</button>
+                                <button class="btn-primary" id="btnActualizarFacturas" style="margin-left:0"><i class="fas fa-sync"></i> Actualizar</button>
                             </div>
                         </div>
                     </div>
@@ -1962,7 +2105,7 @@ try {
                     <div class="resumen-card"><div class="resumen-value" id="cajaTotal">Bs. 0</div><div class="resumen-label">Total</div></div>
                 </div>
                 <div class="table-container">
-                    <div class="table-header"><h3><i class="fas fa-cash-register"></i> Movimientos</h3><div><button class="btn-primary" id="btnAbrirCaja" style="background:var(--success)"><i class="fas fa-unlock"></i> Abrir Caja</button><button class="btn-primary" id="btnCerrarCaja" style="background:var(--danger)"><i class="fas fa-lock"></i> Cerrar Caja</button><button class="btn-primary" id="btnRegistrarMovimiento" style="background:var(--info)"><i class="fas fa-plus"></i> Movimiento</button></div></div>
+                    <div class="table-header"><h3><i class="fas fa-cash-register"></i> Movimientos</h3><div style="display:flex;gap:5px;flex-wrap:wrap"><button class="btn-primary" onclick="imprimirTabla('cajaMovimientosList')" style="background:var(--purple);padding:6px 10px;font-size:0.8rem"><i class="fas fa-print"></i></button><button class="btn-primary" onclick="exportarExcel('cajaMovimientosList','Caja_Movimientos')" style="background:var(--success);padding:6px 10px;font-size:0.8rem"><i class="fas fa-file-excel"></i></button><button class="btn-primary" id="btnAbrirCaja" style="background:var(--success)"><i class="fas fa-unlock"></i> Abrir Caja</button><button class="btn-primary" id="btnCerrarCaja" style="background:var(--danger)"><i class="fas fa-lock"></i> Cerrar Caja</button><button class="btn-primary" id="btnRegistrarMovimiento" style="background:var(--info)"><i class="fas fa-plus"></i> Movimiento</button></div></div>
                     <div class="table-content">
                         <table class="data-table">
                             <thead><tr><th>Fecha</th><th>Tipo</th><th>Categoria</th><th>Monto</th><th>Descripcion</th><th>Usuario</th></tr></thead>
@@ -1976,7 +2119,7 @@ try {
             <div id="ventasClienteSection" class="content-section">
                 <div class="resumen-cards"><div class="resumen-card"><div class="resumen-value" id="clientesTotal">0</div><div class="resumen-label">Total Clientes</div></div><div class="resumen-card"><div class="resumen-value" id="ventasClienteTotal">0</div><div class="resumen-label">Total Ventas</div></div><div class="resumen-card"><div class="resumen-value" id="montoClienteTotal">Bs. 0</div><div class="resumen-label">Monto Total</div></div></div>
                 <div class="table-container">
-                    <div class="table-header"><h3>Ventas por Cliente</h3><div><input type="text" id="buscarCliente" placeholder="Buscar..." class="form-control"></div></div>
+                    <div class="table-header"><h3>Ventas por Cliente</h3><div style="display:flex;gap:8px"><input type="text" id="buscarCliente" placeholder="Buscar..." class="form-control"><button class="btn-primary" onclick="imprimirTabla('ventasClienteBody')" style="background:var(--purple)"><i class="fas fa-print"></i></button><button class="btn-primary" onclick="exportarExcel('ventasClienteBody','Ventas_por_Cliente')" style="background:var(--success)"><i class="fas fa-file-excel"></i></button></div></div>
                     <div class="table-content">
                         <table class="data-table">
                             <thead><tr><th>ID</th><th>Cliente</th><th>Email</th><th>Telefono</th><th>Ventas</th><th>Productos</th><th>Monto</th><th>Ultima Compra</th><th>Acciones</th></tr></thead>
@@ -2000,6 +2143,8 @@ try {
                             <select id="filtroVendedor" class="form-control">
                                 <option value="">Todos los vendedores</option>
                             </select>
+                            <button class="btn-primary" onclick="imprimirTabla('ventasVendedorBody')" style="background:var(--purple)"><i class="fas fa-print"></i></button>
+                            <button class="btn-primary" onclick="exportarExcel('ventasVendedorBody','Ventas_por_Vendedor')" style="background:var(--success)"><i class="fas fa-file-excel"></i></button>
                             <button class="btn-primary" id="btnActualizarVendedores" style="margin-left:10px; background: var(--info);"><i class="fas fa-sync-alt"></i> Actualizar</button>
                         </div>
                     </div>
@@ -2028,7 +2173,7 @@ try {
             <!-- Productos mas Vendidos Section -->
             <div id="productosVendidosSection" class="content-section">
                 <div class="table-container">
-                    <div class="table-header"><h3><i class="fas fa-chart-bar"></i> Productos mas Vendidos</h3></div>
+                    <div class="table-header"><h3><i class="fas fa-chart-bar"></i> Productos mas Vendidos</h3><div><button class="btn-primary" onclick="imprimirTabla('productosVendidosBody')" style="background:var(--purple)"><i class="fas fa-print"></i></button><button class="btn-primary" onclick="exportarExcel('productosVendidosBody','Productos_mas_Vendidos')" style="background:var(--success)"><i class="fas fa-file-excel"></i></button></div></div>
                     <div class="table-content">
                         <table class="data-table">
                             <thead><tr><th>ID</th><th>Producto</th><th>Categoria</th><th>Veces Vendido</th><th>Unidades</th><th>Ingresos</th><th>Stock</th></tr></thead>
@@ -2056,6 +2201,7 @@ try {
                             <select id="filtroCategoriaStock" class="form-control"><option value="">Todas las categorías</option></select>
                             <select id="filtroEstadoStock" class="form-control"><option value="">Todos los estados</option><option value="critico">Stock Crítico (≤5)</option><option value="bajo">Stock Bajo (≤10)</option><option value="normal">Stock Normal (>10)</option><option value="agotado">Agotados</option></select>
                             <button class="btn-primary" id="btnFiltrarStock"><i class="fas fa-filter"></i> Filtrar</button>
+                            <button class="btn-primary" onclick="imprimirTabla('reporteStockBody')" style="background:var(--purple);padding:6px 10px;font-size:0.8rem"><i class="fas fa-print"></i></button>
                             <button class="btn-primary" id="btnExportarStock" style="background: var(--success);"><i class="fas fa-file-excel"></i> Exportar</button>
                             <button class="btn-primary" id="btnActualizarStock" style="background: var(--info);"><i class="fas fa-sync-alt"></i> Actualizar</button>
                             <button class="btn-primary" id="btnNotificarTelegramStock" style="background: var(--danger);"><i class="fab fa-telegram"></i> Notificar por Telegram</button>
@@ -2086,6 +2232,7 @@ try {
                             <input type="date" id="fechaHastaHistorial" class="form-control">
                             <select id="estadoHistorial" class="form-control"><option value="">Todos los estados</option><option value="pendiente">Pendiente</option><option value="completado">Completado</option><option value="facturado">Facturado</option><option value="cancelado">Cancelado</option></select>
                             <button class="btn-primary" id="btnFiltrarHistorial"><i class="fas fa-filter"></i> Filtrar</button>
+                            <button class="btn-primary" onclick="imprimirTabla('historialComprasBody')" style="background:var(--purple);padding:6px 10px;font-size:0.8rem"><i class="fas fa-print"></i></button>
                             <button class="btn-primary" id="btnExportarHistorial" style="background:var(--success)"><i class="fas fa-file-excel"></i> Exportar</button>
                         </div>
                     </div>
@@ -2150,7 +2297,7 @@ try {
                     <div class="filtro-group" style="justify-content: flex-end;"><button class="btn-primary" id="btnAplicarFiltrosEspecificos" style="margin-top: auto;"><i class="fas fa-search"></i> Aplicar Filtros</button></div>
                 </div>
                 <div class="table-container">
-                    <div class="table-header"><h3><i class="fas fa-table"></i> Resultados del Reporte <span id="espTituloReporte">- Ventas</span></h3><div><button class="btn-primary" id="btnExportarEspecificoPDF" style="background: var(--danger);"><i class="fas fa-file-pdf"></i> PDF</button><button class="btn-primary" id="btnExportarEspecificoExcel" style="background: var(--success);"><i class="fas fa-file-excel"></i> Excel</button></div></div>
+                    <div class="table-header"><h3><i class="fas fa-table"></i> Resultados del Reporte <span id="espTituloReporte">- Ventas</span></h3><div style="display:flex;gap:5px"><button class="btn-primary" onclick="imprimirTabla('espTablaBody')" style="background:var(--purple);padding:6px 10px;font-size:0.8rem"><i class="fas fa-print"></i></button><button class="btn-primary" id="btnExportarEspecificoPDF" style="background: var(--danger);"><i class="fas fa-file-pdf"></i> PDF</button><button class="btn-primary" id="btnExportarEspecificoExcel" style="background: var(--success);"><i class="fas fa-file-excel"></i> Excel</button></div></div>
                     <div class="table-content"><table class="data-table"><thead id="espTablaHeaders"><tr><th>ID</th><th>Fecha</th><th>Cliente/Vendedor</th><th>Total</th><th>Estado</th><th>Método Pago</th></tr></thead><tbody id="espTablaBody"><tr><td colspan="6" style="text-align:center">Selecciona filtros y presiona "Aplicar Filtros"</tbody></table></div>
                 </div>
                 <div class="resumen-cards" id="espResumenCards" style="margin-top: 20px; display: none;">
@@ -2185,6 +2332,8 @@ try {
                                 <option value="facturacion">Facturacion</option>
                             </select>
                             <button class="btn-primary" id="btnFiltrarAuditoria"><i class="fas fa-filter"></i> Filtrar</button>
+                            <button class="btn-primary" onclick="imprimirTabla('auditoriaBody')" style="background:var(--purple)"><i class="fas fa-print"></i></button>
+                            <button class="btn-primary" onclick="exportarExcel('auditoriaBody','Auditoria')" style="background:var(--success)"><i class="fas fa-file-excel"></i></button>
                         </div>
                     </div>
                     <div class="table-content">
@@ -2243,7 +2392,11 @@ try {
                 <div class="table-container">
                     <div class="table-header">
                         <h3><i class="fas fa-cog"></i> Configuración del Sistema</h3>
-                        <button class="btn-primary" id="btnGuardarConfig"><i class="fas fa-save"></i> Guardar Cambios</button>
+                        <div style="display:flex;gap:8px">
+                            <button class="btn-primary" onclick="imprimirTabla('configuracionBody')" style="background:var(--purple);padding:6px 10px;font-size:0.8rem"><i class="fas fa-print"></i></button>
+                            <button class="btn-primary" onclick="exportarExcel('configuracionBody','Configuracion')" style="background:var(--success);padding:6px 10px;font-size:0.8rem"><i class="fas fa-file-excel"></i></button>
+                            <button class="btn-primary" id="btnGuardarConfig"><i class="fas fa-save"></i> Guardar Cambios</button>
+                        </div>
                     </div>
                     <div class="table-content">
                         <table class="data-table">
@@ -2257,8 +2410,30 @@ try {
             <!-- Backup Section -->
             <div id="backupSection" class="content-section">
                 <div class="table-container">
-                    <div class="table-header"><h3><i class="fas fa-database"></i> Copias de Seguridad</h3><button class="btn-primary" id="btnCrearBackup"><i class="fas fa-plus"></i> Crear Backup</button></div>
+                    <div class="table-header"><h3><i class="fas fa-database"></i> Copias de Seguridad</h3><div style="display:flex;gap:8px"><button class="btn-primary" onclick="imprimirTabla('backupsList')" style="background:var(--purple);padding:6px 10px;font-size:0.8rem"><i class="fas fa-print"></i></button><button class="btn-primary" onclick="exportarExcel('backupsList','Backups')" style="background:var(--success);padding:6px 10px;font-size:0.8rem"><i class="fas fa-file-excel"></i></button><button class="btn-primary" id="btnCrearBackup"><i class="fas fa-plus"></i> Crear Backup</button></div></div>
                     <div class="table-content"><table class="data-table"><thead><tr><th>ID</th><th>Archivo</th><th>Tamaño</th><th>Tipo</th><th>Fecha</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="backupsList"><tr><td colspan="7" style="text-align:center">Cargando...</tbody></table></div>
+                </div>
+            </div>
+
+            <!-- Marketing / Recomendaciones Section -->
+            <div id="marketingSection" class="content-section">
+                <div class="header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+                    <h3><i class="fas fa-bullhorn"></i> Marketing - Recomendaciones a Clientes</h3>
+                    <div style="display:flex;gap:8px">
+                        <button class="btn-primary" id="btnEnviarRecomendaciones" style="background:var(--success)"><i class="fas fa-paper-plane"></i> Enviar Recomendaciones</button>
+                        <button class="btn-primary" id="btnHistorialEnvios" style="background:var(--info)"><i class="fas fa-sync-alt"></i> Actualizar</button>
+                    </div>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:20px">
+                    <div class="kpi-card"><div class="kpi-icon"><i class="fas fa-envelope"></i></div><div class="kpi-value" id="marketingTotalEnvios">0</div><div class="kpi-label">Total Envíos</div></div>
+                    <div class="kpi-card"><div class="kpi-icon"><i class="fas fa-star"></i></div><div class="kpi-value" id="marketingRecomendaciones">0</div><div class="kpi-label">Recomendaciones</div></div>
+                    <div class="kpi-card"><div class="kpi-icon"><i class="fas fa-box"></i></div><div class="kpi-value" id="marketingNuevosProductos">0</div><div class="kpi-label">Nuevos Productos</div></div>
+                    <div class="kpi-card"><div class="kpi-icon"><i class="fas fa-poll"></i></div><div class="kpi-value" id="marketingEncuestas">0</div><div class="kpi-label">Encuestas</div></div>
+                </div>
+                <div class="table-container">
+                    <div class="table-header"><h3><i class="fas fa-history"></i> Historial de Envíos</h3>
+                    <div style="display:flex;gap:8px"><button class="btn-primary" onclick="imprimirTabla('enviosRecomendacionesBody')" style="background:var(--purple);padding:6px 10px;font-size:0.8rem"><i class="fas fa-print"></i></button><button class="btn-primary" onclick="exportarExcel('enviosRecomendacionesBody','Historial_Marketing')" style="background:var(--success);padding:6px 10px;font-size:0.8rem"><i class="fas fa-file-excel"></i></button></div></div>
+                    <div class="table-content"><table class="data-table"><thead><tr><th>ID</th><th>Email</th><th>Tipo</th><th>Asunto</th><th>Fecha</th></tr></thead><tbody id="enviosRecomendacionesBody"><tr><td colspan="5" style="text-align:center">Cargando...</tbody></table></div>
                 </div>
             </div>
 
@@ -2278,7 +2453,7 @@ try {
                 </div>
                 <div class="chart-container"><div class="chart-title"><i class="fas fa-chart-bar"></i> Pronóstico vs Real (Este Mes)</div><canvas id="prediccionesChart" style="max-height:300px;width:100%"></canvas></div>
                 <div class="table-container" style="margin-top:20px">
-                    <div class="table-header"><h3><i class="fas fa-boxes"></i> Predicciones por Producto</h3><div class="filtros"><input type="text" id="searchPredicciones" placeholder="Buscar producto..." class="form-control" style="width:200px"></div></div>
+                    <div class="table-header"><h3><i class="fas fa-boxes"></i> Predicciones por Producto</h3><div class="filtros" style="display:flex;gap:8px;align-items:center"><input type="text" id="searchPredicciones" placeholder="Buscar producto..." class="form-control" style="width:200px"><button class="btn-primary" onclick="imprimirTabla('prediccionesBody')" style="background:var(--purple);padding:6px 10px;font-size:0.8rem"><i class="fas fa-print"></i></button><button class="btn-primary" onclick="exportarExcel('prediccionesBody','Predicciones')" style="background:var(--success);padding:6px 10px;font-size:0.8rem"><i class="fas fa-file-excel"></i></button></div></div>
                     <div class="table-content"><table class="data-table"><thead><tr><th>Producto</th><th>SKU</th><th>Categoría</th><th>Stock Actual</th><th>Ventas Esperadas</th><th>Stock Sugerido</th><th>Tendencia</th><th>Confianza</th><th>Días para Agotar</th><th>Estado</th></tr></thead><tbody id="prediccionesBody"><tr><td colspan="10" style="text-align:center">Generando predicciones...</tbody></table></div>
                 </div>
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:20px;margin-top:20px">
@@ -2291,9 +2466,17 @@ try {
             <div id="biDashboardSection" class="content-section">
                 <div class="header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
                     <h3><i class="fas fa-chart-pie"></i> Business Intelligence - Analítica Avanzada</h3>
-                    <button class="btn-primary" id="btnActualizarBI" style="background:var(--info)"><i class="fas fa-sync-alt"></i> Actualizar Datos</button>
+                    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                        <label style="color:var(--text-color);font-size:0.85rem">Desde:</label>
+                        <input type="date" id="biFechaDesde" class="form-control" style="width:auto;padding:6px 10px;background:var(--card-bg);color:var(--text-color);border:1px solid var(--border-color);border-radius:6px">
+                        <label style="color:var(--text-color);font-size:0.85rem">Hasta:</label>
+                        <input type="date" id="biFechaHasta" class="form-control" style="width:auto;padding:6px 10px;background:var(--card-bg);color:var(--text-color);border:1px solid var(--border-color);border-radius:6px">
+                        <button class="btn-primary" id="btnFiltrarBI" style="background:var(--accent-color)"><i class="fas fa-filter"></i> Filtrar</button>
+                        <button class="btn-primary" id="btnActualizarBI" style="background:var(--info)"><i class="fas fa-sync-alt"></i> Actualizar Datos</button>
+                    </div>
                 </div>
                 <div class="kpi-grid" id="biKpiGrid">
+                    <div class="kpi-card"><div class="kpi-icon"><i class="fas fa-file-invoice"></i></div><div class="kpi-value" id="biFacturasHoy">0</div><div class="kpi-label">Facturas Hoy</div></div>
                     <div class="kpi-card"><div class="kpi-icon"><i class="fas fa-chart-line"></i></div><div class="kpi-value" id="biVentasHoy">Bs. 0</div><div class="kpi-label">Ventas Hoy</div></div>
                     <div class="kpi-card"><div class="kpi-icon"><i class="fas fa-calendar-week"></i></div><div class="kpi-value" id="biVentasMes">Bs. 0</div><div class="kpi-label">Ventas del Mes</div></div>
                     <div class="kpi-card"><div class="kpi-icon"><i class="fas fa-percent"></i></div><div class="kpi-value" id="biCrecimiento">0%</div><div class="kpi-label">Crecimiento</div></div>
@@ -2613,6 +2796,46 @@ try {
         
         function formatMoney(value) { return `Bs. ${parseFloat(value || 0).toLocaleString('es-ES', {minimumFractionDigits: 2})}`; }
         
+        function imprimirTabla(tbodyId) {
+            const tbody = document.getElementById(tbodyId);
+            if (!tbody || !tbody.rows.length) return;
+            const table = tbody.closest('table') || tbody.parentElement;
+            const win = window.open('', '_blank');
+            win.document.write('<html><head><title>Reporte</title><style>body{font-family:Arial,sans-serif;padding:20px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccc;padding:8px;text-align:left}th{background:#1a1f2e;color:white}</style></head><body>');
+            win.document.write(table.outerHTML);
+            win.document.write('</body></html>');
+            win.document.close();
+            win.print();
+        }
+        
+        function exportarExcel(tbodyId, nombre) {
+            const tbody = document.getElementById(tbodyId);
+            if (!tbody || !tbody.rows.length) return;
+            const table = tbody.closest('table') || tbody.parentElement;
+            let csv = [];
+            const thead = table.querySelector('thead');
+            if (thead) {
+                const headers = [];
+                thead.querySelectorAll('th').forEach(th => headers.push('"' + (th.textContent.trim() || '') + '"'));
+                csv.push(headers.join(','));
+            }
+            tbody.querySelectorAll('tr').forEach(tr => {
+                const row = [];
+                tr.querySelectorAll('td').forEach(td => {
+                    let text = td.textContent.trim().replace(/"/g, '""');
+                    if (td.querySelector('i,button,a')) text = td.innerText.trim().replace(/"/g, '""');
+                    row.push('"' + text + '"');
+                });
+                csv.push(row.join(','));
+            });
+            const blob = new Blob([csv.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = (nombre || 'reporte') + '_' + new Date().toISOString().slice(0,10) + '.csv';
+            link.click();
+            URL.revokeObjectURL(link.href);
+        }
+        
         function mostrarLoading(texto) { 
             const el = document.getElementById('loadingOverlay'); 
             if(el) {
@@ -2926,7 +3149,7 @@ try {
                     document.getElementById('totalProducts').innerHTML = data.total_productos || 0;
                     document.getElementById('totalPedidos').innerHTML = data.total_pedidos || 0;
                     document.getElementById('pedidosPendientes').innerHTML = data.pedidos_pendientes || 0;
-                    document.getElementById('ventasHoy').innerHTML = formatMoney(data.ventas_hoy);
+                    document.getElementById('facturasHoy').innerHTML = data.facturas_hoy || 0;
                     document.getElementById('totalVentas').innerHTML = formatMoney(data.total_ventas);
                     document.getElementById('totalClientes').innerHTML = data.total_clientes || 0;
                     document.getElementById('stockBajo').innerHTML = data.productos_stock_bajo || 0;
@@ -3150,6 +3373,319 @@ function renderCompras() {
             tbody.innerHTML = html;
             const selectAll = document.getElementById('selectAllPedidos');
             if(selectAll) selectAll.onclick = function() { document.querySelectorAll('.pedidoCheckbox').forEach(cb => cb.checked = this.checked); };
+        }
+
+        // ====================================================================
+        // COTIZACIONES CRM - FUNCIONES
+        // ====================================================================
+        let cotizacionesItems = [];
+
+        async function cargarCotizaciones() {
+            try {
+                const busqueda = document.getElementById('buscarCotizacion')?.value || '';
+                const estado = document.getElementById('filtroEstadoCotizacion')?.value || '';
+                const fd = document.getElementById('cotizacionFechaDesde')?.value || '';
+                const fh = document.getElementById('cotizacionFechaHasta')?.value || '';
+                const params = new URLSearchParams({ busqueda, estado, fecha_desde: fd, fecha_hasta: fh });
+                const res = await fetch('/proyecto/cotizaciones/obtener_cotizaciones.php?' + params.toString(), { credentials: 'include' });
+                const data = await res.json();
+                const tbody = document.getElementById('cotizacionesBody');
+                if (!tbody) return;
+                if (!data.success || !data.data || !data.data.length) {
+                    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center">No hay cotizaciones registradas</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = data.data.map(c => {
+                    const estados = { pendiente: 'Pendiente', aprobada: 'Aprobada', rechazada: 'Rechazada', vencida: 'Vencida', convertida: 'Convertida' };
+                    const colores = { pendiente: '#ffa502', aprobada: '#2ed573', rechazada: '#ff4757', vencida: '#95a5a6', convertida: '#3498db' };
+                    return `<tr>
+                        <td><strong>${escapeHtml(c.numero_cotizacion)}</strong></td>
+                        <td>${escapeHtml(c.cliente_nombre)}</td>
+                        <td>${escapeHtml(c.cliente_email || '')}</td>
+                        <td>${escapeHtml(c.cliente_telefono || '')}</td>
+                        <td>${formatMoney(c.total)}</td>
+                        <td><span style="background:${colores[c.estado]||'#95a5a6'};color:white;padding:2px 8px;border-radius:4px;font-size:0.75rem">${estados[c.estado]||c.estado}</span></td>
+                        <td>${escapeHtml(c.usuario_nombre || '')}</td>
+                        <td>${c.fecha_creacion ? new Date(c.fecha_creacion).toLocaleDateString('es-ES') : ''}</td>
+                        <td>${c.fecha_vencimiento ? new Date(c.fecha_vencimiento).toLocaleDateString('es-ES') : 'N/A'}</td>
+                        <td>
+                            <button class="btn-pdf" onclick="verCotizacion(${c.id})" title="Ver"><i class="fas fa-eye"></i></button>
+                            <button class="btn-pdf" onclick="editarCotizacion(${c.id})" title="Editar" style="background:var(--info)"><i class="fas fa-edit"></i></button>
+                            <button class="btn-pdf" onclick="seguimientoCotizacion(${c.id})" title="Seguimiento" style="background:var(--purple)"><i class="fas fa-history"></i></button>
+                            <button class="btn-pdf" onclick="window.open('/proyecto/cotizaciones/generar_pdf_cotizacion.php?id=${c.id}')" title="PDF" style="background:var(--danger)"><i class="fas fa-file-pdf"></i></button>
+                            <button class="btn-pdf" onclick="eliminarCotizacion(${c.id})" title="Eliminar" style="background:#e74c3c"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>`;
+                }).join('');
+            } catch(e) { console.error('Error cargando cotizaciones:', e); }
+        }
+
+        async function abrirModalCotizacion(id) {
+            document.getElementById('cotizacionModalTitle').textContent = id ? 'Editar Cotización' : 'Nueva Cotización';
+            document.getElementById('editCotizacionId').value = id || '';
+
+            // Cargar productos en el select
+            try {
+                const res = await fetch('/proyecto/admin/obtener_inventario.php', { credentials: 'include' });
+                const data = await res.json();
+                const sel = document.getElementById('cotProductoSelect');
+                if (Array.isArray(data)) {
+                    sel.innerHTML = '<option value="">Seleccionar producto...</option>' + data.map(p => `<option value="${p.id}" data-nombre="${escapeHtml(p.name)}" data-precio="${p.price || 0}">${escapeHtml(p.name)} - Bs. ${parseFloat(p.price || 0).toFixed(2)}</option>`).join('');
+                } else if (data.data && Array.isArray(data.data)) {
+                    sel.innerHTML = '<option value="">Seleccionar producto...</option>' + data.data.map(p => `<option value="${p.id}" data-nombre="${escapeHtml(p.name)}" data-precio="${p.price || 0}">${escapeHtml(p.name)} - Bs. ${parseFloat(p.price || 0).toFixed(2)}</option>`).join('');
+                }
+            } catch(e) { console.error('Error cargando productos:', e); }
+
+            if (id) {
+                try {
+                    const res = await fetch('/proyecto/cotizaciones/obtener_cotizacion.php?id=' + id, { credentials: 'include' });
+                    const data = await res.json();
+                    if (data.success && data.data) {
+                        const c = data.data;
+                        document.getElementById('cotClienteNombre').value = c.cliente_nombre || '';
+                        document.getElementById('cotClienteEmail').value = c.cliente_email || '';
+                        document.getElementById('cotClienteTelefono').value = c.cliente_telefono || '';
+                        document.getElementById('cotClienteDireccion').value = c.cliente_direccion || '';
+                        document.getElementById('cotFechaVencimiento').value = c.fecha_vencimiento || '';
+                        document.getElementById('cotNotas').value = c.notas || '';
+                        cotizacionesItems = (c.detalles || []).map(d => ({
+                            producto_id: d.producto_id,
+                            producto_nombre: d.producto_nombre,
+                            cantidad: parseInt(d.cantidad) || 1,
+                            precio_unitario: parseFloat(d.precio_unitario) || 0
+                        }));
+                        renderCotizacionItems();
+                    }
+                } catch(e) { console.error('Error cargando cotización:', e); }
+            } else {
+                document.getElementById('cotClienteNombre').value = '';
+                document.getElementById('cotClienteEmail').value = '';
+                document.getElementById('cotClienteTelefono').value = '';
+                document.getElementById('cotClienteDireccion').value = '';
+                document.getElementById('cotFechaVencimiento').value = '';
+                document.getElementById('cotNotas').value = '';
+                cotizacionesItems = [];
+                renderCotizacionItems();
+            }
+            document.getElementById('cotizacionModal').style.display = 'flex';
+        }
+
+        function cerrarModalCotizacion() {
+            document.getElementById('cotizacionModal').style.display = 'none';
+        }
+
+        function agregarItemCotizacion() {
+            const sel = document.getElementById('cotProductoSelect');
+            const nombreInput = document.getElementById('cotProductoNombre');
+            const cantidad = parseInt(document.getElementById('cotProductoCantidad').value) || 1;
+            const precio = parseFloat(document.getElementById('cotProductoPrecio').value) || 0;
+            let nombre = '';
+            let producto_id = null;
+
+            if (sel.value) {
+                const opt = sel.options[sel.selectedIndex];
+                nombre = opt.dataset.nombre || opt.textContent.split(' - ')[0];
+                producto_id = parseInt(sel.value);
+                if (!precio) document.getElementById('cotProductoPrecio').value = opt.dataset.precio;
+            } else if (nombreInput.value.trim()) {
+                nombre = nombreInput.value.trim();
+            } else {
+                mostrarNotificacion('Selecciona un producto o escribe el nombre', 'error');
+                return;
+            }
+
+            const precioFinal = parseFloat(document.getElementById('cotProductoPrecio').value) || precio;
+            if (precioFinal <= 0) {
+                mostrarNotificacion('Ingresa un precio válido', 'error');
+                return;
+            }
+
+            cotizacionesItems.push({ producto_id, producto_nombre: nombre, cantidad, precio_unitario: precioFinal });
+            renderCotizacionItems();
+            nombreInput.value = '';
+            document.getElementById('cotProductoCantidad').value = '1';
+            document.getElementById('cotProductoPrecio').value = '';
+            sel.value = '';
+        }
+
+        function renderCotizacionItems() {
+            const tbody = document.getElementById('cotizacionItemsBody');
+            if (!tbody) return;
+            let subtotal = 0;
+            tbody.innerHTML = cotizacionesItems.map((item, i) => {
+                const st = item.cantidad * item.precio_unitario;
+                subtotal += st;
+                return `<tr>
+                    <td>${escapeHtml(item.producto_nombre)}</td>
+                    <td><input type="number" value="${item.cantidad}" min="1" style="width:60px;padding:4px;background:var(--card-bg);color:var(--text-color);border:1px solid var(--border-color);border-radius:4px" onchange="actualizarItemCot(${i}, 'cantidad', parseInt(this.value)||1)"></td>
+                    <td><input type="number" value="${item.precio_unitario}" step="0.01" min="0" style="width:100px;padding:4px;background:var(--card-bg);color:var(--text-color);border:1px solid var(--border-color);border-radius:4px" onchange="actualizarItemCot(${i}, 'precio_unitario', parseFloat(this.value)||0)"></td>
+                    <td>Bs. ${st.toFixed(2)}</td>
+                    <td><button class="btn-pdf" onclick="cotizacionesItems.splice(${i},1);renderCotizacionItems()" style="background:#e74c3c"><i class="fas fa-times"></i></button></td>
+                </tr>`;
+            }).join('');
+            if (!cotizacionesItems.length) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#999">Agrega productos a la cotización</td></tr>';
+
+            const ivaPorc = 16;
+            const totalSt = cotizacionesItems.reduce((s, it) => s + (it.cantidad * it.precio_unitario), 0);
+            const iva = totalSt * (ivaPorc / 100);
+            const total = totalSt + iva;
+            document.getElementById('cotSubtotal').textContent = formatMoney(totalSt);
+            document.getElementById('cotIva').textContent = formatMoney(iva);
+            document.getElementById('cotTotal').textContent = formatMoney(total);
+        }
+
+        function actualizarItemCot(idx, campo, valor) {
+            if (cotizacionesItems[idx]) {
+                cotizacionesItems[idx][campo] = valor;
+                renderCotizacionItems();
+            }
+        }
+
+        async function guardarCotizacion() {
+            const id = document.getElementById('editCotizacionId').value;
+            const data = {
+                id: id || null,
+                cliente_nombre: document.getElementById('cotClienteNombre').value.trim(),
+                cliente_email: document.getElementById('cotClienteEmail').value.trim(),
+                cliente_telefono: document.getElementById('cotClienteTelefono').value.trim(),
+                cliente_direccion: document.getElementById('cotClienteDireccion').value.trim(),
+                fecha_vencimiento: document.getElementById('cotFechaVencimiento').value || null,
+                notas: document.getElementById('cotNotas').value.trim(),
+                items: cotizacionesItems
+            };
+
+            if (!data.cliente_nombre) {
+                mostrarNotificacion('El nombre del cliente es requerido', 'error');
+                return;
+            }
+            if (!data.items.length) {
+                mostrarNotificacion('Agrega al menos un producto', 'error');
+                return;
+            }
+
+            try {
+                const url = id ? '/proyecto/cotizaciones/editar_cotizacion.php' : '/proyecto/cotizaciones/crear_cotizacion.php';
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data),
+                    credentials: 'include'
+                });
+                const result = await res.json();
+                if (result.success) {
+                    mostrarNotificacion(result.message, 'success');
+                    cerrarModalCotizacion();
+                    cargarCotizaciones();
+                } else {
+                    mostrarNotificacion(result.message || 'Error al guardar', 'error');
+                }
+            } catch(e) {
+                mostrarNotificacion('Error de conexión', 'error');
+            }
+        }
+
+        function eliminarCotizacion(id) {
+            if (!confirm('¿Eliminar esta cotización?')) return;
+            fetch('/proyecto/cotizaciones/eliminar_cotizacion.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id }),
+                credentials: 'include'
+            }).then(r => r.json()).then(d => {
+                mostrarNotificacion(d.message, d.success ? 'success' : 'error');
+                if (d.success) cargarCotizaciones();
+            });
+        }
+
+        async function verCotizacion(id) {
+            try {
+                const res = await fetch('/proyecto/cotizaciones/obtener_cotizacion.php?id=' + id, { credentials: 'include' });
+                const data = await res.json();
+                if (!data.success || !data.data) return;
+                const c = data.data;
+                const estados = { pendiente: 'Pendiente', aprobada: 'Aprobada', rechazada: 'Rechazada', vencida: 'Vencida', convertida: 'Convertida' };
+                const colores = { pendiente: '#ffa502', aprobada: '#2ed573', rechazada: '#ff4757', vencida: '#95a5a6', convertida: '#3498db' };
+                let detallesHtml = c.detalles.map((d, i) => `<tr><td>${i+1}</td><td>${escapeHtml(d.producto_nombre)}</td><td>${d.cantidad}</td><td>${formatMoney(d.precio_unitario)}</td><td>${formatMoney(d.subtotal)}</td></tr>`).join('');
+
+                const html = `
+                    <div style="padding:20px">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+                            <h2 style="margin:0">${escapeHtml(c.numero_cotizacion)}</h2>
+                            <span style="background:${colores[c.estado]||'#95a5a6'};color:white;padding:4px 12px;border-radius:4px">${estados[c.estado]||c.estado}</span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:20px;padding:15px;background:var(--card-bg);border-radius:8px">
+                            <div><strong>Cliente:</strong> ${escapeHtml(c.cliente_nombre)}</div>
+                            <div><strong>Email:</strong> ${escapeHtml(c.cliente_email||'')}</div>
+                            <div><strong>Teléfono:</strong> ${escapeHtml(c.cliente_telefono||'')}</div>
+                            <div><strong>Vendedor:</strong> ${escapeHtml(c.usuario_nombre||'')}</div>
+                            <div><strong>Fecha:</strong> ${c.fecha_creacion ? new Date(c.fecha_creacion).toLocaleDateString('es-ES') : ''}</div>
+                            <div><strong>Vencimiento:</strong> ${c.fecha_vencimiento ? new Date(c.fecha_vencimiento).toLocaleDateString('es-ES') : 'N/A'}</div>
+                        </div>
+                        <table class="data-table" style="margin-bottom:15px">
+                            <thead><tr><th>#</th><th>Producto</th><th>Cantidad</th><th>Precio Unit.</th><th>Subtotal</th></tr></thead>
+                            <tbody>${detallesHtml}</tbody>
+                        </table>
+                        <div style="text-align:right">
+                            <div>Subtotal: ${formatMoney(c.subtotal)}</div>
+                            <div>IVA: ${formatMoney(c.iva)}</div>
+                            <div style="font-size:1.2rem;font-weight:bold">Total: ${formatMoney(c.total)}</div>
+                        </div>
+                        ${c.notas ? `<div style="margin-top:15px;padding:10px;background:var(--card-bg);border-radius:6px"><strong>Notas:</strong><br>${escapeHtml(c.notas)}</div>` : ''}
+                        ${c.seguimiento ? `<div style="margin-top:10px;padding:10px;background:var(--card-bg);border-radius:6px"><strong>Seguimiento:</strong><pre style="margin:5px 0 0;font-size:0.8rem;white-space:pre-wrap">${escapeHtml(c.seguimiento)}</pre></div>` : ''}
+                        <div style="margin-top:20px;text-align:center">
+                            <button class="btn-primary" onclick="window.open('/proyecto/cotizaciones/generar_pdf_cotizacion.php?id=${c.id}')" style="background:var(--danger)"><i class="fas fa-file-pdf"></i> Descargar PDF</button>
+                        </div>
+                    </div>`;
+
+                const modal = document.createElement('div');
+                modal.className = 'modal';
+                modal.style.cssText = 'display:flex;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center';
+                modal.innerHTML = `<div class="modal-content" style="max-width:700px;max-height:90vh;overflow-y:auto"><div class="modal-header"><h3>Detalle de Cotización</h3><span class="modal-close" onclick="this.closest('.modal').remove()">&times;</span></div><div class="modal-body">${html}</div></div>`;
+                document.body.appendChild(modal);
+            } catch(e) { console.error(e); }
+        }
+
+        async function editarCotizacion(id) {
+            await abrirModalCotizacion(id);
+        }
+
+        async function seguimientoCotizacion(id) {
+            document.getElementById('segCotizacionId').value = id;
+            document.getElementById('segNuevoEstado').value = 'pendiente';
+            document.getElementById('segNota').value = '';
+            try {
+                const res = await fetch('/proyecto/cotizaciones/obtener_cotizacion.php?id=' + id, { credentials: 'include' });
+                const data = await res.json();
+                if (data.success && data.data) {
+                    const c = data.data;
+                    document.getElementById('segNuevoEstado').value = c.estado || 'pendiente';
+                    document.getElementById('segHistorial').innerHTML = c.seguimiento
+                        ? '<pre style="margin:0;font-size:0.8rem;white-space:pre-wrap">' + escapeHtml(c.seguimiento) + '</pre>'
+                        : '<div style="color:#999;text-align:center">Sin seguimiento registrado</div>';
+                }
+            } catch(e) { console.error(e); }
+            document.getElementById('seguimientoModal').style.display = 'flex';
+        }
+
+        async function guardarSeguimiento() {
+            const id = document.getElementById('segCotizacionId').value;
+            const estado = document.getElementById('segNuevoEstado').value;
+            const nota = document.getElementById('segNota').value.trim();
+            if (!id) return;
+            try {
+                const res = await fetch('/proyecto/cotizaciones/cambiar_estado.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: parseInt(id), estado, seguimiento: nota }),
+                    credentials: 'include'
+                });
+                const data = await res.json();
+                mostrarNotificacion(data.message, data.success ? 'success' : 'error');
+                if (data.success) {
+                    document.getElementById('seguimientoModal').style.display = 'none';
+                    cargarCotizaciones();
+                }
+            } catch(e) { mostrarNotificacion('Error de conexión', 'error'); }
         }
 
         async function cargarFacturas() {
@@ -4486,6 +5022,27 @@ function renderConfiguracion() {
             } catch(e) { mostrarNotificacion('Error al crear backup', 'error'); }
             finally { ocultarLoading(); }
         }
+
+        async function enviarRecomendacionesMasivo() {
+            if (!confirm('¿Enviar recomendaciones a todos los clientes con compras previas?')) return;
+            mostrarLoading('Enviando recomendaciones...');
+            try {
+                const response = await fetch('/proyecto/admin/enviar_recomendaciones.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ accion: 'recomendar_masivo' })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    mostrarNotificacion(data.message || 'Recomendaciones enviadas', 'success');
+                    cargarMarketing();
+                } else {
+                    mostrarNotificacion(data.message || 'Error al enviar', 'error');
+                }
+            } catch (e) {
+                mostrarNotificacion('Error al enviar recomendaciones', 'error');
+            } finally { ocultarLoading(); }
+        }
         
         function descargarBackup(id) { window.open(`/proyecto/backups/descargar_backup.php?id=${id}`, '_blank'); }
         
@@ -4958,11 +5515,18 @@ async function cambiarPasswordRecuperacion(event) {
         // ====================================================================
         async function cargarBIDashboard() {
             try {
-                const response = await fetch('/proyecto/bi/obtener_datos_bi.php', { credentials: 'include' });
+                const fechaDesde = document.getElementById('biFechaDesde')?.value || '';
+                const fechaHasta = document.getElementById('biFechaHasta')?.value || '';
+                const params = new URLSearchParams();
+                if (fechaDesde) params.append('fecha_desde', fechaDesde);
+                if (fechaHasta) params.append('fecha_hasta', fechaHasta);
+                const url = '/proyecto/bi/obtener_datos_bi.php?' + params.toString();
+                const response = await fetch(url, { credentials: 'include' });
                 const data = await response.json();
                 if (!data.success) throw new Error('Error al cargar BI');
 
                 if (data.kpis) {
+                    document.getElementById('biFacturasHoy').textContent = data.kpis.facturas_hoy || 0;
                     document.getElementById('biVentasHoy').textContent = formatMoney(data.kpis.ventas_hoy);
                     document.getElementById('biVentasMes').textContent = formatMoney(data.kpis.ventas_mes);
                     document.getElementById('biCrecimiento').textContent = (data.kpis.crecimiento >= 0 ? '+' : '') + data.kpis.crecimiento + '%';
@@ -5259,6 +5823,30 @@ async function cambiarPasswordRecuperacion(event) {
             }
         }
 
+        async function cargarMarketing() {
+            try {
+                const res = await fetch('/proyecto/admin/enviar_recomendaciones.php?accion=historial');
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('marketingTotalEnvios').textContent = data.total || 0;
+                    document.getElementById('marketingRecomendaciones').textContent = data.recomendaciones || 0;
+                    document.getElementById('marketingNuevosProductos').textContent = data.nuevos_productos || 0;
+                    document.getElementById('marketingEncuestas').textContent = data.encuestas || 0;
+
+                    const tbody = document.getElementById('enviosRecomendacionesBody');
+                    if (data.envios && data.envios.length) {
+                        tbody.innerHTML = data.envios.map(e =>
+                            `<tr><td>${e.id}</td><td>${e.cliente_email || '-'}</td><td><span class="badge badge-${e.tipo === 'recomendacion' ? 'success' : e.tipo === 'nuevo_producto' ? 'danger' : 'info'}">${e.tipo}</span></td><td>${e.asunto}</td><td>${e.fecha_envio}</td></tr>`
+                        ).join('');
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">No hay envíos registrados</td></tr>';
+                    }
+                }
+            } catch (e) {
+                console.error('Error cargarMarketing:', e);
+            }
+        }
+
         async function configurar2FA() {
             try {
                 const response = await fetch('/proyecto/2fa/configurar.php?action=generar_secreto', {
@@ -5492,6 +6080,7 @@ async function cambiarPasswordRecuperacion(event) {
                 'proveedoresSection': cargarProveedores, 
                 'comprasSection': cargarCompras,
                 'pedidosSection': cargarPedidos,
+                'cotizacionesSection': cargarCotizaciones,
                 'facturacionSection': cargarFacturas,
                 'cajaSection': cargarCaja, 
                 'ventasClienteSection': cargarVentasCliente,
@@ -5508,7 +6097,8 @@ async function cambiarPasswordRecuperacion(event) {
                 'prediccionesSection': cargarPredicciones,
                 'biDashboardSection': cargarBIDashboard,
                 'telegramSection': cargarTelegramConfig,
-                'seguridad2faSection': cargar2FA
+                'seguridad2faSection': cargar2FA,
+                'marketingSection': cargarMarketing
             };
             const loader = loaders[sectionId];
             if(loader) loader();
@@ -5552,9 +6142,21 @@ async function cambiarPasswordRecuperacion(event) {
             document.getElementById('btnNuevaFactura')?.addEventListener('click', nuevaFactura);
             document.getElementById('btnActualizarFacturas')?.addEventListener('click', cargarFacturas);
             document.getElementById('btnListarFacturas')?.addEventListener('click', function() { window.location.href = '/proyecto/facturacion/listar_facturas.php'; });
+            document.getElementById('btnFiltrarCotizaciones')?.addEventListener('click', cargarCotizaciones);
+            document.getElementById('btnNuevaCotizacion')?.addEventListener('click', () => abrirModalCotizacion(0));
+            document.getElementById('btnAgregarItemCotizacion')?.addEventListener('click', agregarItemCotizacion);
+            document.getElementById('btnGuardarCotizacion')?.addEventListener('click', guardarCotizacion);
+            document.getElementById('btnGuardarSeguimiento')?.addEventListener('click', guardarSeguimiento);
+            document.getElementById('buscarCotizacion')?.addEventListener('keyup', (e) => { if(e.key === 'Enter') cargarCotizaciones(); });
+            document.getElementById('filtroEstadoCotizacion')?.addEventListener('change', cargarCotizaciones);
             document.getElementById('addCompraBtn')?.addEventListener('click', nuevaCompra);
             document.getElementById('btnGuardarConfig')?.addEventListener('click', guardarConfiguracion);
             document.getElementById('btnCrearBackup')?.addEventListener('click', crearBackup);
+            document.getElementById('btnEnviarRecomendaciones')?.addEventListener('click', enviarRecomendacionesMasivo);
+            document.getElementById('btnHistorialEnvios')?.addEventListener('click', () => {
+                const section = document.querySelector('#marketingSection');
+                if (section) cargarMarketing();
+            });
             document.getElementById('btnFiltrarAuditoria')?.addEventListener('click', cargarAuditoria);
             document.getElementById('filtroVendedor')?.addEventListener('change', cargarVentasVendedor);
             document.getElementById('btnActualizarVendedores')?.addEventListener('click', cargarVentasVendedor);
@@ -5579,6 +6181,7 @@ async function cambiarPasswordRecuperacion(event) {
             document.getElementById('btnActualizarProductos')?.addEventListener('click', cargarProductos);
             document.getElementById('btnGenerarPredicciones')?.addEventListener('click', generarPredicciones);
             document.getElementById('btnActualizarBI')?.addEventListener('click', cargarBIDashboard);
+            document.getElementById('btnFiltrarBI')?.addEventListener('click', cargarBIDashboard);
             document.getElementById('btnGuardarTelegram')?.addEventListener('click', guardarTelegram);
             document.getElementById('btnProbarTelegram')?.addEventListener('click', probarTelegram);
             document.getElementById('btnProbarTelegramStock')?.addEventListener('click', probarTelegramStock);

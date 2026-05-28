@@ -100,7 +100,6 @@ try {
 
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
 
         $resultados['whatsapp'] = ['success' => $httpCode >= 200 && $httpCode < 300, 'http_code' => $httpCode];
     } else {

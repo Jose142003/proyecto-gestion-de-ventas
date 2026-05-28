@@ -128,7 +128,6 @@ function scrapingBCVDirecto() {
                 
                 $html = curl_exec($ch);
                 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-                curl_close($ch);
                 
                 if ($httpCode !== 200 || !$html) {
                     continue;
@@ -245,7 +244,6 @@ function obtenerDeExchangeRateAPI() {
         
         $respuesta = curl_exec($ch);
         $error = curl_error($ch);
-        curl_close($ch);
         
         if (!$error && $respuesta) {
             $data = json_decode($respuesta, true);
@@ -273,7 +271,6 @@ function obtenerDeFrankfurter() {
         
         $respuesta = curl_exec($ch);
         $error = curl_error($ch);
-        curl_close($ch);
         
         if (!$error && $respuesta) {
             $data = json_decode($respuesta, true);
@@ -301,7 +298,6 @@ function obtenerDeCurrencyAPI() {
         
         $respuesta = curl_exec($ch);
         $error = curl_error($ch);
-        curl_close($ch);
         
         if (!$error && $respuesta) {
             $data = json_decode($respuesta, true);

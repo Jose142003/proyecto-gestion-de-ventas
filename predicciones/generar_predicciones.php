@@ -120,7 +120,6 @@ try {
                 CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 5
             ]);
             curl_exec($ch);
-            curl_close($ch);
 
             $pdo->exec("UPDATE alertas_stock SET leida = TRUE WHERE leida = FALSE");
         }
@@ -153,7 +152,6 @@ try {
                 CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 5
             ]);
             curl_exec($ch);
-            curl_close($ch);
         }
     }
 

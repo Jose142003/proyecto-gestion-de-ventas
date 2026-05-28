@@ -2,6 +2,9 @@
 // /proyecto/interfaz_usuario/pedido_confirmado.php
 // VERSIÓN CORREGIDA - MANTIENE SESIÓN DE CLIENTE
 
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_WARNING & ~E_NOTICE);
+ini_set('display_errors', 0);
+
 require_once __DIR__ . '/../config/database.php';
 
 session_name('CLIENTSESSID');
@@ -227,6 +230,9 @@ if ($numero_pedido) {
 $productosDesdeURL = [];
 if (!empty($productos_json)) {
     $productosDesdeURL = json_decode(urldecode($productos_json), true);
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        $productosDesdeURL = [];
+    }
 }
 
 // ============================================================================
@@ -592,9 +598,13 @@ $return_url = '/proyecto/interfaz_usuario/pagina_modernizada.html';
 </div>
 
 <script>
+    // Redirigir automáticamente a la tienda después de 5 segundos
+    setTimeout(function() {
+        window.location.href = '<?php echo $return_url; ?>';
+    }, 5000);
+    
     // Asegurar que al hacer clic en "Seguir Comprando" se preserve la sesión del cliente
     document.getElementById('btnSeguirComprando')?.addEventListener('click', function(e) {
-        // No prevenir el comportamiento por defecto, solo asegurar que la URL es correcta
         console.log('Redirigiendo a la tienda...');
     });
     

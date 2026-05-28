@@ -1,6 +1,9 @@
 ﻿<?php
 // proceso_compra/procesar-pago.php
 
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_WARNING & ~E_NOTICE);
+ini_set('display_errors', 0);
+
 header('Content-Type: application/json');
 
 // Detectar sesión del cliente primero (CLIENTSESSID), sino usar PHPSESSID (admin)
@@ -214,6 +217,16 @@ try {
         telegramNotificarPedido($pdo, $pedido_id);
     } catch (Throwable $e) {
         error_log("Error notificando pedido por Telegram: " . $e->getMessage());
+    }
+
+    // Enviar encuesta de satisfacción
+    if (!empty($factura_data['cliente_email'])) {
+        try {
+            require_once __DIR__ . '/../admin/enviar_encuesta_satisfaccion.php';
+            enviarEncuestaSatisfaccion($pdo, $pedido_id, $factura_data['cliente_email'], $factura_data['cliente_nombre'] ?? 'Cliente', $factura_data['numero_factura'] ?? '');
+        } catch (Throwable $e) {
+            error_log("Error enviando encuesta: " . $e->getMessage());
+        }
     }
     
 } catch (Exception $e) {

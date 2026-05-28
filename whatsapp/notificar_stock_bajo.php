@@ -128,7 +128,6 @@ try {
 
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
 
     auditoriaRegistrar('notificar_stock_bajo', 'whatsapp',
         "Notificación de stock bajo enviada por WhatsApp. Críticos: " . count($productosCriticos) .

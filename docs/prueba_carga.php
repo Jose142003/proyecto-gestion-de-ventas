@@ -83,7 +83,6 @@ foreach ($endpoints as $endpoint) {
             }
 
             curl_multi_remove_handle($mh, $info['handle']);
-            curl_close($info['handle']);
         }
 
         curl_multi_close($mh);

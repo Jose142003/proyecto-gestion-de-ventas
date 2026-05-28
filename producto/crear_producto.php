@@ -149,6 +149,14 @@ function crearProducto(PDO $pdo, array $datos, ?int $usuario_id, ?string $usuari
         $productoId = $pdo->lastInsertId();
         $sku = 'PROD-' . str_pad($productoId, 4, '0', STR_PAD_LEFT);
         $pdo->prepare("UPDATE products SET sku = ? WHERE id = ?")->execute([$sku, $productoId]);
+
+        try {
+            require_once __DIR__ . '/../admin/enviar_recomendaciones.php';
+            enviarNotificacionNuevoProducto($pdo, $productoId, $datos['nombre'], $datos['categoria']);
+        } catch (Throwable $e) {
+            error_log("Error notificando nuevo producto: " . $e->getMessage());
+        }
+
         return ['success' => true, 'sku' => $sku, 'id' => $productoId];
     } catch (PDOException $e) {
         error_log("Error creando producto: " . $e->getMessage());

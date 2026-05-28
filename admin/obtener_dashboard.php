@@ -22,10 +22,10 @@ try {
     $stmtStockBajo = $pdo->query($sqlStockBajo);
     $stockBajo = $stmtStockBajo->fetch(PDO::FETCH_ASSOC);
     
-    // Ventas del día (usando facturas)
-    $sqlVentasHoy = "SELECT COALESCE(SUM(total), 0) as ventas_hoy FROM facturas WHERE DATE(fecha_emision) = CURDATE()";
-    $stmtVentasHoy = $pdo->query($sqlVentasHoy);
-    $ventasHoy = $stmtVentasHoy->fetch(PDO::FETCH_ASSOC);
+    // Facturas emitidas hoy
+    $sqlFacturasHoy = "SELECT COUNT(*) as facturas_hoy FROM facturas WHERE DATE(fecha_emision) = CURDATE()";
+    $stmtFacturasHoy = $pdo->query($sqlFacturasHoy);
+    $facturasHoy = $stmtFacturasHoy->fetch(PDO::FETCH_ASSOC);
     
     // Total de ventas
     $sqlTotalVentas = "SELECT COALESCE(SUM(total), 0) as total_ventas FROM facturas";
@@ -58,7 +58,7 @@ try {
         'total_productos' => (int)($totalProductos['total_productos'] ?? 0),
         'total_pedidos' => (int)($pedidos['total_pedidos'] ?? 0),
         'pedidos_pendientes' => (int)($pedidos['pedidos_pendientes'] ?? 0),
-        'ventas_hoy' => (float)($ventasHoy['ventas_hoy'] ?? 0),
+        'facturas_hoy' => (int)($facturasHoy['facturas_hoy'] ?? 0),
         'total_ventas' => (float)($totalVentas['total_ventas'] ?? 0),
         'total_clientes' => (int)($totalClientes['total_clientes'] ?? 0),
         'stock_bajo' => (int)($stockBajo['stock_bajo'] ?? 0),
@@ -77,7 +77,7 @@ try {
         'total_productos' => 0,
         'total_pedidos' => 0,
         'pedidos_pendientes' => 0,
-        'ventas_hoy' => 0,
+        'facturas_hoy' => 0,
         'total_ventas' => 0,
         'total_clientes' => 0,
         'stock_bajo' => 0,

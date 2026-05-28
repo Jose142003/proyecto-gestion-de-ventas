@@ -608,10 +608,10 @@ function generarHTMLFacturaEmail($factura, $detalles) {
                 <!-- HEADER -->
                 <div class="header" style="background: linear-gradient(135deg, #1e3c72, #2a5298); color: #ffffff; padding: 20px;">
                     <div class="company-info" style="text-align: center; margin-bottom: 15px;">
-                        <h1 style="margin: 0 0 5px 0; font-size: 16px; font-weight: 600;">PIC - Productos Industriales y Comerciales</h1>
+                        <h1 style="margin: 0 0 5px 0; font-size: 16px; font-weight: 600;">PIC - Proyectos Industriales del centro</h1>
                         <p style="margin: 3px 0; font-size: 11px; opacity: 0.9;">RIF: J-12345678-9</p>
-                        <p style="margin: 3px 0; font-size: 11px; opacity: 0.9;">Av. Principal, Zona Industrial, Caracas, Venezuela</p>
-                        <p style="margin: 3px 0; font-size: 11px; opacity: 0.9;">Teléfono: 0212-5551234 / 0424-8393902</p>
+                        <p style="margin: 3px 0; font-size: 11px; opacity: 0.9;">prolongacion Av. Michelena, Zona Industrial, Valencia, Venezuela</p>
+                        <p style="margin: 3px 0; font-size: 11px; opacity: 0.9;">Teléfono: 0424-8393902</p>
                     </div>
                     <div class="invoice-title" style="text-align: center; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 12px;">
                         <h2 style="margin: 0; font-size: 24px; font-weight: 700;">FACTURA</h2>

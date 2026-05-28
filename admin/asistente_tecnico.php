@@ -222,6 +222,7 @@ body { background: var(--bg); min-height: 100vh; display: flex; }
                 </select>
                 <input type="text" id="compatModelo" placeholder="Buscar modelo...">
                 <button class="btn btn-primary" onclick="buscarCompatibilidad()"><i class="fas fa-search"></i> Buscar</button>
+                <button class="btn btn-secondary" onclick="limpiarCompatibilidad()"><i class="fas fa-eraser"></i></button>
             </div>
             <div id="compatResultados" style="overflow-x:auto"></div>
         </div>
@@ -231,6 +232,7 @@ body { background: var(--bg); min-height: 100vh; display: flex; }
             <div class="search-box">
                 <input type="text" id="compatProductoSearch" placeholder="Buscar por nombre o ID del producto..." style="flex:1">
                 <button class="btn btn-primary" onclick="buscarCompatPorProducto()"><i class="fas fa-search"></i> Buscar</button>
+                <button class="btn btn-secondary" onclick="limpiarCompatProducto()"><i class="fas fa-eraser"></i></button>
             </div>
             <div id="compatProductoResultados"></div>
         </div>
@@ -273,13 +275,6 @@ body { background: var(--bg); min-height: 100vh; display: flex; }
                     <input type="text" id="confBuscarProducto" placeholder="🔍 Buscar producto por nombre..." style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:13px">
                 </div>
                 <div id="componentesTablero">
-                    <div class="component-row" style="display:flex;gap:8px;margin-bottom:6px">
-                        <select style="flex:1;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:13px" class="comp-select">
-                            <option value="">Seleccionar producto...</option>
-                        </select>
-                        <input type="number" class="comp-cant" value="1" style="width:55px;padding:6px;border:1px solid #ddd;border-radius:6px;text-align:center" min="1">
-                        <button class="btn btn-sm btn-secondary" onclick="this.parentElement.remove();actualizarTotal()"><i class="fas fa-times"></i></button>
-                    </div>
                 </div>
                 <button class="btn btn-sm btn-secondary" onclick="agregarComponente()" style="margin:10px 0">
                     <i class="fas fa-plus"></i> Agregar componente
@@ -300,6 +295,11 @@ body { background: var(--bg); min-height: 100vh; display: flex; }
     </div>
 
     <div id="tab-mantenimiento" class="tab-content">
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:15px">
+            <a href="/proyecto/admin/generar_reporte_mantenimiento.php" target="_blank" class="btn btn-primary" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;background:#dc3545"><i class="fas fa-file-pdf"></i> Reporte PDF</a>
+            <a href="/proyecto/admin/generar_reporte_mantenimiento.php?excel=1" target="_blank" class="btn btn-primary" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;background:#28a745"><i class="fas fa-file-excel"></i> Exportar Excel</a>
+            <button class="btn btn-primary" onclick="window.print()" style="display:inline-flex;align-items:center;gap:6px;background:#6c757d"><i class="fas fa-print"></i> Imprimir</button>
+        </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
             <div class="card">
                 <h3><i class="fas fa-bell"></i> Alertas de Mantenimiento</h3>
@@ -366,7 +366,7 @@ function showTab(tab) {
     document.getElementById('tab-' + tab).classList.add('active');
     document.querySelector(`.tab[onclick*="'${tab}'"]`).classList.add('active');
     if (tab === 'resumen') cargarResumen();
-    if (tab === 'configurador') cargarConfiguraciones();
+    if (tab === 'configurador') { cargarConfiguraciones(); document.getElementById('componentesTablero').innerHTML = ''; agregarComponente(); }
     if (tab === 'mantenimiento') cargarAlertas();
     if (tab === 'compatibilidad') { cargarCategoriasCompat(); cargarRecomendacionesMant(); }
 }
@@ -449,7 +449,7 @@ function renderResultados(r) {
                 html += '<div class="product-suggest">';
                 items.forEach(p => {
                     const st = p.stock < 5 ? '#dc3545' : p.stock < 15 ? '#fd7e14' : '#28a745';
-                    html += `<div class="product-item"><div class="name">${p.name}</div><div class="price">Bs ${+p.price.toFixed(2)}</div><div class="stock" style="color:${st}">Stock: ${p.stock}</div></div>`;
+                    html += `<div class="product-item"><div class="name">${p.name}</div><div class="price">Bs ${(+p.price).toFixed(2)}</div><div class="stock" style="color:${st}">Stock: ${p.stock}</div></div>`;
                 });
                 html += '</div>';
             }
@@ -512,7 +512,8 @@ async function buscarCompatibilidad() {
 }
 
 async function buscarCompatPorProducto() {
-    const id = document.getElementById('compatProductoId').value || document.getElementById('compatProductoSearch').value;
+    const compatProductoId = document.getElementById('compatProductoId');
+    const id = (compatProductoId ? compatProductoId.value : '') || document.getElementById('compatProductoSearch').value;
     if (!id) return;
     const isNum = /^\d+$/.test(id);
     const url = isNum ? `accion=producto&producto_id=${id}` : `accion=buscar&modelo=${id}`;
@@ -529,7 +530,7 @@ async function buscarCompatPorProducto() {
         if (res.alternativas && res.alternativas.length) {
             html += '<h5 style="margin:10px 0;font-size:13px">Alternativas:</h5><div class="product-suggest">';
             res.alternativas.forEach(p => {
-                html += `<div class="product-item"><div class="name">${p.name}</div><div class="price">Bs ${+p.price.toFixed(2)}</div><div class="stock">Stock: ${p.stock}</div></div>`;
+                html += `<div class="product-item"><div class="name">${p.name}</div><div class="price">Bs ${(+p.price).toFixed(2)}</div><div class="stock">Stock: ${p.stock}</div></div>`;
             });
             html += '</div>';
         }
@@ -547,12 +548,24 @@ async function buscarCompatPorProducto() {
     }
 }
 
+function limpiarCompatibilidad() {
+    document.getElementById('compatCategoria').value = '';
+    document.getElementById('compatMarca').innerHTML = '<option value="">Todas las marcas</option>';
+    document.getElementById('compatModelo').value = '';
+    document.getElementById('compatResultados').innerHTML = '';
+}
+
+function limpiarCompatProducto() {
+    document.getElementById('compatProductoSearch').value = '';
+    document.getElementById('compatProductoResultados').innerHTML = '';
+}
+
 async function cargarProductos() {
     if (productosCache.length) return;
     try {
         const res = await fetch('/proyecto/producto/obtener_productos.php');
         const data = await res.json();
-        productosCache = Array.isArray(data) ? data : (data.products || data.data || []);
+        productosCache = Array.isArray(data) ? data : (data.productos || data.products || data.data || []);
     } catch (e) {
         productosCache = [];
     }
@@ -577,7 +590,7 @@ async function agregarComponente(productoId) {
     });
     div.innerHTML = `
         <select class="comp-select" style="flex:1;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:13px" onchange="actualizarTotal()">${opts}</select>
-        <input type="number" class="comp-cant" value="1" min="1" style="width:55px;padding:6px;border:1px solid #ddd;border-radius:6px;text-align:center" onchange="actualizarTotal()">
+        <input type="number" class="comp-cant" value="1" min="1" style="width:70px;padding:6px;border:1px solid #ddd;border-radius:6px;text-align:center;font-size:14px" onchange="actualizarTotal()" step="1">
         <button class="btn btn-sm btn-secondary" onclick="this.parentElement.remove();actualizarTotal()"><i class="fas fa-times"></i></button>`;
     container.appendChild(div);
     actualizarTotal();
@@ -597,9 +610,10 @@ function actualizarTotal() {
 
 document.getElementById('confBuscarProducto')?.addEventListener('input', function() {
     const t = this.value.toLowerCase();
-    document.querySelectorAll('.component-row .comp-select option').forEach(o => {
-        const item = o.closest('.component-row');
-        if (item) item.style.display = (!t || o.text.toLowerCase().includes(t) || !o.value) ? '' : 'none';
+    document.querySelectorAll('.component-row .comp-select').forEach(sel => {
+        sel.querySelectorAll('option').forEach(o => {
+            o.style.display = (!t || o.text.toLowerCase().includes(t) || !o.value) ? '' : 'none';
+        });
     });
 });
 
@@ -634,7 +648,7 @@ async function cargarConfiguraciones() {
             html += `<div class="config-card">
                 <h4>${c.nombre}</h4>
                 <div class="meta">${c.aplicacion} · ${new Date(c.created_at).toLocaleDateString()}</div>
-                <div class="total">Bs ${+c.total_estimado.toFixed(2)}</div>
+                <div class="total">Bs ${(+c.total_estimado).toFixed(2)}</div>
                 <div style="margin-top:8px">
                     <button class="btn btn-sm btn-primary" onclick="cargarConfig(${c.id})"><i class="fas fa-folder-open"></i></button>
                     <button class="btn btn-sm btn-secondary" onclick="eliminarConfig(${c.id})"><i class="fas fa-trash"></i></button>
