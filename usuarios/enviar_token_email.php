@@ -23,11 +23,14 @@ function enviarTokenEmail($email, $nombre, $pin) {
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->CharSet    = 'UTF-8';
         
+        $mail->Timeout = 30;
+        $mail->SMTPKeepAlive = false;
+        
         $mail->SMTPOptions = array(
             'ssl' => array(
-                'verify_peer' => true,
-                'verify_peer_name' => true,
-                'allow_self_signed' => false
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                'allow_self_signed' => true
             )
         );
         
@@ -62,6 +65,7 @@ function enviarTokenEmail($email, $nombre, $pin) {
         
     } catch (Exception $e) {
         error_log("Error PHPMailer: " . $mail->ErrorInfo);
+        error_log("SMTP config: host=" . SMTP_HOST . " port=" . SMTP_PORT . " user=" . SMTP_USER);
         return false;
     }
 }

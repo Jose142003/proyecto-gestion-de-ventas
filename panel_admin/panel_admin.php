@@ -138,6 +138,7 @@ try {
     <meta name="csrf-token" content="<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>">
     <link rel="shortcut icon" href="/proyecto/img/pic.png">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
     <style>
        :root {
             --primary-color: #0a0e1a;
@@ -156,6 +157,7 @@ try {
             --info: #3498db;
             --purple: #9B59B6;
             --orange: #E67E22;
+            --teal: #1abc9c;
             --border-color: #2c3348;
             --table-hover: rgba(60, 145, 237, 0.1);
         }
@@ -1752,6 +1754,7 @@ try {
                     <div class="card"><div class="card-header"><h3 class="card-title">Productos</h3><div class="card-icon" style="background: var(--success);"><i class="fas fa-boxes"></i></div></div><div class="card-content" id="totalProducts">0</div><div class="card-footer">Productos en inventario</div></div>
                     <div class="card"><div class="card-header"><h3 class="card-title">Pedidos</h3><div class="card-icon" style="background: var(--purple);"><i class="fas fa-shopping-cart"></i></div></div><div class="card-content" id="totalPedidos">0</div><div class="card-footer">Pendientes: <span id="pedidosPendientes">0</span></div></div>
                     <div class="card"><div class="card-header"><h3 class="card-title">Facturas Emitidas</h3><div class="card-icon" style="background: var(--orange);"><i class="fas fa-file-invoice"></i></div></div><div class="card-content" id="facturasHoy">0</div><div class="card-footer">Facturas emitidas hoy</div></div>
+                    <div class="card"><div class="card-header"><h3 class="card-title">Cotizaciones</h3><div class="card-icon" style="background: var(--teal);"><i class="fas fa-file-signature"></i></div></div><div class="card-content" id="totalCotizaciones">0</div><div class="card-footer">Pendientes: <span id="cotizacionesPendientes">0</span></div></div>
                 </div>
                 <div class="dashboard-stats">
                     <div class="stat-card"><div class="stat-value" id="totalVentas">Bs. 0</div><div class="stat-label">Ventas Totales</div></div>
@@ -1800,6 +1803,22 @@ try {
                             </div>
                         </div>
                         <div class="profile-tab-pane" id="tabSecurity">
+                            <div class="profile-section">
+                                <h3 class="profile-section-title"><i class="fas fa-shield-alt"></i> Autenticación en Dos Pasos (2FA)</h3>
+                                <div id="perfil2faStatus" style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--card-bg);border-radius:8px;margin-bottom:10px">
+                                    <div style="font-size:2rem;opacity:0.5"><i class="fas fa-qrcode"></i></div>
+                                    <div style="flex:1">
+                                        <div style="font-weight:600;font-size:0.95rem" id="perfil2faLabel">Verificando...</div>
+                                        <div style="font-size:0.8rem;opacity:0.7;margin-top:2px" id="perfil2faDesc">Consultando estado...</div>
+                                    </div>
+                                    <div>
+                                        <span class="badge" id="perfil2faBadge">...</span>
+                                    </div>
+                                </div>
+                                <div class="form-actions" style="margin-top:10px">
+                                    <button class="btn-primary" onclick="switchSection('seguridad2faSection')"><i class="fas fa-cog"></i> Gestionar 2FA</button>
+                                </div>
+                            </div>
                             <div class="profile-section">
                                 <h3 class="profile-section-title"><i class="fas fa-key"></i> Cambiar Contraseña</h3>
                                 <form id="cambiarPasswordForm" onsubmit="cambiarContrasena(event)">
@@ -2957,12 +2976,41 @@ try {
                 }
                 document.getElementById('displayFechaRegistro').textContent = fechaRegistro;
                 await cargarFotoPerfil();
+                await cargarEstado2FAenPerfil();
                 return usuarioActual;
             }
         }
     } catch(e) { console.error('Error cargando perfil:', e); }
     return null;
 }
+        
+        async function cargarEstado2FAenPerfil() {
+            try {
+                const response = await fetch('/proyecto/2fa/configurar.php?action=estado', { credentials: 'include' });
+                const data = await response.json();
+                const label = document.getElementById('perfil2faLabel');
+                const desc = document.getElementById('perfil2faDesc');
+                const badge = document.getElementById('perfil2faBadge');
+                if (data.migracion_pendiente) {
+                    label.textContent = 'Migración pendiente';
+                    desc.textContent = 'Ejecute la migración para activar 2FA';
+                    badge.className = 'badge badge-pending';
+                    badge.innerHTML = '<i class="fas fa-clock"></i> Pendiente';
+                } else if (data.enabled) {
+                    label.textContent = '✅ 2FA Activado';
+                    desc.textContent = 'Tu cuenta está protegida con autenticación en dos pasos.';
+                    badge.className = 'badge badge-active';
+                    badge.innerHTML = '<i class="fas fa-check-circle"></i> Activado';
+                } else {
+                    label.textContent = '2FA Desactivado';
+                    desc.textContent = 'Activa la autenticación en dos pasos para mayor seguridad.';
+                    badge.className = 'badge badge-pending';
+                    badge.innerHTML = '<i class="fas fa-clock"></i> Desactivado';
+                }
+            } catch (e) {
+                console.error('Error cargando estado 2FA en perfil:', e);
+            }
+        }
         
         async function cargarFotoPerfil() {
             try {
@@ -3158,6 +3206,8 @@ try {
                     document.getElementById('totalPedidos').innerHTML = data.total_pedidos || 0;
                     document.getElementById('pedidosPendientes').innerHTML = data.pedidos_pendientes || 0;
                     document.getElementById('facturasHoy').innerHTML = data.facturas_hoy || 0;
+                    document.getElementById('totalCotizaciones').innerHTML = data.total_cotizaciones || 0;
+                    document.getElementById('cotizacionesPendientes').innerHTML = data.cotizaciones_pendientes || 0;
                     document.getElementById('totalVentas').innerHTML = formatMoney(data.total_ventas);
                     document.getElementById('totalClientes').innerHTML = data.total_clientes || 0;
                     document.getElementById('stockBajo').innerHTML = data.productos_stock_bajo || 0;
@@ -5849,9 +5899,12 @@ async function cambiarPasswordRecuperacion(event) {
                     } else {
                         tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">No hay envíos registrados</td></tr>';
                     }
+                } else {
+                    mostrarNotificacion(data.message || 'Error al cargar historial', 'error');
                 }
             } catch (e) {
                 console.error('Error cargarMarketing:', e);
+                mostrarNotificacion('Error de conexión al cargar marketing', 'error');
             }
         }
 
@@ -5875,13 +5928,19 @@ async function cambiarPasswordRecuperacion(event) {
                 if (data.qr_content) {
                     const qrContainer = document.getElementById('2faQRContainer');
                     qrContainer.innerHTML = `<div style="text-align:center;padding:10px">
-                        <p style="color:#333;font-size:0.8rem;margin-bottom:8px;word-break:break-all">${data.qr_content}</p>
-                        <div style="background:#f8f8f8;border:2px dashed #ddd;border-radius:8px;padding:15px">
-                            <i class="fas fa-qrcode" style="font-size:5rem;color:#3C91ED"></i>
-                            <p style="color:#666;font-size:0.75rem;margin-top:8px">Escanea con Google Authenticator</p>
-                        </div>
-                        <p style="color:#999;font-size:0.7rem;margin-top:8px">Clave: <code style="background:#eee;padding:2px 6px;border-radius:3px;font-size:0.8rem">${data.secret}</code></p>
+                        <canvas id="2faQRCanvas"></canvas>
+                        <p style="color:#666;font-size:0.75rem;margin-top:8px">Escanea con Google Authenticator</p>
                     </div>`;
+                    try {
+                        new QRious({
+                            element: document.getElementById('2faQRCanvas'),
+                            value: data.qr_content,
+                            size: 200,
+                            level: 'M'
+                        });
+                    } catch(e) {
+                        console.error('Error generando QR:', e);
+                    }
                 }
 
                 const backupContainer = document.getElementById('2faBackupCodes');

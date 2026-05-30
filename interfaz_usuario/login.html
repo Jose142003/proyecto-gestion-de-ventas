@@ -270,6 +270,7 @@
             .form-control { height: 45px; }
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
 </head>
 <body>
     <div class="login-wrapper">
@@ -311,9 +312,39 @@
                         </span>
                     </button>
                 </form>
-                
+
                 <div id="message" class="alert-message" style="display: none;"></div>
-                
+
+                <div style="text-align:center;margin-top:12px;margin-bottom:4px">
+                    <span style="display:inline-block;width:100%;height:1px;background:#e9ecef;vertical-align:middle"></span>
+                    <span style="display:inline-block;padding:0 12px;font-size:0.75rem;color:#94a3b8;background:white;position:relative;top:-9px">O</span>
+                </div>
+
+                <div id="qrLoginSection" style="display:none;text-align:center">
+                    <div id="qrContainer" style="background:#f8f8f8;border:2px dashed #ddd;border-radius:12px;padding:20px;margin-bottom:10px">
+                        <div id="qrLoading" style="padding:30px 0">
+                            <div class="loading-spinner-small" style="width:32px;height:32px;border-width:3px"></div>
+                            <p style="font-size:0.8rem;color:#666;margin-top:10px">Generando código QR...</p>
+                        </div>
+                        <div id="qrCodeDisplay" style="display:none">
+                            <canvas id="qrLoginCanvas"></canvas>
+                            <p style="font-size:0.75rem;color:#666;margin-top:8px">Escanea este código con tu teléfono</p>
+                        </div>
+                        <div id="qrExpired" style="display:none">
+                            <i class="fas fa-clock" style="font-size:3rem;color:#dc3545"></i>
+                            <p style="font-size:0.8rem;color:#dc3545;margin-top:8px">QR expirado</p>
+                        </div>
+                    </div>
+                    <div id="qrStatusMsg" style="font-size:0.8rem;color:#666;margin-bottom:8px">Esperando escaneo...</div>
+                    <button class="btn btn-sm" id="qrRefreshBtn" style="background:#e9ecef;border:none;border-radius:8px;padding:6px 16px;font-size:0.75rem;cursor:pointer"><i class="fas fa-sync-alt"></i> Nuevo código</button>
+                </div>
+
+                <div style="text-align:center;margin-top:6px">
+                    <a href="#" id="toggleQrLogin" style="font-size:0.75rem;color:var(--primary-color);text-decoration:none">
+                        <i class="fas fa-qrcode"></i> Iniciar sesión con QR
+                    </a>
+                </div>
+
                 <div class="register-link">
                     <i class="fas fa-user-plus"></i> ¿Nuevo por aquí? 
                     <a href="../interfaz_usuario/registro_usuarios.html">Crea una cuenta</a>
@@ -494,6 +525,7 @@
         }
 
         let currentRecoveryEmail = '';
+        let currentRecoveryPin = '';
 
         // ============================================================
         // LOGIN - CORREGIDO: Usa redirect_url del servidor
@@ -567,6 +599,99 @@
                 loginBtn.disabled = false;
             }
         });
+
+        // ============================================================
+        // QR LOGIN - GENERAR Y POLLING
+        // ============================================================
+        let qrPollingInterval = null;
+        let currentQrToken = null;
+
+        document.getElementById('toggleQrLogin').addEventListener('click', function(e) {
+            e.preventDefault();
+            const qrSection = document.getElementById('qrLoginSection');
+            const loginForm = document.getElementById('loginForm');
+            const isHidden = qrSection.style.display === 'none' || qrSection.style.display === '';
+            qrSection.style.display = isHidden ? 'block' : 'none';
+            loginForm.style.display = isHidden ? 'none' : 'block';
+            this.innerHTML = isHidden
+                ? '<i class="fas fa-keyboard"></i> Iniciar sesión con correo'
+                : '<i class="fas fa-qrcode"></i> Iniciar sesión con QR';
+            if (isHidden) generarQR();
+            else detenerQR();
+        });
+
+        async function generarQR() {
+            detenerQR();
+            document.getElementById('qrLoading').style.display = 'block';
+            document.getElementById('qrCodeDisplay').style.display = 'none';
+            document.getElementById('qrExpired').style.display = 'none';
+            document.getElementById('qrStatusMsg').textContent = 'Generando código QR...';
+
+            try {
+                const res = await fetch('/proyecto/2fa/qr_generate.php');
+                const data = await res.json();
+                if (!data.success) throw new Error(data.message);
+
+                currentQrToken = data.token;
+                document.getElementById('qrLoading').style.display = 'none';
+                document.getElementById('qrCodeDisplay').style.display = 'block';
+                document.getElementById('qrExpired').style.display = 'none';
+                document.getElementById('qrStatusMsg').textContent = 'Escanea este código con tu teléfono';
+
+                new QRious({
+                    element: document.getElementById('qrLoginCanvas'),
+                    value: data.qr_url,
+                    size: 200,
+                    level: 'M'
+                });
+
+                iniciarPolling(data.token);
+            } catch(e) {
+                document.getElementById('qrLoading').style.display = 'none';
+                document.getElementById('qrExpired').style.display = 'block';
+                document.getElementById('qrExpired').querySelector('p').textContent = 'Error al generar QR';
+                document.getElementById('qrStatusMsg').textContent = 'Error';
+                console.error('Error generando QR:', e);
+            }
+        }
+
+        function iniciarPolling(token) {
+            detenerQR();
+            qrPollingInterval = setInterval(async () => {
+                try {
+                    const res = await fetch(`/proyecto/2fa/qr_check.php?token=${token}`);
+                    const data = await res.json();
+                    if (data.status === 'approved') {
+                        detenerQR();
+                        document.getElementById('qrStatusMsg').textContent = '✅ Inicio de sesión exitoso. Redirigiendo...';
+                        document.getElementById('qrStatusMsg').style.color = '#28a745';
+                        setTimeout(() => {
+                            window.location.href = data.redirect_url;
+                        }, 1000);
+                        return;
+                    }
+                    if (data.status === 'expired' || data.status === 'invalid') {
+                        detenerQR();
+                        document.getElementById('qrCodeDisplay').style.display = 'none';
+                        document.getElementById('qrExpired').style.display = 'block';
+                        document.getElementById('qrStatusMsg').textContent = 'QR expirado. Presiona "Nuevo código".';
+                        document.getElementById('qrStatusMsg').style.color = '#dc3545';
+                        return;
+                    }
+                } catch(e) {
+                    console.error('Polling error:', e);
+                }
+            }, 2000);
+        }
+
+        function detenerQR() {
+            if (qrPollingInterval) {
+                clearInterval(qrPollingInterval);
+                qrPollingInterval = null;
+            }
+        }
+
+        document.getElementById('qrRefreshBtn').addEventListener('click', generarQR);
 
         // ============================================================
         // RECUPERACIÓN DE CONTRASEÑA - PASO 1: Solicitar PIN
@@ -702,6 +827,7 @@
                 });
                 const result = await response.json();
                 if (result.success) {
+                    currentRecoveryPin = pinCode;
                     $('#pinModal').modal('hide');
                     document.getElementById('newPassword').value = '';
                     document.getElementById('confirmPassword').value = '';
@@ -753,7 +879,7 @@
                 const response = await fetch('/proyecto/usuarios/recuperacion_contraseña.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: currentRecoveryEmail, newPassword: newPass })
+                    body: JSON.stringify({ email: currentRecoveryEmail, pin: currentRecoveryPin, newPassword: newPass })
                 });
                 const result = await response.json();
                 if (result.success) {

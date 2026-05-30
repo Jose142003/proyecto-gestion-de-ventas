@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificación 2FA - Cliente</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            font-family: 'Segoe UI', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .card {
+            max-width: 400px;
+            width: 100%;
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .card-header i { font-size: 2rem; margin-bottom: 8px; }
+        .card-body { padding: 24px; }
+        .pin-input-group { display: flex; gap: 8px; justify-content: center; margin: 16px 0; }
+        .pin-digit {
+            width: 48px; height: 55px; text-align: center; font-size: 1.4rem; font-weight: bold;
+            border: 2px solid #e2e8f0; border-radius: 12px; background: #f8fafc;
+        }
+        .pin-digit:focus {
+            border-color: #1e3c72; outline: none; box-shadow: 0 0 0 3px rgba(30,60,114,0.2);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            border: none; border-radius: 12px; padding: 12px;
+            font-weight: 600;
+        }
+        .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+        .alert { border-radius: 12px; font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="card-header">
+            <i class="fas fa-shield-alt"></i>
+            <h5 class="mb-0">Verificación en dos pasos</h5>
+            <small style="opacity:0.8">Ingresa el código de 6 dígitos</small>
+        </div>
+        <div class="card-body">
+            <div id="message" class="alert" style="display:none"></div>
+            <p style="font-size:0.85rem;color:#666;text-align:center;margin-bottom:16px">
+                Abre tu aplicación de autenticación (Google Authenticator) e ingresa el código de 6 dígitos.
+            </p>
+            <div class="pin-input-group" id="pinContainer">
+                <input type="text" class="pin-digit" id="code1" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                <input type="text" class="pin-digit" id="code2" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                <input type="text" class="pin-digit" id="code3" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                <input type="text" class="pin-digit" id="code4" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                <input type="text" class="pin-digit" id="code5" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                <input type="text" class="pin-digit" id="code6" maxlength="1" inputmode="numeric" pattern="[0-9]">
+            </div>
+            <button class="btn btn-primary btn-block" id="verifyBtn" disabled>
+                <i class="fas fa-check-circle"></i> Verificar
+            </button>
+            <p style="text-align:center;margin-top:14px;font-size:0.75rem;color:#94a3b8">
+                <i class="fas fa-info-circle"></i> Código válido por 5 minutos
+            </p>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        if (!token) {
+            document.body.innerHTML = '<div class="card"><div class="card-body text-center"><p style="color:#dc3545">Token inválido</p></div></div>';
+        }
+
+        const pinInputs = document.querySelectorAll('.pin-digit');
+        pinInputs.forEach((input, index) => {
+            input.addEventListener('input', function() {
+                this.value = this.value.replace(/[^0-9]/g, '');
+                if (this.value && index < pinInputs.length - 1) {
+                    pinInputs[index + 1].focus();
+                }
+                updateVerifyBtn();
+            });
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Backspace' && !this.value && index > 0) {
+                    pinInputs[index - 1].focus();
+                }
+                if (e.key === 'Enter' && !document.getElementById('verifyBtn').disabled) {
+                    verificar();
+                }
+            });
+        });
+
+        function updateVerifyBtn() {
+            const allFilled = Array.from(pinInputs).every(i => i.value.length === 1);
+            document.getElementById('verifyBtn').disabled = !allFilled;
+        }
+
+        document.getElementById('verifyBtn').addEventListener('click', verificar);
+
+        async function verificar() {
+            const code = Array.from(pinInputs).map(i => i.value).join('');
+            if (code.length !== 6) return;
+
+            const btn = document.getElementById('verifyBtn');
+            const msgDiv = document.getElementById('message');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Verificando...';
+            msgDiv.style.display = 'none';
+
+            try {
+                const formData = new FormData();
+                formData.append('code', code);
+                formData.append('token', token);
+
+                const res = await fetch('/proyecto/2fa/verificar_login_cliente.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    msgDiv.className = 'alert alert-success';
+                    msgDiv.textContent = '✅ ' + (data.message || 'Verificación exitosa');
+                    msgDiv.style.display = 'block';
+                    setTimeout(() => {
+                        window.location.href = data.redirect_url || '/proyecto/interfaz_usuario/pagina_modernizada.html';
+                    }, 1000);
+                } else {
+                    msgDiv.className = 'alert alert-danger';
+                    msgDiv.textContent = data.message || 'Código inválido';
+                    msgDiv.style.display = 'block';
+                    pinInputs.forEach(i => i.value = '');
+                    pinInputs[0].focus();
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-check-circle"></i> Verificar';
+                }
+            } catch(e) {
+                msgDiv.className = 'alert alert-danger';
+                msgDiv.textContent = 'Error de conexión';
+                msgDiv.style.display = 'block';
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check-circle"></i> Verificar';
+            }
+        }
+    </script>
+</body>
+</html>

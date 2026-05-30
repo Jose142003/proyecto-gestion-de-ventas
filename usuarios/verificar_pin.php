@@ -6,6 +6,7 @@ ob_start();
 header('Content-Type: application/json');
 
 require_once '../conexion/conexion.php';
+iniciarSesion();
 
 $response = ['success' => false, 'message' => ''];
 
@@ -21,10 +22,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $db = conectarDB();
             
-            // CORREGIDO: usar 'correo'
-            $stmt = $db->prepare("SELECT id, nombre, verification_token FROM users WHERE correo = ?");
+            $stmt = $db->prepare("SELECT id, nombre, verification_token, 'users' as tipo FROM users WHERE correo = ?");
             $stmt->execute([$email]);
             $user = $stmt->fetch();
+
+            if (!$user) {
+                $stmt = $db->prepare("SELECT id, nombre, verification_token, 'admin_users' as tipo FROM admin_users WHERE correo = ?");
+                $stmt->execute([$email]);
+                $user = $stmt->fetch();
+            }
 
             if ($user && $user['verification_token']) {
                 $tokenData = json_decode($user['verification_token'], true);
@@ -36,6 +42,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if ($ahora > $expiracion) {
                         $response['message'] = 'El código ha expirado. Solicita uno nuevo.';
                     } elseif ($tokenData['pin'] == $pin) {
+                        $_SESSION['recovery_email'] = $email;
+                        $_SESSION['recovery_tabla'] = $user['tipo'];
                         $response['success'] = true;
                         $response['message'] = 'Código verificado correctamente';
                     } else {

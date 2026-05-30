@@ -92,6 +92,7 @@ try {
             --info: #3498db;
             --purple: #9B59B6;
             --orange: #E67E22;
+            --teal: #1abc9c;
             --border-color: #2c3348;
             --table-hover: rgba(60, 145, 237, 0.1);
         }
@@ -1667,6 +1668,7 @@ try {
                     <div class="card"><div class="card-header"><h3 class="card-title">Productos</h3><div class="card-icon" style="background: var(--success);"><i class="fas fa-boxes"></i></div></div><div class="card-content" id="totalProducts">0</div><div class="card-footer">Productos en inventario</div></div>
                     <div class="card"><div class="card-header"><h3 class="card-title">Pedidos</h3><div class="card-icon" style="background: var(--purple);"><i class="fas fa-shopping-cart"></i></div></div><div class="card-content" id="totalPedidos">0</div><div class="card-footer">Pendientes: <span id="pedidosPendientes">0</span></div></div>
                     <div class="card"><div class="card-header"><h3 class="card-title">Ventas Hoy</h3><div class="card-icon" style="background: var(--orange);"><i class="fas fa-chart-line"></i></div></div><div class="card-content" id="ventasHoy">Bs. 0</div><div class="card-footer">Facturas emitidas</div></div>
+                    <div class="card"><div class="card-header"><h3 class="card-title">Cotizaciones</h3><div class="card-icon" style="background: var(--teal);"><i class="fas fa-file-signature"></i></div></div><div class="card-content" id="totalCotizaciones">0</div><div class="card-footer">Pendientes: <span id="cotizacionesPendientes">0</span></div></div>
                 </div>
                 <div class="dashboard-stats">
                     <div class="stat-card"><div class="stat-value" id="totalVentas">Bs. 0</div><div class="stat-label">Ventas Totales</div></div>
@@ -2653,6 +2655,8 @@ try {
                     const data = await response.json();
                     document.getElementById('totalUsers').innerHTML = data.total_usuarios || 0;
                     document.getElementById('totalProducts').innerHTML = data.total_productos || 0;
+                    document.getElementById('totalCotizaciones').innerHTML = data.total_cotizaciones || 0;
+                    document.getElementById('cotizacionesPendientes').innerHTML = data.cotizaciones_pendientes || 0;
                     document.getElementById('totalPedidos').innerHTML = data.total_pedidos || 0;
                     document.getElementById('pedidosPendientes').innerHTML = data.pedidos_pendientes || 0;
                     document.getElementById('ventasHoy').innerHTML = formatMoney(data.ventas_hoy);

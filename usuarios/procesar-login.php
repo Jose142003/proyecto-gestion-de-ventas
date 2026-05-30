@@ -247,6 +247,40 @@ try {
             error_log("2FA check skipped (columns may not exist): " . $e->getMessage());
         }
     }
+
+    // ========== VERIFICAR 2FA PARA CLIENTES ==========
+    if ($tabla_origen === 'users') {
+        try {
+            $stmt2fa = $pdo->query("SHOW COLUMNS FROM users LIKE '2fa_enabled'");
+            if ($stmt2fa->rowCount() > 0) {
+                $stmt2fa = $pdo->prepare("SELECT 2fa_enabled, 2fa_secret FROM users WHERE id = ?");
+                $stmt2fa->execute([$user['id']]);
+                $client2fa = $stmt2fa->fetch();
+                
+                if ($client2fa && $client2fa['2fa_enabled'] && !empty($client2fa['2fa_secret'])) {
+                    $tokenVerificacion = bin2hex(random_bytes(32));
+                    $expiracion = date('Y-m-d H:i:s', time() + 300);
+                    
+                    $stmtToken = $pdo->prepare("
+                        INSERT INTO sesiones_2fa_clientes (user_id, token_verificacion, expiracion)
+                        VALUES (?, ?, ?)
+                    ");
+                    $stmtToken->execute([$user['id'], $tokenVerificacion, $expiracion]);
+                    
+                    echo json_encode([
+                        "success" => true,
+                        "require_2fa" => true,
+                        "message" => "Verificación de dos factores requerida",
+                        "token_2fa" => $tokenVerificacion,
+                        "redirect_url" => BASE_URL . '/2fa/verificar_cliente.html?token=' . $tokenVerificacion
+                    ]);
+                    exit;
+                }
+            }
+        } catch (PDOException $e) {
+            error_log("2FA client check skipped: " . $e->getMessage());
+        }
+    }
     
     // ========== LIMPIAR Y REGENERAR SESIÓN (SEPARADA POR ROL) ==========
     // Cerrar sesión temporal de login

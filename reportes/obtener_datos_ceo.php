@@ -109,7 +109,7 @@ try {
     ");
     $ventas_por_mes = $stmt_ventas_por_mes->fetchAll(PDO::FETCH_ASSOC);
 
-    // Métodos de pago más usados - CORREGIDO
+    // Métodos de pago más usados - incluye todas las facturas (pagadas y pendientes)
     $stmt_metodos_pago = $pdo->query("
         SELECT 
             CASE 
@@ -123,8 +123,9 @@ try {
             COUNT(*) as cantidad,
             COALESCE(SUM(total), 0) as total
         FROM facturas 
-        WHERE estado = 'pagada'
+        WHERE metodo_pago IS NOT NULL AND metodo_pago != ''
         GROUP BY metodo_pago
+        ORDER BY total DESC
     ");
     $metodos_pago = $stmt_metodos_pago->fetchAll(PDO::FETCH_ASSOC);
 

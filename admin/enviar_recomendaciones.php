@@ -7,12 +7,13 @@ require_once __DIR__ . '/../usuarios/config_email.php';
 
 function obtenerRecomendacionesParaCliente(PDO $pdo, string $clienteEmail, int $limite = 6): array {
     $categorias = $pdo->prepare("
-        SELECT DISTINCT p.category FROM pedidos ped
+        SELECT p.category FROM pedidos ped
         JOIN pedido_detalles pd ON ped.id = pd.pedido_id
         JOIN products p ON pd.producto_id = p.id
         WHERE ped.cliente_id = (SELECT id FROM clientes WHERE email = ? LIMIT 1)
         AND p.active = 1
-        ORDER BY ped.created_at DESC
+        GROUP BY p.category
+        ORDER BY MAX(ped.created_at) DESC
         LIMIT 3
     ");
     $categorias->execute([$clienteEmail]);
@@ -126,7 +127,13 @@ function enviarNotificacionNuevoProducto(PDO $pdo, int $productoId, string $prod
         $producto = $stmt->fetch();
         if (!$producto) return ['success' => false, 'message' => 'Producto no encontrado'];
 
-        $stmt = $pdo->prepare("SELECT DISTINCT c.email, c.nombre FROM clientes c JOIN pedidos p ON c.id = p.cliente_id WHERE p.estado IN ('completado','facturado') AND c.email IS NOT NULL AND c.email != '' AND (c.ciudad IS NOT NULL OR c.nombre IS NOT NULL) GROUP BY c.email");
+        $stmt = $pdo->prepare("
+            SELECT DISTINCT email, nombre FROM (
+                SELECT c.email, c.nombre FROM clientes c JOIN pedidos p ON c.id = p.cliente_id WHERE p.estado IN ('completado','facturado') AND c.email IS NOT NULL AND c.email != ''
+                UNION
+                SELECT u.correo AS email, u.nombre FROM users u JOIN pedidos p ON u.id = p.usuario_id WHERE p.estado IN ('completado','facturado') AND u.correo IS NOT NULL AND u.correo != ''
+            ) AS todos_los_clientes
+        ");
         $stmt->execute();
         $clientes = $stmt->fetchAll();
 
@@ -232,14 +239,20 @@ try {
             $resultado = enviarRecomendaciones($pdo, $email, $nombre);
             echo json_encode($resultado);
         } elseif ($accion === 'recomendar_masivo') {
-            $stmt = $pdo->query("SELECT DISTINCT c.email, c.nombre FROM clientes c JOIN pedidos p ON c.id = p.cliente_id WHERE c.email IS NOT NULL AND c.email != '' AND p.estado IN ('completado','facturado')");
+            $stmt = $pdo->query("
+                SELECT DISTINCT email, nombre FROM (
+                    SELECT c.email, c.nombre FROM clientes c JOIN pedidos p ON c.id = p.cliente_id WHERE c.email IS NOT NULL AND c.email != '' AND p.estado IN ('completado','facturado')
+                    UNION
+                    SELECT u.correo AS email, u.nombre FROM users u JOIN pedidos p ON u.id = p.usuario_id WHERE u.correo IS NOT NULL AND u.correo != '' AND p.estado IN ('completado','facturado')
+                ) AS todos_los_clientes
+            ");
             $clientes = $stmt->fetchAll();
             $enviados = 0;
             foreach ($clientes as $c) {
                 $res = enviarRecomendaciones($pdo, $c['email'], $c['nombre']);
                 if ($res['success']) $enviados++;
             }
-            echo json_encode(['success' => true, 'message' => "Recomendaciones enviadas a {$enviados} de " . count($clientes) . " clientes"]);
+            echo json_encode(['success' => $enviados > 0, 'message' => "Recomendaciones enviadas a {$enviados} de " . count($clientes) . " clientes"]);
         } elseif ($accion === 'nuevo_producto') {
             $productoId = (int)($input['producto_id'] ?? 0);
             $nombre = trim($input['nombre'] ?? '');

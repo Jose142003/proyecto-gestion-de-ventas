@@ -37,6 +37,11 @@ try {
     $stmtClientes = $pdo->query($sqlClientes);
     $totalClientes = $stmtClientes->fetch(PDO::FETCH_ASSOC);
     
+    // Total de cotizaciones y pendientes
+    $sqlCotizaciones = "SELECT COUNT(*) as total_cotizaciones, SUM(CASE WHEN estado = 'pendiente' THEN 1 ELSE 0 END) as cotizaciones_pendientes FROM cotizaciones";
+    $stmtCotizaciones = $pdo->query($sqlCotizaciones);
+    $cotizaciones = $stmtCotizaciones->fetch(PDO::FETCH_ASSOC);
+
     // Total de pedidos y pendientes
     $sqlPedidos = "SELECT COUNT(*) as total_pedidos, SUM(CASE WHEN estado = 'pendiente' THEN 1 ELSE 0 END) as pedidos_pendientes FROM pedidos";
     $stmtPedidos = $pdo->query($sqlPedidos);
@@ -56,6 +61,8 @@ try {
         'success' => true,
         'total_usuarios' => (int)($totalUsuarios['total_usuarios'] ?? 0),
         'total_productos' => (int)($totalProductos['total_productos'] ?? 0),
+        'total_cotizaciones' => (int)($cotizaciones['total_cotizaciones'] ?? 0),
+        'cotizaciones_pendientes' => (int)($cotizaciones['cotizaciones_pendientes'] ?? 0),
         'total_pedidos' => (int)($pedidos['total_pedidos'] ?? 0),
         'pedidos_pendientes' => (int)($pedidos['pedidos_pendientes'] ?? 0),
         'facturas_hoy' => (int)($facturasHoy['facturas_hoy'] ?? 0),
@@ -75,6 +82,8 @@ try {
         'message' => 'Error interno del servidor',
         'total_usuarios' => 0,
         'total_productos' => 0,
+        'total_cotizaciones' => 0,
+        'cotizaciones_pendientes' => 0,
         'total_pedidos' => 0,
         'pedidos_pendientes' => 0,
         'facturas_hoy' => 0,

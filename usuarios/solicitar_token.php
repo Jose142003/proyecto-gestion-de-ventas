@@ -33,13 +33,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $db = conectarDB();
             
-            // CORREGIDO: usar 'correo' en lugar de 'email'
-            $stmt = $db->prepare("SELECT id, nombre FROM users WHERE correo = ?");
+            $stmt = $db->prepare("SELECT id, nombre, 'users' as tipo FROM users WHERE correo = ?");
             $stmt->execute([$email]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
+            if (!$user) {
+                $stmt = $db->prepare("SELECT id, nombre, 'admin_users' as tipo FROM admin_users WHERE correo = ?");
+                $stmt->execute([$email]);
+                $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            }
+
             if ($user) {
-                // Generar PIN de 6 dígitos
                 $pin = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
                 $expira = date('Y-m-d H:i:s', strtotime('+1 hour'));
 
@@ -49,16 +53,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'type' => 'password_reset'
                 ]);
 
-                // Guardar el token
-                $update = $db->prepare("UPDATE users SET verification_token = ? WHERE id = ?");
+                $tabla = $user['tipo'];
+                $update = $db->prepare("UPDATE $tabla SET verification_token = ? WHERE id = ?");
                 $update->execute([$tokenData, $user['id']]);
 
-                // Enviar correo
                 if (enviarTokenEmail($email, $user['nombre'], $pin)) {
                     $response['success'] = true;
                     $response['message'] = 'Se ha enviado un código de verificación a tu correo.';
                 } else {
-                    $response['message'] = 'Error al enviar el correo. Inténtalo de nuevo.';
+                    $response['message'] = 'Error al enviar el correo. Verifica que el servidor SMTP esté configurado correctamente.';
                 }
             } else {
                 $response['message'] = 'No encontramos una cuenta asociada a este correo.';

@@ -104,6 +104,9 @@ try {
     } catch (Exception $e) {
         error_log("Error al registrar historial: " . $e->getMessage());
     }
+
+    $stmtNotif = $pdo->prepare("INSERT INTO notificaciones (usuario_id, titulo, mensaje, tipo, referencia_id) VALUES (?, ?, ?, 'pedido', ?)");
+    $stmtNotif->execute([$pedido['usuario_id'], "Pedido #$pedido_id actualizado", "Tu pedido #$pedido_id cambió de '$estado_anterior' a '$nuevo_estado'", $pedido_id]);
     
     // Si el estado es 'facturado', verificar si ya tiene factura
     if ($nuevo_estado === 'facturado') {

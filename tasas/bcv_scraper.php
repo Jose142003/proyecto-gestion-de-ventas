@@ -12,37 +12,20 @@ ini_set('log_errors', 1);
 // FUNCIÓN PARA LIMPIAR Y CONVERTIR NÚMEROS CON FORMATO VENEZOLANO
 // ==============================================
 function limpiarNumeroVenezolano($numero) {
-    // Eliminar espacios
     $numero = trim($numero);
     
-    // Detectar si tiene formato venezolano (ej: "500,46" que son 500 miles? o "50,046060000"?)
-    // Según la imagen: "USD500,46060000" = 50.04606 (la coma es separador decimal en este caso?)
-    // Pero en Venezuela, la coma es separador de miles y el punto decimal
-	
-    // Revisar: "500,46060000" - si hay 3 dígitos antes de la coma, probablemente son miles
-    if (preg_match('/^(\d{3}),(\d+)$/', $numero, $matches)) {
-        // Caso: "500,46" -> 500.46? o 50.046?
-        // Según la imagen, USD 50,046060000 = 50.04 Bs
-        // El BCV muestra "USD500,46060000" en la página pero el valor real es ~50.05
-        // Los primeros 2 dígitos son la parte entera, el tercero es decimal
-        $entero = $matches[1]; // "500"
-        $decimal = $matches[2]; // "46060000"
-        
-        // Si el entero tiene 3 dígitos y empieza con 5, probablemente son 3 dígitos que representan 50.0
-        if (strlen($entero) == 3 && substr($entero, 0, 1) == '5') {
-            // Convertir "500" a 50.0
-            $entero_corregido = substr($entero, 0, 2) . '.' . substr($entero, 2);
-            return floatval(str_replace(',', '.', $entero_corregido . '.' . $decimal));
-        }
+    // Reemplazar coma por punto (formato venezolano: coma es decimal)
+    $numero = str_replace(',', '.', $numero);
+    
+    // Eliminar puntos que sean separadores de miles (solo si hay mas de un punto)
+    $partes = explode('.', $numero);
+    if (count($partes) > 2) {
+        // Formato: 1.549,37 -> quitar puntos excepto el ultimo
+        $ultimo = array_pop($partes);
+        $numero = implode('', $partes) . '.' . $ultimo;
     }
     
-    // Reemplazar coma por punto si es el único separador decimal
-    if (strpos($numero, ',') !== false && strpos($numero, '.') === false) {
-        $numero = str_replace(',', '.', $numero);
-    }
-    
-    // Eliminar cualquier coma que quede (separadores de miles)
-    $numero = str_replace(',', '', $numero);
+    $numero = preg_replace('/[^0-9.]/', '', $numero);
     
     return floatval($numero);
 }
@@ -53,40 +36,40 @@ function limpiarNumeroVenezolano($numero) {
 function obtenerTasaBCV() {
     // 1. Intentar scraping directo del BCV (fuente oficial)
     $tasa = scrapingBCVDirecto();
-    if ($tasa !== null && $tasa > 20 && $tasa < 200) {
+    if ($tasa !== null && $tasa > 20 && $tasa < 2000) {
         guardarEnCacheLocal($tasa, 'BCV Oficial');
         return $tasa;
     }
     
     // 2. Intentar con API alternativa (ExchangeRate-API)
     $tasa = obtenerDeExchangeRateAPI();
-    if ($tasa !== null && $tasa > 20 && $tasa < 200) {
+    if ($tasa !== null && $tasa > 20 && $tasa < 2000) {
         guardarEnCacheLocal($tasa, 'ExchangeRate-API');
         return $tasa;
     }
     
     // 3. Intentar con Frankfurter API
     $tasa = obtenerDeFrankfurter();
-    if ($tasa !== null && $tasa > 20 && $tasa < 200) {
+    if ($tasa !== null && $tasa > 20 && $tasa < 2000) {
         guardarEnCacheLocal($tasa, 'Frankfurter');
         return $tasa;
     }
     
     // 4. Intentar con CurrencyAPI
     $tasa = obtenerDeCurrencyAPI();
-    if ($tasa !== null && $tasa > 20 && $tasa < 200) {
+    if ($tasa !== null && $tasa > 20 && $tasa < 2000) {
         guardarEnCacheLocal($tasa, 'CurrencyAPI');
         return $tasa;
     }
     
     // 5. Usar caché local
     $tasa = obtenerDeCacheLocal(true);
-    if ($tasa !== null && $tasa > 20 && $tasa < 200) {
+    if ($tasa !== null && $tasa > 20 && $tasa < 2000) {
         return $tasa;
     }
     
     // 6. Valor por defecto
-    return 50.05;
+    return 549;
 }
 
 // ==============================================
@@ -149,7 +132,7 @@ function scrapingBCVDirecto() {
                         $numero_raw = $matches[1];
                         $tasa = convertirTasaUSD($numero_raw);
                         
-                        if ($tasa !== null && $tasa > 20 && $tasa < 200) {
+                        if ($tasa !== null && $tasa > 20 && $tasa < 2000) {
                             error_log("BCV Scraping exitoso desde $url: $numero_raw -> $tasa");
                             return $tasa;
                         }
@@ -180,51 +163,28 @@ function scrapingBCVDirecto() {
 // CONVERTIR TASA USD DEL BCV (formato especial)
 // ==============================================
 function convertirTasaUSD($numero_raw) {
-    // Eliminar espacios
-    $numero_raw = trim($numero_raw);
+    $numero_raw = trim(str_replace(' ', '', $numero_raw));
     
-    // Caso: "500,46060000" (formato del BCV)
-    // El valor real es 50.04606 (los primeros 2 dígitos + el resto)
-    if (preg_match('/^(\d{3}),(\d+)$/', $numero_raw, $matches)) {
-        $tres_digitos = $matches[1]; // "500"
-        $decimales = $matches[2];    // "46060000"
-        
-        // Convertir "500" a "50.0"
-        $primeros_dos = substr($tres_digitos, 0, 2);  // "50"
-        $tercer_digito = substr($tres_digitos, 2, 1); // "0"
-        
-        // Construir número: 50.046060000
-        $numero_corregido = $primeros_dos . '.' . $tercer_digito . $decimales;
-        
-        return floatval($numero_corregido);
-    }
-    
-    // Caso: "50,05" (formato normal con coma decimal)
-    if (preg_match('/^(\d{1,2}),(\d{1,2})$/', $numero_raw, $matches)) {
+    // Formato BCV: "549,37160000" -> 549.3716 (comma es separador decimal)
+    if (preg_match('/^(\d+),(\d+)$/', $numero_raw, $matches)) {
         return floatval($matches[1] . '.' . $matches[2]);
     }
     
-    // Caso: "50.05" (formato con punto decimal)
-    if (preg_match('/^(\d{1,2})\.(\d{1,2})$/', $numero_raw, $matches)) {
+    // Formato con punto decimal
+    if (preg_match('/^(\d+)\.(\d+)$/', $numero_raw, $matches)) {
         return floatval($numero_raw);
     }
     
-    // Intentar limpieza general
+    // Solo dígitos (sin separadores)
+    if (ctype_digit($numero_raw)) {
+        return floatval($numero_raw);
+    }
+    
+    // Limpieza general
     $numero_limpio = str_replace(',', '.', $numero_raw);
     $numero_limpio = preg_replace('/[^0-9.]/', '', $numero_limpio);
     
-    $tasa = floatval($numero_limpio);
-    
-    // Si la tasa es > 100, probablemente está mal interpretada (como "500,46" -> 500.46)
-    // Intentar corregir dividiendo entre 10
-    if ($tasa > 100 && $tasa < 1000) {
-        $tasa_corregida = $tasa / 10;
-        if ($tasa_corregida > 20 && $tasa_corregida < 100) {
-            return $tasa_corregida;
-        }
-    }
-    
-    return ($tasa > 20 && $tasa < 200) ? $tasa : null;
+    return ($numero_limpio !== '' && is_numeric($numero_limpio)) ? floatval($numero_limpio) : null;
 }
 
 // ==============================================
