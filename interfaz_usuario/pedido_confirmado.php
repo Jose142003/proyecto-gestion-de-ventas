@@ -598,22 +598,8 @@ $return_url = '/proyecto/interfaz_usuario/pagina_modernizada.html';
 </div>
 
 <script>
-    // Redirigir automáticamente a la tienda después de 5 segundos
-    setTimeout(function() {
-        window.location.href = '<?php echo $return_url; ?>';
-    }, 5000);
-    
-    // Asegurar que al hacer clic en "Seguir Comprando" se preserve la sesión del cliente
-    document.getElementById('btnSeguirComprando')?.addEventListener('click', function(e) {
-        console.log('Redirigiendo a la tienda...');
-    });
-    
-    // Si el usuario es administrador, mostrar aviso informativo
     <?php if ($es_administrador): ?>
     console.log('Usuario administrador - compra registrada correctamente');
-    setTimeout(function() {
-        console.log('Puedes volver al panel administrativo desde el botón correspondiente');
-    }, 1000);
     <?php endif; ?>
 </script>
 </body>

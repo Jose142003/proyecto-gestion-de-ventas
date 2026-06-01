@@ -156,7 +156,7 @@ try {
         } while ($check_fact->fetch());
     }
     
-    $estado_factura = 'pendiente';
+    $estado_factura = (in_array($payment_method, ['transferencia', 'pago_movil', 'zelle'])) ? 'pagada' : 'pendiente';
     
     $fact_insert = $pdo->prepare("INSERT INTO facturas (numero_factura, cliente_id, pedido_id, fecha_emision, fecha_vencimiento, subtotal, iva, total, metodo_pago, estado, usuario_id, observaciones) VALUES (?, ?, ?, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 30 DAY), ?, ?, ?, ?, ?, ?, ?)");
     $fact_insert->execute([$numero_factura, $cliente_id, $pedido_id, $subtotal, $iva, $total, $payment_method, $estado_factura, $user_id, $observaciones]);

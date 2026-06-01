@@ -315,6 +315,7 @@ try {
     $_SESSION['tabla_origen'] = $tabla_origen; // CRÍTICO: 'users' o 'admin_users'
     $_SESSION['user_tipo_login'] = $tipo_usuario ?: ($es_admin ? 'admin' : 'cliente');
     $_SESSION['2fa_verified'] = true;
+    $_SESSION['2fa_verified_at'] = time();
 
     // ========== BANDERAS CLARAS ==========
     if ($tabla_origen === 'admin_users') {

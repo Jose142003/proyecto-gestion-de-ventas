@@ -1015,6 +1015,32 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     </div>
 </div>
 
+<div class="modal fade" id="reverify2faModal" tabindex="-1" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-shield-alt"></i> Verificación periódica 2FA</h5>
+            </div>
+            <div class="modal-body text-center">
+                <i class="fab fa-google" style="font-size:3rem;color:#4285F4;margin-bottom:10px"></i>
+                <p style="font-size:0.9rem;color:var(--text-color);margin-bottom:4px">Tu sesión requiere verificación adicional</p>
+                <p style="font-size:0.85rem;opacity:0.7;margin-bottom:16px">Abre <strong>Google Authenticator</strong> e ingresa el código de 6 dígitos</p>
+                <form id="reverify2faForm">
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="reverify2faCode" inputmode="numeric" autocomplete="one-time-code"
+                               maxlength="6" placeholder="000000" required
+                               style="text-align:center;font-size:1.5rem;letter-spacing:8px;font-weight:600;border-radius:10px;padding:12px;background:var(--card-bg);color:var(--text-color)">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block" id="reverify2faBtn">
+                        <i class="fas fa-check-circle"></i> Verificar código
+                    </button>
+                </form>
+                <div id="reverify2faMessage" style="display:none;margin-top:0.8rem;padding:8px 12px;border-radius:8px;font-size:0.85rem"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="contactModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -1540,8 +1566,76 @@ function iniciarVerificacionSesionPeriodica() {
         } catch (error) {
             console.error('Error en verificación periódica:', error);
         }
+
+        // Check periodic 2FA re-verification
+        verificarReverificacion2FA();
     }, 60000);
 }
+
+async function verificarReverificacion2FA() {
+    if (!CURRENT_USER || !CURRENT_USER.id) return;
+    try {
+        const res = await fetch('/proyecto/2fa/verificar_2fa_periodico.php?action=check&type=cliente', {
+            credentials: 'include',
+            cache: 'no-store'
+        });
+        const data = await res.json();
+        if (data.success && data.needs_2fa) {
+            if (!$('#reverify2faModal').is(':visible')) {
+                $('#reverify2faModal').modal('show');
+                document.getElementById('reverify2faCode').value = '';
+                document.getElementById('reverify2faMessage').style.display = 'none';
+            }
+        }
+    } catch(e) {
+        console.error('Error verificando 2FA periódico:', e);
+    }
+}
+
+document.getElementById('reverify2faForm')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const code = document.getElementById('reverify2faCode').value.trim();
+    if (code.length !== 6) return;
+    const btn = document.getElementById('reverify2faBtn');
+    const msgDiv = document.getElementById('reverify2faMessage');
+    msgDiv.style.display = 'none';
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Verificando...';
+
+    try {
+        const formData = new FormData();
+        formData.append('action', 'verify');
+        formData.append('code', code);
+        formData.append('type', 'cliente');
+        const res = await fetch('/proyecto/2fa/verificar_2fa_periodico.php', { method: 'POST', body: formData, credentials: 'include' });
+        const data = await res.json();
+        if (data.success) {
+            msgDiv.style.cssText = 'display:block;padding:8px 12px;border-radius:8px;font-size:0.85rem;background:#d4edda;color:#155724';
+            msgDiv.textContent = '✅ Verificado correctamente';
+            setTimeout(() => {
+                $('#reverify2faModal').modal('hide');
+            }, 800);
+        } else {
+            msgDiv.style.cssText = 'display:block;padding:8px 12px;border-radius:8px;font-size:0.85rem;background:#f8d7da;color:#721c24';
+            msgDiv.textContent = data.message || 'Código inválido';
+            document.getElementById('reverify2faCode').value = '';
+            document.getElementById('reverify2faCode').focus();
+        }
+    } catch(e) {
+        msgDiv.style.cssText = 'display:block;padding:8px 12px;border-radius:8px;font-size:0.85rem;background:#f8d7da;color:#721c24';
+        msgDiv.textContent = 'Error de conexión';
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check-circle"></i> Verificar código';
+    }
+});
+
+document.getElementById('reverify2faCode')?.addEventListener('input', function() {
+    this.value = this.value.replace(/\D/g, '').slice(0, 6);
+    if (this.value.length === 6) {
+        document.getElementById('reverify2faForm').dispatchEvent(new Event('submit'));
+    }
+});
 
 function formatearTasa(tasa, decimales = 4) {
     return tasa.toLocaleString('es-VE', {

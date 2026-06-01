@@ -474,9 +474,9 @@ async function procesarPago() {
     try {
         const user_id = localStorage.getItem('user_id') || 1;
         
-        // Preparar productos con el formato correcto
+        // Preparar productos con el formato correcto (usar product_id, no el ID del carrito)
         const productosEnvio = cartItems.map(item => ({
-            id: item.id,
+            id: item.product_id,
             name: item.name,
             price: parseFloat(item.price),
             quantity: parseInt(item.quantity)

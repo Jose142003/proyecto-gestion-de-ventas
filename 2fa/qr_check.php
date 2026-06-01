@@ -68,6 +68,7 @@ try {
         $_SESSION['user_rol'] = $userData['rol'];
         $_SESSION['tabla_origen'] = $userData['user_table'];
         $_SESSION['2fa_verified'] = true;
+        $_SESSION['2fa_verified_at'] = time();
 
         if ($userData['user_table'] === 'admin_users') {
             $_SESSION['es_admin'] = true;

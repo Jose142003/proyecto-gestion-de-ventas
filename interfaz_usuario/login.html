@@ -321,22 +321,50 @@
                 </div>
 
                 <div id="qrLoginSection" style="display:none;text-align:center">
-                    <div id="qrContainer" style="background:#f8f8f8;border:2px dashed #ddd;border-radius:12px;padding:20px;margin-bottom:10px">
-                        <div id="qrLoading" style="padding:30px 0">
-                            <div class="loading-spinner-small" style="width:32px;height:32px;border-width:3px"></div>
-                            <p style="font-size:0.8rem;color:#666;margin-top:10px">Generando código QR...</p>
+                    <!-- Step 1: Enter email to generate QR -->
+                    <div id="qrStep1">
+                        <p style="font-size:0.85rem;color:#555;margin-bottom:10px">Ingresa tu correo para generar el código QR</p>
+                        <div class="form-group" style="margin-bottom:8px">
+                            <input type="email" class="form-control" id="qrEmailInput" placeholder="Correo electrónico" required style="border-radius:8px;padding:8px 12px;font-size:0.85rem">
                         </div>
-                        <div id="qrCodeDisplay" style="display:none">
-                            <canvas id="qrLoginCanvas"></canvas>
-                            <p style="font-size:0.75rem;color:#666;margin-top:8px">Escanea este código con tu teléfono</p>
-                        </div>
-                        <div id="qrExpired" style="display:none">
-                            <i class="fas fa-clock" style="font-size:3rem;color:#dc3545"></i>
-                            <p style="font-size:0.8rem;color:#dc3545;margin-top:8px">QR expirado</p>
-                        </div>
+                        <button class="btn btn-login" id="qrGenerateBtn" style="padding:8px;font-size:0.85rem">
+                            <i class="fas fa-qrcode"></i> Generar QR
+                        </button>
+                        <div id="qrStep1Error" style="color:#dc3545;font-size:0.75rem;margin-top:6px;display:none"></div>
                     </div>
-                    <div id="qrStatusMsg" style="font-size:0.8rem;color:#666;margin-bottom:8px">Esperando escaneo...</div>
-                    <button class="btn btn-sm" id="qrRefreshBtn" style="background:#e9ecef;border:none;border-radius:8px;padding:6px 16px;font-size:0.75rem;cursor:pointer"><i class="fas fa-sync-alt"></i> Nuevo código</button>
+                    <!-- Step 2: QR + Password + GA Code -->
+                    <div id="qrStep2" style="display:none">
+                        <div id="qrContainer" style="background:#f8f8f8;border:2px dashed #ddd;border-radius:12px;padding:20px;margin-bottom:10px">
+                            <div id="qrLoading" style="padding:30px 0">
+                                <div class="loading-spinner-small" style="width:32px;height:32px;border-width:3px"></div>
+                                <p style="font-size:0.8rem;color:#666;margin-top:10px">Generando código QR...</p>
+                            </div>
+                            <div id="qrCodeDisplay" style="display:none">
+                                <canvas id="qrLoginCanvas"></canvas>
+                                <p style="font-size:0.75rem;color:#666;margin-top:8px">Escanea este código QR con <strong>Google Authenticator</strong></p>
+                            </div>
+                            <div id="qrExpired" style="display:none">
+                                <i class="fas fa-clock" style="font-size:3rem;color:#dc3545"></i>
+                                <p style="font-size:0.8rem;color:#dc3545;margin-top:8px">QR expirado</p>
+                            </div>
+                        </div>
+                        <form id="qrLoginForm2">
+                            <input type="hidden" id="qrLoginToken">
+                            <input type="hidden" id="qrLoginEmail">
+                            <div class="form-group" style="margin-bottom:8px">
+                                <input type="password" class="form-control" id="qrPasswordInput" placeholder="Contraseña" required style="border-radius:8px;padding:8px 12px;font-size:0.85rem">
+                            </div>
+                            <div class="form-group" style="margin-bottom:8px">
+                                <input type="text" class="form-control" id="qrCodeInput" inputmode="numeric" maxlength="6" placeholder="Código de 6 dígitos" required style="border-radius:8px;padding:8px 12px;font-size:0.85rem;text-align:center;letter-spacing:4px;font-weight:600">
+                            </div>
+                            <button type="submit" class="btn btn-login" id="qrLoginBtn2" style="padding:8px;font-size:0.85rem">
+                                Iniciar sesión
+                            </button>
+                            <div id="qrLoginError2" style="color:#dc3545;font-size:0.75rem;margin-top:6px;display:none"></div>
+                        </form>
+                    </div>
+                    <div id="qrStatusMsg" style="font-size:0.8rem;color:#666;margin-bottom:8px;display:none">&nbsp;</div>
+                    <button class="btn btn-sm" id="qrBackBtn" style="display:none;background:#e9ecef;border:none;border-radius:8px;padding:6px 16px;font-size:0.75rem;cursor:pointer"><i class="fas fa-arrow-left"></i> Volver</button>
                 </div>
 
                 <div style="text-align:center;margin-top:6px">
@@ -423,7 +451,42 @@
         </div>
     </div>
 
-    <!-- MODAL 3: Cambiar contraseña -->
+    <!-- MODAL 3: Google Authenticator (2FA) -->
+    <div class="modal fade" id="gaModal" tabindex="-1" role="dialog" aria-labelledby="gaModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="gaModalLabel">
+                        <i class="fas fa-shield-alt"></i> Autenticación de dos factores
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white;">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body text-center">
+                    <i class="fab fa-google" style="font-size:3rem;color:#4285F4;margin-bottom:10px"></i>
+                    <p style="font-size:0.9rem;color:#555;margin-bottom:4px">Abre tu aplicación <strong>Google Authenticator</strong></p>
+                    <p style="font-size:0.85rem;color:#777;margin-bottom:16px">Ingresa el código de 6 dígitos para completar el inicio de sesión</p>
+                    <form id="gaForm">
+                        <div class="form-group">
+                            <input type="text" class="form-control" id="gaCode" inputmode="numeric" autocomplete="one-time-code"
+                                   maxlength="6" placeholder="000000" required
+                                   style="text-align:center;font-size:1.5rem;letter-spacing:8px;font-weight:600;border-radius:10px;padding:12px">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block btn-modal" id="gaBtn">
+                            <i class="fas fa-check-circle"></i> Verificar código
+                        </button>
+                    </form>
+                    <div id="gaMessage" class="alert-message" style="display: none; margin-top: 0.8rem;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-modal" data-dismiss="modal">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 4: Cambiar contraseña -->
     <div class="modal fade" id="resetPasswordModal" tabindex="-1" role="dialog" aria-labelledby="resetPasswordLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
@@ -616,27 +679,49 @@
             this.innerHTML = isHidden
                 ? '<i class="fas fa-keyboard"></i> Iniciar sesión con correo'
                 : '<i class="fas fa-qrcode"></i> Iniciar sesión con QR';
-            if (isHidden) generarQR();
-            else detenerQR();
+            if (isHidden) {
+                document.getElementById('qrStep1').style.display = 'block';
+                document.getElementById('qrStep2').style.display = 'none';
+                document.getElementById('qrBackBtn').style.display = 'none';
+                document.getElementById('qrStatusMsg').style.display = 'none';
+                document.getElementById('qrStep1Error').style.display = 'none';
+                document.getElementById('qrEmailInput').value = '';
+                detenerQR();
+            } else {
+                detenerQR();
+            }
         });
 
-        async function generarQR() {
-            detenerQR();
-            document.getElementById('qrLoading').style.display = 'block';
-            document.getElementById('qrCodeDisplay').style.display = 'none';
-            document.getElementById('qrExpired').style.display = 'none';
-            document.getElementById('qrStatusMsg').textContent = 'Generando código QR...';
+        document.getElementById('qrGenerateBtn').addEventListener('click', async function() {
+            const email = document.getElementById('qrEmailInput').value.trim();
+            const errorDiv = document.getElementById('qrStep1Error');
+            errorDiv.style.display = 'none';
+            if (!email) {
+                errorDiv.textContent = 'Ingresa tu correo electrónico';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            const btn = this;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Generando...';
 
             try {
-                const res = await fetch('/proyecto/2fa/qr_generate.php');
+                const formData = new FormData();
+                formData.append('email', email);
+                const res = await fetch('/proyecto/2fa/qr_generate.php', { method: 'POST', body: formData });
                 const data = await res.json();
                 if (!data.success) throw new Error(data.message);
 
                 currentQrToken = data.token;
+
+                // Show Step 2
+                document.getElementById('qrStep1').style.display = 'none';
+                document.getElementById('qrStep2').style.display = 'block';
+                document.getElementById('qrBackBtn').style.display = 'inline-block';
                 document.getElementById('qrLoading').style.display = 'none';
                 document.getElementById('qrCodeDisplay').style.display = 'block';
-                document.getElementById('qrExpired').style.display = 'none';
-                document.getElementById('qrStatusMsg').textContent = 'Escanea este código con tu teléfono';
+                document.getElementById('qrStatusMsg').style.display = 'none';
 
                 new QRious({
                     element: document.getElementById('qrLoginCanvas'),
@@ -645,15 +730,85 @@
                     level: 'M'
                 });
 
+                document.getElementById('qrLoginToken').value = data.token;
+                document.getElementById('qrLoginEmail').value = email;
+                document.getElementById('qrPasswordInput').value = '';
+                document.getElementById('qrCodeInput').value = '';
+                document.getElementById('qrLoginError2').style.display = 'none';
+
                 iniciarPolling(data.token);
             } catch(e) {
-                document.getElementById('qrLoading').style.display = 'none';
-                document.getElementById('qrExpired').style.display = 'block';
-                document.getElementById('qrExpired').querySelector('p').textContent = 'Error al generar QR';
-                document.getElementById('qrStatusMsg').textContent = 'Error';
+                errorDiv.textContent = e.message || 'Error al generar QR';
+                errorDiv.style.display = 'block';
                 console.error('Error generando QR:', e);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-qrcode"></i> Generar QR';
             }
-        }
+        });
+
+        document.getElementById('qrBackBtn').addEventListener('click', function() {
+            detenerQR();
+            document.getElementById('qrStep2').style.display = 'none';
+            document.getElementById('qrStep1').style.display = 'block';
+            document.getElementById('qrBackBtn').style.display = 'none';
+            document.getElementById('qrStatusMsg').style.display = 'none';
+        });
+
+        document.getElementById('qrLoginForm2').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const token = document.getElementById('qrLoginToken').value;
+            const email = document.getElementById('qrLoginEmail').value;
+            const password = document.getElementById('qrPasswordInput').value;
+            const code = document.getElementById('qrCodeInput').value.trim();
+            const errorDiv = document.getElementById('qrLoginError2');
+            errorDiv.style.display = 'none';
+
+            if (!token || !email || !password || !code) {
+                errorDiv.textContent = 'Completa todos los campos';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            const btn = document.getElementById('qrLoginBtn2');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Verificando...';
+
+            try {
+                const formData = new FormData();
+                formData.append('action', 'login_with_code');
+                formData.append('email', email);
+                formData.append('password', password);
+                formData.append('code', code);
+                const res = await fetch(`/proyecto/2fa/qr_login.php?token=${token}`, { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('qrStatusMsg').textContent = 'Inicio de sesión confirmado.';
+                    document.getElementById('qrStatusMsg').style.color = '#28a745';
+                    document.getElementById('qrStatusMsg').style.display = 'block';
+                    document.getElementById('qrStep2').style.display = 'none';
+                    document.getElementById('qrBackBtn').style.display = 'none';
+                } else {
+                    errorDiv.textContent = data.message || 'Error al iniciar sesión';
+                    errorDiv.style.display = 'block';
+                    document.getElementById('qrCodeInput').value = '';
+                    document.getElementById('qrCodeInput').focus();
+                }
+            } catch(e) {
+                errorDiv.textContent = 'Error de conexión';
+                errorDiv.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Iniciar sesión';
+            }
+        });
+
+        document.getElementById('qrCodeInput').addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '').slice(0, 6);
+            if (this.value.length === 6 && document.getElementById('qrPasswordInput').value) {
+                document.getElementById('qrLoginForm2').dispatchEvent(new Event('submit'));
+            }
+        });
 
         function iniciarPolling(token) {
             detenerQR();
@@ -665,6 +820,7 @@
                         detenerQR();
                         document.getElementById('qrStatusMsg').textContent = '✅ Inicio de sesión exitoso. Redirigiendo...';
                         document.getElementById('qrStatusMsg').style.color = '#28a745';
+                        document.getElementById('qrStatusMsg').style.display = 'block';
                         setTimeout(() => {
                             window.location.href = data.redirect_url;
                         }, 1000);
@@ -674,8 +830,9 @@
                         detenerQR();
                         document.getElementById('qrCodeDisplay').style.display = 'none';
                         document.getElementById('qrExpired').style.display = 'block';
-                        document.getElementById('qrStatusMsg').textContent = 'QR expirado. Presiona "Nuevo código".';
+                        document.getElementById('qrStatusMsg').textContent = 'QR expirado. Presiona "Volver" para generar otro.';
                         document.getElementById('qrStatusMsg').style.color = '#dc3545';
+                        document.getElementById('qrStatusMsg').style.display = 'block';
                         return;
                     }
                 } catch(e) {
@@ -691,7 +848,47 @@
             }
         }
 
-        document.getElementById('qrRefreshBtn').addEventListener('click', generarQR);
+        // Keep GA modal handler for fallback (legacy phone flow)
+        document.getElementById('gaForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const token = this.dataset.token;
+            const code = document.getElementById('gaCode').value.trim();
+            if (!token || !code) return;
+            const btn = document.getElementById('gaBtn');
+            const msgDiv = document.getElementById('gaMessage');
+            msgDiv.style.display = 'none';
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Verificando...';
+
+            try {
+                const formData = new FormData();
+                formData.append('action', 'verify_2fa');
+                formData.append('code', code);
+                const res = await fetch(`/proyecto/2fa/qr_login.php?token=${token}`, { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.success) {
+                    msgDiv.className = 'alert alert-success';
+                    msgDiv.textContent = 'Código verificado. Inicio de sesión completado.';
+                    msgDiv.style.display = 'block';
+                    $('#gaModal').modal('hide');
+                    document.getElementById('qrStatusMsg').textContent = 'Inicio de sesión confirmado.';
+                    document.getElementById('qrStatusMsg').style.display = 'block';
+                } else {
+                    msgDiv.className = 'alert alert-danger';
+                    msgDiv.textContent = data.message || 'Código inválido';
+                    msgDiv.style.display = 'block';
+                    document.getElementById('gaCode').value = '';
+                    document.getElementById('gaCode').focus();
+                }
+            } catch(e) {
+                msgDiv.className = 'alert alert-danger';
+                msgDiv.textContent = 'Error de conexión';
+                msgDiv.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check-circle"></i> Verificar código';
+            }
+        });
 
         // ============================================================
         // RECUPERACIÓN DE CONTRASEÑA - PASO 1: Solicitar PIN

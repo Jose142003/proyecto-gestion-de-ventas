@@ -43,6 +43,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                             $_SESSION['_ultimo_acceso'] = time();
                             $_SESSION['_regenerado_en'] = time();
                             $_SESSION['2fa_verified'] = true;
+                            $_SESSION['2fa_verified_at'] = time();
                         }
                     } catch (PDOException $e) {
                         error_log("panel_admin.php: Error restaurando persist_token: " . $e->getMessage());
@@ -2676,6 +2677,25 @@ try {
     <div id="abrirCajaModal" class="modal">
         <div class="modal-content"><div class="modal-header"><h3 class="modal-title">Abrir Caja</h3><button class="modal-close" onclick="cerrarModales()">&times;</button></div>
         <form id="abrirCajaForm"><div class="form-group"><label class="form-label">Monto Inicial</label><input type="number" id="montoInicial" class="form-control" step="0.01" required></div><div class="form-group"><label class="form-label">Observaciones</label><textarea id="cajaObservaciones" class="form-control" rows="2"></textarea></div><div class="form-actions"><button type="button" class="btn-secondary" onclick="cerrarModales()">Cancelar</button><button type="submit" class="btn-primary">Abrir Caja</button></div></form></div>
+    </div>
+
+    <!-- Modal: Re-verificación 2FA periódica -->
+    <div id="reverificar2faModal" class="modal">
+        <div class="modal-content" style="max-width:400px">
+            <div class="modal-header"><h3 class="modal-title"><i class="fas fa-shield-alt"></i> Verificación 2FA</h3><button class="modal-close" onclick="cerrarModales()">&times;</button></div>
+            <div class="modal-body text-center" style="padding:20px">
+                <i class="fab fa-google" style="font-size:3rem;color:#4285F4;margin-bottom:10px"></i>
+                <p style="font-size:0.9rem;margin-bottom:4px">Tu sesión requiere verificación adicional</p>
+                <p style="font-size:0.85rem;opacity:0.7;margin-bottom:16px">Abre <strong>Google Authenticator</strong> e ingresa el código de 6 dígitos</p>
+                <form id="reverificar2faForm">
+                    <div class="form-group">
+                        <input type="text" id="reverificar2faCode" class="form-control" inputmode="numeric" maxlength="6" placeholder="000000" style="text-align:center;font-size:1.5rem;letter-spacing:8px;font-weight:600;padding:12px">
+                    </div>
+                    <button type="submit" class="btn-primary" style="width:100%;padding:10px;font-size:0.9rem"><i class="fas fa-check-circle"></i> Verificar código</button>
+                </form>
+                <div id="reverificar2faMessage" style="display:none;margin-top:0.8rem;padding:8px 12px;border-radius:8px;font-size:0.85rem"></div>
+            </div>
+        </div>
     </div>
 
     <!-- Loading Overlay -->
@@ -6287,6 +6307,72 @@ async function cambiarPasswordRecuperacion(event) {
             await cargarDatosPerfil();
             ocultarLoading();
             mostrarNotificacion('Panel cargado correctamente', 'success');
+
+            // Periodic 2FA re-verification (every 60 seconds)
+            setInterval(verificarReverificacion2FA, 60000);
+        });
+
+        async function verificarReverificacion2FA() {
+            try {
+                const res = await fetch('/proyecto/2fa/verificar_2fa_periodico.php?action=check&type=admin', {
+                    credentials: 'include',
+                    cache: 'no-store'
+                });
+                const data = await res.json();
+                if (data.success && data.needs_2fa) {
+                    const modal = document.getElementById('reverificar2faModal');
+                    if (modal && modal.style.display !== 'flex') {
+                        modal.style.display = 'flex';
+                        document.getElementById('reverificar2faCode').value = '';
+                        document.getElementById('reverificar2faMessage').style.display = 'none';
+                    }
+                }
+            } catch(e) {
+                console.error('Error verificando 2FA periódico:', e);
+            }
+        }
+
+        document.getElementById('reverificar2faForm')?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const code = document.getElementById('reverificar2faCode').value.trim();
+            if (code.length !== 6) return;
+            const msgDiv = document.getElementById('reverificar2faMessage');
+            msgDiv.style.display = 'none';
+            const btn = this.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Verificando...';
+
+            try {
+                const formData = new FormData();
+                formData.append('action', 'verify');
+                formData.append('code', code);
+                formData.append('type', 'admin');
+                const res = await fetch('/proyecto/2fa/verificar_2fa_periodico.php', { method: 'POST', body: formData, credentials: 'include' });
+                const data = await res.json();
+                if (data.success) {
+                    msgDiv.style.cssText = 'display:block;padding:8px 12px;border-radius:8px;font-size:0.85rem;background:#d4edda;color:#155724';
+                    msgDiv.textContent = '✅ Verificado correctamente';
+                    setTimeout(() => { cerrarModales(); }, 800);
+                } else {
+                    msgDiv.style.cssText = 'display:block;padding:8px 12px;border-radius:8px;font-size:0.85rem;background:#f8d7da;color:#721c24';
+                    msgDiv.textContent = data.message || 'Código inválido';
+                    document.getElementById('reverificar2faCode').value = '';
+                    document.getElementById('reverificar2faCode').focus();
+                }
+            } catch(e) {
+                msgDiv.style.cssText = 'display:block;padding:8px 12px;border-radius:8px;font-size:0.85rem;background:#f8d7da;color:#721c24';
+                msgDiv.textContent = 'Error de conexión';
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check-circle"></i> Verificar código';
+            }
+        });
+
+        document.getElementById('reverificar2faCode')?.addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '').slice(0, 6);
+            if (this.value.length === 6) {
+                document.getElementById('reverificar2faForm').dispatchEvent(new Event('submit'));
+            }
         });
     </script>
 </body>

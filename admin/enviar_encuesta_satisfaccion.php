@@ -2,13 +2,6 @@
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_WARNING & ~E_NOTICE);
 ini_set('display_errors', 0);
 
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
-
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
-
 require_once __DIR__ . '/../conexion/conexion.php';
 require_once __DIR__ . '/../usuarios/config_email.php';
 
@@ -51,26 +44,36 @@ function enviarEncuestaSatisfaccion(PDO $pdo, int $pedidoId, string $clienteEmai
     }
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    try {
-        $pdo = conectarDB();
-        $input = json_decode(file_get_contents('php://input'), true);
-        $pedidoId = (int)($input['pedido_id'] ?? 0);
-        $email = trim($input['email'] ?? '');
-        $nombre = trim($input['nombre'] ?? '');
-        $numero = trim($input['numero_pedido'] ?? '');
+// Solo ejecutar lógica principal si se accede directamente (no por include)
+if (basename($_SERVER['SCRIPT_FILENAME']) === 'enviar_encuesta_satisfaccion.php') {
+    header('Content-Type: application/json');
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Methods: POST, OPTIONS');
+    header('Access-Control-Allow-Headers: Content-Type');
 
-        if (!$pedidoId || !$email) {
-            echo json_encode(['success' => false, 'message' => 'Datos incompletos']);
-            exit;
+    if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        try {
+            $pdo = conectarDB();
+            $input = json_decode(file_get_contents('php://input'), true);
+            $pedidoId = (int)($input['pedido_id'] ?? 0);
+            $email = trim($input['email'] ?? '');
+            $nombre = trim($input['nombre'] ?? '');
+            $numero = trim($input['numero_pedido'] ?? '');
+
+            if (!$pedidoId || !$email) {
+                echo json_encode(['success' => false, 'message' => 'Datos incompletos']);
+                exit;
+            }
+
+            $resultado = enviarEncuestaSatisfaccion($pdo, $pedidoId, $email, $nombre, $numero);
+            echo json_encode($resultado);
+        } catch (Throwable $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error interno']);
         }
-
-        $resultado = enviarEncuestaSatisfaccion($pdo, $pedidoId, $email, $nombre, $numero);
-        echo json_encode($resultado);
-    } catch (Throwable $e) {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Error interno']);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Método no permitido']);
     }
-} else {
-    echo json_encode(['success' => false, 'message' => 'Método no permitido']);
 }

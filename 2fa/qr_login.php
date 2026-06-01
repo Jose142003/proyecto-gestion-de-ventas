@@ -11,16 +11,195 @@ if (empty($token)) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json');
+    $action = trim($_POST['action'] ?? '');
 
     try {
         $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8", DB_USER, DB_PASS);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
+        // --- Single-step: validate email + password + TOTP code ---
+        if ($action === 'login_with_code') {
+            $email = trim($_POST['email'] ?? '');
+            $password = $_POST['password'] ?? '';
+            $code = trim($_POST['code'] ?? '');
+
+            if (empty($email) || empty($password) || empty($code)) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Todos los campos son requeridos']);
+                exit;
+            }
+
+            $stmt = $pdo->prepare("SELECT id, estado, expires_at FROM qr_login_sessions WHERE token = ?");
+            $stmt->execute([$token]);
+            $row = $stmt->fetch();
+
+            if (!$row || $row['estado'] !== 'pending') {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'QR inválido o ya procesado']);
+                exit;
+            }
+
+            if (strtotime($row['expires_at']) < time()) {
+                $pdo->prepare("UPDATE qr_login_sessions SET estado = 'expired' WHERE token = ?")->execute([$token]);
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Sesión expirada']);
+                exit;
+            }
+
+            // Validate credentials
+            $user = null;
+            $userTable = null;
+
+            $stmt = $pdo->prepare("SELECT id, nombre, correo, contrasena as password, rol FROM admin_users WHERE correo = ? AND activo = 1");
+            $stmt->execute([$email]);
+            if ($stmt->rowCount() > 0) {
+                $u = $stmt->fetch();
+                if (password_verify($password, $u['password']) || hash_equals(hash('sha256', $password), $u['password']) || hash_equals(strtoupper(hash('sha256', $password)), $u['password'])) {
+                    $user = $u;
+                    $userTable = 'admin_users';
+                }
+            }
+
+            if (!$user) {
+                $stmt = $pdo->prepare("SELECT id, nombre, correo, password, rol FROM users WHERE correo = ? AND is_active = 1 AND estado = 'activo'");
+                $stmt->execute([$email]);
+                if ($stmt->rowCount() > 0) {
+                    $u = $stmt->fetch();
+                    if (password_verify($password, $u['password'])) {
+                        $user = $u;
+                        $userTable = 'users';
+                    }
+                }
+            }
+
+            if (!$user) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Credenciales incorrectas']);
+                exit;
+            }
+
+            // Validate TOTP code
+            $tableName = ($userTable === 'admin_users') ? 'admin_users' : 'users';
+            $stmt2fa = $pdo->prepare("SELECT 2fa_secret, 2fa_backup_codes FROM $tableName WHERE id = ?");
+            $stmt2fa->execute([$user['id']]);
+            $user2fa = $stmt2fa->fetch();
+
+            if (!$user2fa || empty($user2fa['2fa_secret'])) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => '2FA no configurado']);
+                exit;
+            }
+
+            $isValid = verificarTOTP($pdo, $user['id'], $userTable, $user2fa['2fa_secret'], $code);
+
+            if (!$isValid) {
+                $codes = json_decode($user2fa['2fa_backup_codes'] ?? '[]', true);
+                if (is_array($codes)) {
+                    $idx = array_search($code, $codes);
+                    if ($idx !== false) {
+                        unset($codes[$idx]);
+                        $pdo->prepare("UPDATE $tableName SET 2fa_backup_codes = ? WHERE id = ?")->execute([json_encode(array_values($codes)), $user['id']]);
+                        $isValid = true;
+                    }
+                }
+            }
+
+            if (!$isValid) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Código de Google Authenticator inválido']);
+                exit;
+            }
+
+            // Approve
+            $userDataArr = [
+                'id' => $user['id'],
+                'nombre' => $user['nombre'],
+                'correo' => $user['correo'],
+                'rol' => $user['rol'],
+                'user_table' => $userTable
+            ];
+            $pdo->prepare("UPDATE qr_login_sessions SET estado = 'approved', user_id = ?, user_table = ?, user_data = ? WHERE token = ?")
+                ->execute([$user['id'], $userTable, json_encode($userDataArr), $token]);
+
+            echo json_encode(['success' => true, 'message' => 'Inicio de sesión exitoso']);
+            exit;
+        }
+
+        // --- Step 2: Verify Google Authenticator code ---
+        if ($action === 'verify_2fa') {
+            $code = trim($_POST['code'] ?? '');
+            if (empty($code)) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Código requerido']);
+                exit;
+            }
+
+            $stmt = $pdo->prepare("SELECT id, estado, user_data, expires_at FROM qr_login_sessions WHERE token = ?");
+            $stmt->execute([$token]);
+            $row = $stmt->fetch();
+
+            if (!$row || $row['estado'] !== 'scanned') {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Primero debes iniciar sesión con correo y contraseña']);
+                exit;
+            }
+
+            if (strtotime($row['expires_at']) < time()) {
+                $pdo->prepare("UPDATE qr_login_sessions SET estado = 'expired' WHERE token = ?")->execute([$token]);
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Sesión expirada']);
+                exit;
+            }
+
+            $userData = json_decode($row['user_data'], true);
+            $userId = $userData['id'];
+            $table = $userData['user_table'];
+
+            $secretCol = ($table === 'admin_users') ? 'admin_users' : 'users';
+            $stmt = $pdo->prepare("SELECT 2fa_secret, 2fa_backup_codes FROM $secretCol WHERE id = ?");
+            $stmt->execute([$userId]);
+            $user = $stmt->fetch();
+
+            if (!$user || empty($user['2fa_secret'])) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => '2FA no configurado']);
+                exit;
+            }
+
+            $isValid = verificarTOTP($pdo, $userId, $table, $user['2fa_secret'], $code);
+
+            if (!$isValid) {
+                $codes = json_decode($user['2fa_backup_codes'] ?? '[]', true);
+                if (is_array($codes)) {
+                    $idx = array_search($code, $codes);
+                    if ($idx !== false) {
+                        unset($codes[$idx]);
+                        $pdo->prepare("UPDATE $secretCol SET 2fa_backup_codes = ? WHERE id = ?")->execute([json_encode(array_values($codes)), $userId]);
+                        $isValid = true;
+                    }
+                }
+            }
+
+            if (!$isValid) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Código inválido']);
+                exit;
+            }
+
+            // Approve the session
+            $pdo->prepare("UPDATE qr_login_sessions SET estado = 'approved', user_id = ?, user_table = ?, user_data = ? WHERE token = ?")
+                ->execute([$userData['id'], $userData['user_table'], json_encode($userData), $token]);
+
+            echo json_encode(['success' => true, 'message' => '2FA verificado. Inicio de sesión confirmado.']);
+            exit;
+        }
+
+        // --- Step 1: Validate credentials ---
         $stmt = $pdo->prepare("SELECT id, estado, expires_at FROM qr_login_sessions WHERE token = ?");
         $stmt->execute([$token]);
         $row = $stmt->fetch();
 
-        if (!$row || $row['estado'] !== 'pending') {
+        if (!$row || !in_array($row['estado'], ['pending', 'scanned'])) {
             http_response_code(400);
             echo json_encode(['success' => false, 'message' => 'QR inválido o ya procesado']);
             exit;
@@ -73,24 +252,94 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
-        $userData = json_encode([
+        // Check if the user has 2FA (Google Authenticator) enabled
+        $tableName = ($userTable === 'admin_users') ? 'admin_users' : 'users';
+        $has2FA = false;
+
+        $checkCol = $pdo->query("SHOW COLUMNS FROM $tableName LIKE '2fa_enabled'");
+        if ($checkCol->rowCount() > 0) {
+            $stmt2fa = $pdo->prepare("SELECT 2fa_enabled, 2fa_secret FROM $tableName WHERE id = ?");
+            $stmt2fa->execute([$user['id']]);
+            $user2fa = $stmt2fa->fetch();
+            $has2FA = ($user2fa && $user2fa['2fa_enabled'] && !empty($user2fa['2fa_secret']));
+        }
+
+        $userDataArr = [
             'id' => $user['id'],
             'nombre' => $user['nombre'],
             'correo' => $user['correo'],
             'rol' => $user['rol'],
             'user_table' => $userTable
-        ]);
+        ];
 
-        $pdo->prepare("UPDATE qr_login_sessions SET estado = 'approved', user_id = ?, user_table = ?, user_data = ? WHERE token = ?")
-            ->execute([$user['id'], $userTable, $userData, $token]);
-
-        echo json_encode(['success' => true, 'message' => 'Inicio de sesión confirmado. Vuelve a tu computadora.']);
+        if ($has2FA) {
+            // Store validated user data but keep estado = 'scanned' (waiting for TOTP)
+            $pdo->prepare("UPDATE qr_login_sessions SET estado = 'scanned', user_data = ? WHERE token = ?")
+                ->execute([json_encode($userDataArr), $token]);
+            echo json_encode(['success' => true, 'needs_2fa' => true, 'message' => 'Credenciales válidas. Ingresa el código de Google Authenticator.']);
+        } else {
+            // No 2FA — approve immediately
+            $pdo->prepare("UPDATE qr_login_sessions SET estado = 'approved', user_id = ?, user_table = ?, user_data = ? WHERE token = ?")
+                ->execute([$user['id'], $userTable, json_encode($userDataArr), $token]);
+            echo json_encode(['success' => true, 'message' => 'Inicio de sesión confirmado. Vuelve a tu computadora.']);
+        }
     } catch (Throwable $e) {
         http_response_code(500);
         echo json_encode(['success' => false, 'message' => 'Error del servidor']);
     }
     exit;
 }
+
+// ================================================================
+// TOTP Helper Functions
+// ================================================================
+
+function verificarTOTP($pdo, int $userId, string $table, string $secret, string $code): bool {
+    $code = trim($code);
+    if (strlen($code) !== 6 || !ctype_digit($code)) return false;
+
+    $timeSlice = floor(time() / 30);
+    for ($i = -1; $i <= 1; $i++) {
+        if (hash_equals(generarTOTP($secret, $timeSlice + $i), $code)) return true;
+    }
+
+    $tableName = ($table === 'admin_users') ? 'admin_users' : 'users';
+    $stmtBackup = $pdo->prepare("SELECT 2fa_backup_codes FROM $tableName WHERE id = ?");
+    $stmtBackup->execute([$userId]);
+    $user = $stmtBackup->fetch();
+    if ($user && !empty($user['2fa_backup_codes'])) {
+        $codes = json_decode($user['2fa_backup_codes'], true);
+        if (is_array($codes)) {
+            $idx = array_search($code, $codes);
+            if ($idx !== false) {
+                unset($codes[$idx]);
+                $pdo->prepare("UPDATE $tableName SET 2fa_backup_codes = ? WHERE id = ?")->execute([json_encode(array_values($codes)), $userId]);
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+function generarTOTP(string $secret, int $timeSlice): string {
+    $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    $secret = strtoupper(str_replace('=', '', $secret));
+    $bits = '';
+    for ($i = 0; $i < strlen($secret); $i++) {
+        $pos = strpos($chars, $secret[$i]);
+        if ($pos === false) continue;
+        $bits .= str_pad(decbin($pos), 5, '0', STR_PAD_LEFT);
+    }
+    $decoded = '';
+    for ($i = 0; $i + 8 <= strlen($bits); $i += 8) $decoded .= chr(bindec(substr($bits, $i, 8)));
+
+    $timeBytes = pack('J', $timeSlice);
+    $hash = hash_hmac('sha1', $timeBytes, $decoded, true);
+    $offset = ord($hash[19]) & 0x0F;
+    $code = (((ord($hash[$offset]) & 0x7F) << 24) | ((ord($hash[$offset + 1]) & 0xFF) << 16) | ((ord($hash[$offset + 2]) & 0xFF) << 8) | (ord($hash[$offset + 3]) & 0xFF)) % 1000000;
+    return str_pad((string)$code, 6, '0', STR_PAD_LEFT);
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="es">

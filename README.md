@@ -34,10 +34,22 @@
 
 ### 🔐 Autenticación 2FA (Nuevo)
 - Autenticación de dos factores TOTP (Google Authenticator compatible)
-- Generación de QR para escaneo rápido
+- Generación de QR para escaneo rápido con Google Authenticator
 - 8 códigos de respaldo de un solo uso
 - Verificación obligatoria en inicio de sesión admin
 - Activar/desactivar desde el panel de seguridad
+- **Login QR mejorado** — El QR ahora genera una URL `otpauth://` válida escaneable por Google Authenticator; flujo en 2 pasos: correo → QR + contraseña + código 2FA
+- **Verificación 2FA periódica** — Similar a WhatsApp: cada 24 horas pide re-ingresar el código de Google Authenticator, tanto en clientes (`pagina_modernizada`) como en admin (`panel_admin`)
+
+### 🔔 Encuestas de satisfacción (Nuevo)
+- Envío automático de encuesta de satisfacción por correo al confirmar un pedido
+- Integración con el flujo de pago (transferencia y pago móvil)
+- Función reutilizable para ser llamada desde cualquier parte del sistema
+
+### 💰 Facturación automática (Mejora)
+- Facturas por transferencia bancaria y pago móvil se marcan automáticamente como **pagadas**
+- Facturas por efectivo y pago mixto quedan como **pendientes** hasta recibir el pago en persona
+- Corrección de ID de producto en transferencia.html y pago_movil.html para evitar errores al procesar el pedido
 
 ### 💬 Telegram (Nuevo)
 - Integración con Telegram Bot API
