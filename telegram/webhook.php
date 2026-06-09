@@ -116,7 +116,6 @@ function sendTelegramMessage($chatId, $text) {
     curl_setopt($ch, CURLOPT_TIMEOUT, 10);
     $result = curl_exec($ch);
     $error = curl_error($ch);
-    curl_close($ch);
 
     if ($error) {
         error_log("Telegram API error: $error");
