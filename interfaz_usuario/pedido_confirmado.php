@@ -312,8 +312,13 @@ if (!$pedido_id && !empty($productosDesdeURL)) {
         // CREAR FACTURA AUTOMÁTICAMENTE
         // ====================================================================
         $anio_act = date('Y');
-        $seq_fact = mysqli_query($conn, "SELECT numero_factura FROM facturas WHERE numero_factura LIKE 'FAC-{$anio_act}-%' ORDER BY id DESC LIMIT 1");
-        $last_fact = mysqli_fetch_assoc($seq_fact);
+        $like_pattern = "FAC-{$anio_act}-%";
+        $stmt_seq = mysqli_prepare($conn, "SELECT numero_factura FROM facturas WHERE numero_factura LIKE ? ORDER BY id DESC LIMIT 1");
+        mysqli_stmt_bind_param($stmt_seq, 's', $like_pattern);
+        mysqli_stmt_execute($stmt_seq);
+        $result_seq = mysqli_stmt_get_result($stmt_seq);
+        $last_fact = mysqli_fetch_assoc($result_seq);
+        mysqli_stmt_close($stmt_seq);
         if ($last_fact) {
             preg_match('/FAC-' . $anio_act . '-(\d+)/', $last_fact['numero_factura'], $matches);
             $sig = isset($matches[1]) ? intval($matches[1]) + 1 : 1;
@@ -322,12 +327,20 @@ if (!$pedido_id && !empty($productosDesdeURL)) {
         }
         $num_factura = "FAC-{$anio_act}-" . str_pad($sig, 6, '0', STR_PAD_LEFT);
         
-        $check_f = mysqli_query($conn, "SELECT id FROM facturas WHERE numero_factura = '$num_factura'");
-        while (mysqli_fetch_assoc($check_f)) {
+        $stmt_check = mysqli_prepare($conn, "SELECT id FROM facturas WHERE numero_factura = ?");
+        mysqli_stmt_bind_param($stmt_check, 's', $num_factura);
+        mysqli_stmt_execute($stmt_check);
+        mysqli_stmt_store_result($stmt_check);
+        while (mysqli_stmt_num_rows($stmt_check) > 0) {
+            mysqli_stmt_close($stmt_check);
             $sig++;
             $num_factura = "FAC-{$anio_act}-" . str_pad($sig, 6, '0', STR_PAD_LEFT);
-            $check_f = mysqli_query($conn, "SELECT id FROM facturas WHERE numero_factura = '$num_factura'");
+            $stmt_check = mysqli_prepare($conn, "SELECT id FROM facturas WHERE numero_factura = ?");
+            mysqli_stmt_bind_param($stmt_check, 's', $num_factura);
+            mysqli_stmt_execute($stmt_check);
+            mysqli_stmt_store_result($stmt_check);
         }
+        mysqli_stmt_close($stmt_check);
         
         $estado_fact = 'pendiente';
         $obs_fact = "Pedido por {$metodo_normalizado}" . ($referencia ? " - Ref: {$referencia}" : "");
