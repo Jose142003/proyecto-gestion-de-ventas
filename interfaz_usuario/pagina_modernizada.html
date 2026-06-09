@@ -956,9 +956,10 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
             <h4>Proyectos Industriales del Centro</h4>
             <p>Brindamos tecnología y suministros de alta calidad para optimizar los procesos de producción industrial en todo el país.</p>
             <div class="social-links mt-3">
-                <a href="#"><i class="fab fa-facebook-f"></i></a>
-                <a href="#"><i class="fab fa-linkedin-in"></i></a>
-                <a href="#"><i class="fab fa-instagram"></i></a>
+                <a href="https://www.facebook.com/piccavzla" target="_blank" rel="noopener"><i class="fab fa-facebook-f"></i></a>
+                <a href="https://www.linkedin.com/company/piccavzla" target="_blank" rel="noopener"><i class="fab fa-linkedin-in"></i></a>
+                <a href="https://www.instagram.com/piccavzla/" target="_blank" rel="noopener"><i class="fab fa-instagram"></i></a>
+                <a href="https://t.me/piccavzlabot" target="_blank" rel="noopener"><i class="fab fa-telegram"></i></a>
             </div>
         </div>
 
@@ -2731,7 +2732,7 @@ document.querySelectorAll('.contact-option').forEach(btn => {
                 window.open(`https://outlook.live.com/mail/0/compose?to=${email}&subject=${subject}&body=${body}`, '_blank');
                 break;
             case 'telegram':
-                window.open('https://t.me/piccavzla_bot', '_blank');
+                window.open('https://t.me/piccavzlabot', '_blank');
                 break;
             case 'email':
                 $('#contactOptionsModal').modal('hide');
