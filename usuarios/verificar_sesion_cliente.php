@@ -58,7 +58,7 @@ if ($tabla_origen === 'admin_users') {
         'success' => false,
         'is_authenticated' => false,
         'role' => 'guest',
-        'is_admin' => false,
+        'is_admin' => true,
         'is_cliente' => false,
         'can_purchase' => false,
         'force_logout' => false,

@@ -26,6 +26,15 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     <link rel="icon" type="image/png" sizes="192x192" href="/proyecto/img/pic.png">
     <link rel="icon" type="image/png" sizes="512x512" href="/proyecto/img/pic.png">
     
+    <!-- Open Graph (WhatsApp, Facebook, etc) -->
+    <meta property="og:title" content="Proyectos Industriales del Centro">
+    <meta property="og:description" content="Suministros industriales de alta calidad - Tienda oficial">
+    <meta property="og:image" content="/proyecto/img/pic.png">
+    <meta property="og:url" content="https://www.picindustrial.com">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="PIC Industrial">
+    <meta name="twitter:card" content="summary_large_image">
+    
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet"/>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
     <style>
@@ -302,6 +311,25 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
             .products-grid {
                 grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
                 gap: 15px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .products-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 10px;
+            }
+            .product-card {
+                padding: 12px;
+            }
+            .product-img-container {
+                height: 140px;
+            }
+            .product-card h5 {
+                font-size: 0.85rem;
+            }
+            .product-card .price {
+                font-size: 1.1rem;
             }
         }
 
@@ -1239,7 +1267,6 @@ function showNotification(message, isError = false) {
 // ===== FUNCIÓN PARA CARGAR FOTO DE PERFIL =====
 async function cargarFotoPerfil() {
     if (!CURRENT_USER || !CURRENT_USER.id || CURRENT_USER.rol === 'guest') {
-        console.log('No hay usuario autenticado para cargar foto');
         return;
     }
     
@@ -1368,17 +1395,27 @@ async function eliminarFotoPerfil() {
 // ===== ACCIONES DE USUARIO =====
 function cerrarSesion() {
     if (confirm('¿Cerrar sesión?')) {
-        fetch('/proyecto/usuarios/cerrar_sesion.php', { method: 'POST' })
-            .then(() => window.location.href = '/proyecto/interfaz_usuario/login.html')
-            .catch(() => window.location.href = '/proyecto/interfaz_usuario/login.html');
+        window.location.href = '/proyecto/usuarios/cerrar_sesion.php';
     }
 }
 
 function eliminarCuenta() {
     if (confirm('⚠️ ¿Estás seguro de que deseas eliminar tu cuenta?\n\nEsta acción es irreversible.')) {
-        fetch('/proyecto/usuarios/eliminar_cuenta.php', { method: 'POST' })
-            .then(() => window.location.href = '/proyecto/interfaz_usuario/index.html')
-            .catch(() => window.location.href = '/proyecto/interfaz_usuario/index.html');
+        fetch('/proyecto/usuarios/eliminar_cuenta.php', { 
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '/proyecto/interfaz_usuario/index.html';
+            } else {
+                showNotification(data.message || 'Error al eliminar cuenta', true);
+            }
+        })
+        .catch(() => {
+            showNotification('Error de conexión', true);
+        });
     }
 }
 
@@ -1439,10 +1476,8 @@ async function obtenerUsuarioActual() {
         });
         const data = await response.json();
         
-        console.log('Verificación de cliente:', data);
         
-        if (data.role === 'admin' || data.is_admin === true) {
-            console.log('⚠️ ADMINISTRADOR detectado - NO puede comprar en tienda');
+        if (data.is_admin === true) {
             showNotification('⚠️ Esta cuenta es de Administrador. Los administradores no pueden realizar compras.', 'warning');
             
             CURRENT_USER = { 
@@ -1467,7 +1502,6 @@ async function obtenerUsuarioActual() {
         }
         
         if (data.role === 'cliente' && data.success === true && data.can_purchase !== false) {
-            console.log('✅ CLIENTE autenticado:', data.user.nombre);
             
             CURRENT_USER = {
                 id: data.user.id,
@@ -1493,7 +1527,6 @@ async function obtenerUsuarioActual() {
         }
         
         if (data.force_logout === true) {
-            console.log('🔄 Sesión corrupta detectada - Forzando logout local');
             showNotification('Sesión inválida. Por favor inicia sesión nuevamente.', 'warning');
             
             CURRENT_USER = { 
@@ -1518,15 +1551,12 @@ async function obtenerUsuarioActual() {
         }
         
         if (data.role === 'inactive') {
-            console.log('⚠️ Usuario inactivo');
             showNotification('Tu cuenta está inactiva. Contacta al administrador.', 'error');
             setTimeout(() => {
                 window.location.href = '/proyecto/interfaz_usuario/login.html';
             }, 2000);
             return false;
         }
-        
-        console.log('👤 Modo invitado - Sin sesión activa');
         
         if (data.redirect) {
             window.location.href = data.redirect;
@@ -1586,8 +1616,7 @@ function iniciarVerificacionSesionPeriodica() {
             });
             const data = await response.json();
             
-            if (data.force_logout === true || (data.role === 'admin' && CURRENT_USER && CURRENT_USER.rol !== 'admin')) {
-                console.log('⚠️ Sesión inválida para cliente - Limpiando estado');
+            if (data.force_logout === true) {
                 showNotification('Tu sesión ha cambiado. Por favor inicia sesión nuevamente.', 'warning');
                 
                 CURRENT_USER = { id: null, nombre: 'Invitado', correo: '', rol: 'guest', can_purchase: false };
@@ -1607,7 +1636,6 @@ function iniciarVerificacionSesionPeriodica() {
             }
             
             if (!data.success && !data.is_authenticated && CURRENT_USER && CURRENT_USER.id) {
-                console.log('⚠️ Sesión expirada');
                 showNotification('Sesión expirada. Por favor inicia sesión nuevamente.', 'warning');
                 setTimeout(() => {
                     window.location.href = '/proyecto/interfaz_usuario/login.html';
@@ -1770,7 +1798,6 @@ async function cargarTasaBCV() {
             return;
         }
         
-        console.log('Intentando API alternativa...');
         const backupResponse = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
         const backupData = await backupResponse.json();
         
@@ -2663,8 +2690,12 @@ function setupEventListeners() {
     document.getElementById('viewHistoryBtn')?.addEventListener('click', async () => {
         $('#historyModal').modal('show');
         document.getElementById('historyContent').innerHTML = '<p class="text-center">Cargando...</p>';
+        if (!CURRENT_USER?.id) {
+            document.getElementById('historyContent').innerHTML = '<p class="text-center" style="color:var(--text-color); opacity:0.7; padding:40px;">Inicia sesión para ver tu historial</p>';
+            return;
+        }
         try {
-            const response = await fetch(`/proyecto/producto/obtener_historial_pedidos.php?user_id=${CURRENT_USER?.id || 1}`);
+            const response = await fetch(`/proyecto/producto/obtener_historial_pedidos.php?user_id=${CURRENT_USER.id}`);
             const data = await response.json();
             if (data.success && data.historial && data.historial.length > 0) {
                 let html = '';
@@ -3002,6 +3033,7 @@ window.addEventListener('offline', () => {
 // NOTIFICACIONES DE PEDIDOS
 // ============================================================
 async function checkNotificaciones() {
+    if (!CURRENT_USER?.id) return;
     try {
         const res = await fetch('/proyecto/usuarios/notificaciones.php?action=listar', { credentials: 'include' });
         if (!res.ok) return;
@@ -3028,8 +3060,8 @@ if ('Notification' in window && Notification.permission !== 'denied') {
     Notification.requestPermission();
 }
 
-setInterval(checkNotificaciones, 30000);
-checkNotificaciones();
+setInterval(() => { if (CURRENT_USER?.id) checkNotificaciones(); }, 30000);
+if (CURRENT_USER?.id) checkNotificaciones();
 </script>
 </body>
 </html>
