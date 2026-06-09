@@ -71,7 +71,7 @@ foreach ($data['result'] as $update) {
     file_put_contents($logFile, date('Y-m-d H:i:s') . " | $firstName ($username): $text\n", FILE_APPEND);
     
     // Determinar respuesta
-    $response = getAutoResponse($text, $firstName);
+    $response = getAutoResponse($text);
     
     if ($response) {
         sendTelegramMessage($chatId, $response);
@@ -88,11 +88,11 @@ echo "Procesados $processed mensaje(s).\n";
 
 // ===== FUNCIONES =====
 
-function getAutoResponse($text, $firstName) {
+function getAutoResponse($text) {
     $lowerText = mb_strtolower(trim($text));
     
     if (preg_match('/\b(hola|buenas|saludos|hi|hello|buen dia|buenas tardes)\b/i', $lowerText)) {
-        return "¡Hola $firstName! 👋 Bienvenido a **Proyectos Industriales del Centro**.\n\n"
+        return "¡Hola! 👋 Bienvenido a **Proyectos Industriales del Centro**.\n\n"
             . "Soy el asistente virtual. Estas son mis opciones:\n\n"
             . "🔹 *Productos* — Ver nuestro catálogo\n"
             . "🔹 *Contacto* — Información de contacto\n"
@@ -126,7 +126,7 @@ function getAutoResponse($text, $firstName) {
     }
     
     if (preg_match('/\b(gracias|thanks|thank|ok|perfecto|excelente)\b/i', $lowerText)) {
-        return "🙌 ¡Gracias a ti, $firstName! Si tienes más preguntas, aquí estaremos. \n\n"
+        return "🙌 ¡Gracias por escribirnos! Si tienes más preguntas, aquí estaremos. \n\n"
             . "No olvides visitar nuestra tienda: https://picindustrial.com";
     }
     
@@ -141,7 +141,7 @@ function getAutoResponse($text, $firstName) {
     }
     
     // Respuesta por defecto para cualquier otro mensaje
-    return "✅ Hemos recibido tu mensaje, $firstName. Te responderemos a la brevedad.\n\n"
+    return "✅ Hemos recibido tu mensaje. Te responderemos a la brevedad.\n\n"
         . "Mientras tanto, puedes:\n\n"
         . "🌐 Visitar nuestra tienda: https://picindustrial.com\n"
         . "📱 Llamarnos: +58 0424-8323902\n\n"

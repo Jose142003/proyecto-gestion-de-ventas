@@ -58,53 +58,76 @@ if (defined('SMTP_FROM_EMAIL') || file_exists(__DIR__ . '/../config/database.php
     }
 }
 
-// Respuesta automática según el mensaje
-$response = '';
-$lowerText = mb_strtolower(trim($text));
-
-if (preg_match('/\b(hola|buenas|saludos|hi|hello)\b/i', $lowerText)) {
-    $response = "¡Hola $firstName! 👋 Bienvenido a Proyectos Industriales del Centro.\n\n"
-        . "Soy el asistente virtual. Puedes consultar:\n"
-        . "🔹 /productos - Ver nuestros productos\n"
-        . "🔹 /contacto - Información de contacto\n"
-        . "🔹 /horario - Nuestro horario\n"
-        . "🔹 /precios - Consultar precios\n\n"
-        . "O simplemente escríbenos tu consulta y te atenderemos pronto.";
-} elseif (preg_match('/\b(producto|catálogo|catalogo|precio|lista)\b/i', $lowerText)) {
-    $response = "📦 Puedes ver nuestro catálogo completo en:\n"
-        . "https://picindustrial.com/proyecto/interfaz_usuario/pagina_modernizada.html\n\n"
-        . "O escríbenos el producto que buscas y te daremos información.";
-} elseif (preg_match('/\b(contacto|teléfono|telefono|dirección|ubicación|ubicacion|whatsapp)\b/i', $lowerText)) {
-    $response = "📞 Información de contacto:\n\n"
-        . "📍 Zona Industrial, Centro Michelena\n"
-        . "📱 +58 0424-8323902\n"
-        . "📧 Picca.ventas@gmail.com\n"
-        . "🌐 https://picindustrial.com\n\n"
-        . "Horario: Lun-Vie 8:00 AM - 5:00 PM";
-} elseif (preg_match('/\b(horario|hora|abierto|abren)\b/i', $lowerText)) {
-    $response = "🕐 Horario de atención:\n\n"
-        . "Lunes a Viernes: 8:00 AM - 5:00 PM\n"
-        . "Sábados: 8:00 AM - 12:00 PM\n"
-        . "Domingos: Cerrado";
-} elseif (preg_match('/\b(gracias|thanks|thank)\b/i', $lowerText)) {
-    $response = "🙌 ¡Gracias a ti, $firstName! Si tienes más preguntas, aquí estaremos.";
-} else {
-    $response = "✅ Hemos recibido tu mensaje, $firstName. Te responderemos a la brevedad.\n\n"
-        . "Mientras tanto, puedes visitar nuestra tienda:\n"
-        . "🌐 https://picindustrial.com/proyecto/interfaz_usuario/pagina_modernizada.html\n\n"
-        . "Usa /menu para ver las opciones disponibles.";
-}
-
+$response = getAutoResponse($text);
 sendTelegramMessage($chatId, $response);
 
 http_response_code(200);
+
+function getAutoResponse($text) {
+    $lowerText = mb_strtolower(trim($text));
+    
+    if (preg_match('/\b(hola|buenas|saludos|hi|hello|buen dia|buenas tardes)\b/i', $lowerText)) {
+        return "¡Hola! 👋 Bienvenido a **Proyectos Industriales del Centro**.\n\n"
+            . "Soy el asistente virtual. Estas son mis opciones:\n\n"
+            . "🔹 *Productos* — Ver nuestro catálogo\n"
+            . "🔹 *Contacto* — Información de contacto\n"
+            . "🔹 *Horario* — Horario de atención\n"
+            . "🔹 *Precios* — Consultar precios\n\n"
+            . "O simplemente escríbenos tu consulta y te atenderemos pronto.";
+    }
+    
+    if (preg_match('/\b(producto|catálogo|catalogo|precio|lista|vender|comprar|tienda)\b/i', $lowerText)) {
+        return "📦 *Catálogo de Productos*\n\n"
+            . "Puedes ver nuestro catálogo completo en:\n"
+            . "https://picindustrial.com/proyecto/interfaz_usuario/pagina_modernizada.html\n\n"
+            . "O escríbenos el nombre del producto que buscas y te daremos información específica.";
+    }
+    
+    if (preg_match('/\b(contacto|teléfono|telefono|dirección|ubicación|ubicacion|whatsapp|cómo|como|donde|dónde|chat)\b/i', $lowerText)) {
+        return "📞 *Información de Contacto*\n\n"
+            . "📍 *Dirección:* Zona Industrial, Centro Michelena\n"
+            . "📱 *Teléfono:* +58 0424-8323902\n"
+            . "📧 *Email:* Picca.ventas@gmail.com\n"
+            . "🌐 *Web:* https://picindustrial.com\n\n"
+            . "Horario: Lun-Vie 8:00 AM - 5:00 PM";
+    }
+    
+    if (preg_match('/\b(horario|hora|abierto|abren|cierran)\b/i', $lowerText)) {
+        return "🕐 *Horario de Atención*\n\n"
+            . "Lunes a Viernes: 8:00 AM - 5:00 PM\n"
+            . "Sábados: 8:00 AM - 12:00 PM\n"
+            . "Domingos: Cerrado\n\n"
+            . "📍 Zona Industrial, Centro Michelena";
+    }
+    
+    if (preg_match('/\b(gracias|thanks|thank|ok|perfecto|excelente)\b/i', $lowerText)) {
+        return "🙌 ¡Gracias por escribirnos! Si tienes más preguntas, aquí estaremos. \n\n"
+            . "No olvides visitar nuestra tienda: https://picindustrial.com";
+    }
+    
+    if (preg_match('/\b(menu|ayuda|help|opciones|comandos)\b/i', $lowerText)) {
+        return "🤖 *Menú de Opciones*\n\n"
+            . "Puedes preguntarme sobre:\n\n"
+            . "🔹 *Productos* — Catálogo y precios\n"
+            . "🔹 *Contacto* — Cómo ubicarnos\n"
+            . "🔹 *Horario* — Horario de atención\n"
+            . "🔹 *Precios* — Consultar precios\n\n"
+            . "O simplemente escribe tu mensaje y te responderemos.";
+    }
+    
+    return "✅ Hemos recibido tu mensaje. Te responderemos a la brevedad.\n\n"
+        . "Mientras tanto, puedes:\n\n"
+        . "🌐 Visitar nuestra tienda: https://picindustrial.com\n"
+        . "📱 Llamarnos: +58 0424-8323902\n\n"
+        . "Usa *Menú* para ver las opciones disponibles.";
+}
 
 function sendTelegramMessage($chatId, $text) {
     $url = "https://api.telegram.org/bot" . TELEGRAM_BOT_TOKEN . "/sendMessage";
     $data = [
         'chat_id' => $chatId,
         'text' => $text,
-        'parse_mode' => 'HTML',
+        'parse_mode' => 'Markdown',
         'disable_web_page_preview' => false
     ];
 
