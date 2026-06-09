@@ -1,42 +1,15 @@
 <?php
 // eliminar_usuario.php (API Corregida - Compatible con panel_admin.php)
 session_start();
-require_once '../conexion/conexion.php';
+require_once __DIR__ . '/../conexion/conexion.php';
 
 // Configurar para JSON
 header('Content-Type: application/json');
 
+error_reporting(0);
+ini_set('display_errors', 0);
+
 verificarCSRF();
-
-// ==============================================
-// CONFIGURACIÓN DE DEPURACIÓN (DESACTIVAR EN PRODUCCIÓN)
-// ==============================================
-$DEBUG_MODE = true; // Cambiar a false en producción
-
-if ($DEBUG_MODE) {
-    error_reporting(E_ALL); ini_set('display_errors', 0);
-    ini_set('log_errors', 1);
-    
-    // Registrar solicitud para depuración
-    $log_data = [
-        'timestamp' => date('Y-m-d H:i:s'),
-        'method' => $_SERVER['REQUEST_METHOD'],
-        'content_type' => $_SERVER['CONTENT_TYPE'] ?? 'No especificado',
-        'php_input' => file_get_contents('php://input'),
-        'post_data' => $_POST,
-        'get_data' => $_GET,
-        'session' => isset($_SESSION) ? $_SESSION : 'No session'
-    ];
-    
-    file_put_contents('debug_eliminar.log', 
-        "[" . date('Y-m-d H:i:s') . "] " . 
-        print_r($log_data, true) . "\n\n",
-        FILE_APPEND
-    );
-} else {
-    error_reporting(0);
-    ini_set('display_errors', 0);
-}
 
 // ==============================================
 // VERIFICACIÓN DEL MÉTODO HTTP
@@ -45,8 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode([
         'success' => false, 
-        'message' => 'Método no permitido. Se requiere POST.',
-        'debug' => $DEBUG_MODE ? ['received_method' => $_SERVER['REQUEST_METHOD']] : null
+        'message' => 'Método no permitido. Se requiere POST.'
     ]);
     exit;
 }
@@ -109,14 +81,7 @@ if ($usuario_a_eliminar_id <= 0) {
     http_response_code(400);
     echo json_encode([
         'success' => false, 
-        'message' => 'Datos inválidos. Se requiere el ID del usuario (campo "id").',
-        'debug' => $DEBUG_MODE ? [
-            'input_source' => $input_source,
-            'php_input_raw' => file_get_contents('php://input'),
-            'post_data' => $_POST,
-            'get_data' => $_GET,
-            'content_type' => $_SERVER['CONTENT_TYPE'] ?? 'No especificado'
-        ] : null
+        'message' => 'Datos inválidos. Se requiere el ID del usuario (campo "id").'
     ]);
     exit;
 }
@@ -232,11 +197,7 @@ try {
         http_response_code(401);
         echo json_encode([
             'success' => false, 
-            'message' => 'Acceso denegado. Debes ser administrador para realizar esta acción.',
-            'debug' => $DEBUG_MODE ? [
-                'session_data' => $_SESSION,
-                'session_keys' => array_keys($_SESSION)
-            ] : null
+            'message' => 'Acceso denegado. Debes ser administrador para realizar esta acción.'
         ]);
         exit;
     }
@@ -407,44 +368,17 @@ try {
         $response['dependencies'] = $dependencies;
     }
     
-    // Información de depuración
-    if ($DEBUG_MODE) {
-        $response['debug'] = [
-            'input_source' => $input_source,
-            'admin_rol' => $admin_rol,
-            'total_dependencies' => $total_dependencies,
-            'session_user_id' => $_SESSION['user_id'] ?? null,
-            'session_es_admin' => $_SESSION['es_admin'] ?? null
-        ];
-    }
-    
     auditoriaRegistrar('eliminar_usuario', 'usuarios', "Usuario {$usuario_info['nombre']} ({$usuario_info['correo']}) - Acción: $action");
     echo json_encode($response);
     
 } catch (Exception $e) {
-    // Revertir transacción en caso de error
     if (isset($db) && $db->inTransaction()) {
         $db->rollBack();
     }
-    
-    // Registrar error
-    if ($DEBUG_MODE) {
-        file_put_contents('debug_eliminar.log', 
-            "[" . date('Y-m-d H:i:s') . "] ERROR: " . 
-            $e->getMessage() . "\n" .
-            "Trace: " . $e->getTraceAsString() . "\n\n",
-            FILE_APPEND
-        );
-    }
-    
     http_response_code(500);
     echo json_encode([
         'success' => false, 
-        'message' => 'Error interno del servidor',
-        'debug' => $DEBUG_MODE ? [
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
-        ] : null
+        'message' => 'Error interno del servidor'
     ]);
     exit;
 }

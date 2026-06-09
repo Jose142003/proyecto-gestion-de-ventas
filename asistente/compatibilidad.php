@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Origin: http://localhost');
 require_once __DIR__ . '/conexion.php';
 
 $input = json_decode(file_get_contents('php://input'), true);

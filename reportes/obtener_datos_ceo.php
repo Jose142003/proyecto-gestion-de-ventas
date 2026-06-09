@@ -124,7 +124,7 @@ try {
             COALESCE(SUM(total), 0) as total
         FROM facturas 
         WHERE metodo_pago IS NOT NULL AND metodo_pago != ''
-        GROUP BY metodo_pago
+        GROUP BY 1
         ORDER BY total DESC
     ");
     $metodos_pago = $stmt_metodos_pago->fetchAll(PDO::FETCH_ASSOC);

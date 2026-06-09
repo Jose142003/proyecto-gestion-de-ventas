@@ -3,8 +3,13 @@
 # ============================================================================
 
 # Proteger archivos sensibles
-<FilesMatch "\.(sql|log|env|lock|md|gitignore|json|yml|yaml|xml|dist)$">
+<FilesMatch "\.(sql|log|env|lock|md|gitignore|yml|yaml|xml|dist)$">
     Require all denied
+</FilesMatch>
+
+# Permitir manifest.json para PWA
+<FilesMatch "^manifest\.json$">
+    Require all granted
 </FilesMatch>
 
 # Proteger archivos de configuración y código fuente sensible
@@ -30,6 +35,7 @@ Options -Indexes
     Header always set X-XSS-Protection "1; mode=block"
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
     Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+    Header always append Permissions-Policy "unload=(self)"
     Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
 </IfModule>
 

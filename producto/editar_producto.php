@@ -2,21 +2,30 @@
 // editar_producto.php - Formulario para editar un producto
 session_start();
 
+require_once __DIR__ . '/../conexion/conexion.php';
+
 // Verificar autenticación y permisos de administrador
 $isAdmin = false;
 if (isset($_SESSION['user_id']) && isset($_SESSION['user_rol']) && $_SESSION['user_rol'] === 'admin') {
     $isAdmin = true;
-} elseif (isset($_SESSION['user_correo']) && (stripos($_SESSION['user_correo'], 'picca.ventas@gmail.com') !== false || stripos($_SESSION['user_correo'], 'admin') !== false)) {
-    $isAdmin = true;
-    $_SESSION['user_rol'] = 'admin';
+} elseif (isset($_SESSION['user_correo'])) {
+    try {
+        $tmpPdo = Database::getConnection();
+        $tmpStmt = $tmpPdo->prepare("SELECT id FROM admin_users WHERE correo = ? AND activo = 1 LIMIT 1");
+        $tmpStmt->execute([$_SESSION['user_correo']]);
+        if ($tmpStmt->fetch()) {
+            $isAdmin = true;
+            $_SESSION['user_rol'] = 'admin';
+        }
+    } catch (Throwable $e) {
+        $isAdmin = false;
+    }
 }
 
 if (!$isAdmin) {
     header('Location: /proyecto/interfaz_usuario/login.html');
     exit;
 }
-
-require_once __DIR__ . '/../conexion/conexion.php';
 
 // Función helper para manejar valores null de forma segura
 function safeStripTags($value) {
@@ -140,7 +149,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $destacado, $id
             ]);
             
-            if ($stmt->rowCount() > 0) {
+            if ($stmt->rowCount() > 0 || $stmt->errorCode() === '00000') {
                 $success = 'Producto actualizado correctamente';
                 auditoriaRegistrar('editar_producto', 'producto', "Producto ID $id editado: $nombre");
             } else {

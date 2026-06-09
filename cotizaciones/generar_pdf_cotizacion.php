@@ -2,8 +2,7 @@
 error_reporting(0);
 ini_set('display_errors', 0);
 
-require_once __DIR__ . '/../conexion/conexion.php';
-require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 requerirAdmin();
 
 $id = (int)($_GET['id'] ?? 0);
@@ -24,8 +23,6 @@ try {
     $stmtDet = $pdo->prepare("SELECT * FROM cotizacion_detalles WHERE cotizacion_id = ?");
     $stmtDet->execute([$id]);
     $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
-
-    require_once __DIR__ . '/../vendor/autoload.php';
 
     $html = '
     <html>
@@ -128,5 +125,6 @@ try {
     $dompdf->stream("Cotizacion_" . $c['numero_cotizacion'] . ".pdf", ["Attachment" => true]);
 
 } catch (Throwable $e) {
-    die('Error generando PDF: ' . $e->getMessage());
+    error_log('Error generando PDF cotización: ' . $e->getMessage());
+    die('Error generando PDF');
 }

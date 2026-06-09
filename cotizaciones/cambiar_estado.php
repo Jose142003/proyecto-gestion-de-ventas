@@ -8,6 +8,7 @@ header('Access-Control-Allow-Credentials: true');
 
 require_once __DIR__ . '/../conexion/conexion.php';
 requerirAdmin();
+verificarCSRF();
 
 try {
     $pdo = conectarDB();

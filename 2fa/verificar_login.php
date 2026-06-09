@@ -12,7 +12,8 @@ register_shutdown_function(function () {
     }
 });
 
-require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../conexion/conexion.php';
+require_once __DIR__ . '/totp.php';
 
 $input = json_decode(file_get_contents('php://input'), true);
 $code = trim($input['code'] ?? $_POST['code'] ?? '');
@@ -25,8 +26,7 @@ if (empty($code) || empty($token)) {
 }
 
 try {
-    $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8", DB_USER, DB_PASS);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = Database::getConnection();
 
     $check = $pdo->query("SHOW TABLES LIKE 'sesiones_2fa'");
     if ($check->rowCount() === 0) {
@@ -35,13 +35,20 @@ try {
         exit;
     }
 
-    $stmt = $pdo->prepare("SELECT s.*, a.nombre, a.correo, a.rol, a.2fa_secret, a.2fa_backup_codes FROM sesiones_2fa s JOIN admin_users a ON s.admin_user_id = a.id WHERE s.token_verificacion = ? AND s.completado = FALSE AND s.expiracion > NOW()");
+    $stmt = $pdo->prepare("SELECT s.*, a.nombre, a.correo, a.rol, a.2fa_secret, a.2fa_backup_codes FROM sesiones_2fa s JOIN admin_users a ON s.admin_user_id = a.id WHERE s.token_verificacion = ? AND s.completado = FALSE");
     $stmt->execute([$token]);
     $sesion = $stmt->fetch();
 
     if (!$sesion) {
         http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Sesión expirada o inválida']);
+        echo json_encode(['success' => false, 'message' => 'Sesión inválida o ya utilizada']);
+        exit;
+    }
+
+    $expiracionTs = strtotime($sesion['expiracion'] . ' UTC');
+    if ($expiracionTs < time()) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Sesión expirada']);
         exit;
     }
 
@@ -57,7 +64,7 @@ try {
     $isValid = false;
     $secret = $sesion['2fa_secret'];
     $timeSlice = floor(time() / 30);
-    for ($i = -1; $i <= 1; $i++) {
+    for ($i = -2; $i <= 2; $i++) {
         if (hash_equals(generarTOTP($secret, $timeSlice + $i), $code)) { $isValid = true; break; }
     }
 
@@ -102,25 +109,3 @@ try {
     echo json_encode(['success' => false, 'message' => 'Error al verificar código 2FA']);
 }
 
-function generarTOTP(string $secret, int $timeSlice): string {
-    $secret = base32Decode($secret);
-    $timeBytes = pack('J', $timeSlice);
-    $hash = hash_hmac('sha1', $timeBytes, $secret, true);
-    $offset = ord($hash[19]) & 0x0F;
-    $code = (((ord($hash[$offset]) & 0x7F) << 24) | ((ord($hash[$offset + 1]) & 0xFF) << 16) | ((ord($hash[$offset + 2]) & 0xFF) << 8) | (ord($hash[$offset + 3]) & 0xFF)) % 1000000;
-    return str_pad((string)$code, 6, '0', STR_PAD_LEFT);
-}
-
-function base32Decode(string $data): string {
-    $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-    $data = strtoupper(str_replace('=', '', $data));
-    $bits = '';
-    for ($i = 0; $i < strlen($data); $i++) {
-        $pos = strpos($chars, $data[$i]);
-        if ($pos === false) continue;
-        $bits .= str_pad(decbin($pos), 5, '0', STR_PAD_LEFT);
-    }
-    $result = '';
-    for ($i = 0; $i + 8 <= strlen($bits); $i += 8) $result .= chr(bindec(substr($bits, $i, 8)));
-    return $result;
-}

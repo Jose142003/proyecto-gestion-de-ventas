@@ -159,7 +159,7 @@ try {
     // ============================================================
     // 3. ESTADÍSTICAS DE PEDIDOS
     // ============================================================
-    $pedidos_pendientes = $pdo->query("SELECT COUNT(*) FROM pedidos WHERE estado = 'pendiente'")->fetchColumn() ?: 0;
+    $pedidos_pendientes = $pdo->query("SELECT COUNT(*) FROM pedidos WHERE estado = 'pendiente' AND metodo_pago IN ('efectivo', 'mixto')")->fetchColumn() ?: 0;
     $pedidos_completados = $pdo->query("SELECT COUNT(*) FROM pedidos WHERE estado = 'completado'")->fetchColumn() ?: 0;
     $pedidos_totales = $pdo->query("SELECT COUNT(*) FROM pedidos")->fetchColumn() ?: 0;
     
@@ -237,7 +237,7 @@ try {
     $stmt_ventas_mensuales = $pdo->prepare("
         SELECT 
             DATE_FORMAT(f.fecha_emision, '%Y-%m') as mes,
-            DATE_FORMAT(f.fecha_emision, '%b %Y') as mes_nombre,
+            ANY_VALUE(DATE_FORMAT(f.fecha_emision, '%b %Y')) as mes_nombre,
             SUM(
                 CASE 
                     WHEN f.currency = 'USD' THEN f.total * :tasa
@@ -273,12 +273,12 @@ try {
     $stmt_top_productos = $pdo->prepare("
         SELECT 
             p.id,
-            p.name as nombre,
-            p.category as categoria,
+            ANY_VALUE(p.name) as nombre,
+            ANY_VALUE(p.category) as categoria,
             COALESCE(SUM(dp.cantidad), 0) as unidades_vendidas,
             COALESCE(COUNT(DISTINCT dp.pedido_id), 0) as veces_vendido,
             COALESCE(SUM(dp.subtotal), 0) as ingresos,
-            COALESCE(p.stock, 0) as stock_actual
+            ANY_VALUE(COALESCE(p.stock, 0)) as stock_actual
         FROM products p
         LEFT JOIN detalle_pedidos dp ON p.id = dp.producto_id
         LEFT JOIN pedidos ped ON dp.pedido_id = ped.id
@@ -296,9 +296,9 @@ try {
     $stmt_top_clientes = $pdo->prepare("
         SELECT 
             c.id,
-            c.nombre,
-            c.email,
-            c.telefono,
+            ANY_VALUE(c.nombre) as nombre,
+            ANY_VALUE(c.email) as email,
+            ANY_VALUE(c.telefono) as telefono,
             COUNT(p.id) as total_compras,
             COALESCE(SUM(p.total), 0) as monto_total,
             MAX(p.fecha_pedido) as ultima_compra
@@ -318,8 +318,8 @@ try {
     $stmt_top_vendedores = $pdo->prepare("
         SELECT 
             u.id,
-            u.nombre,
-            u.correo as email,
+            ANY_VALUE(u.nombre) as nombre,
+            ANY_VALUE(u.correo) as email,
             COUNT(p.id) as total_ventas,
             COALESCE(SUM(p.total), 0) as monto_total,
             COALESCE(SUM(dp.cantidad), 0) as productos_vendidos
@@ -358,8 +358,8 @@ try {
     $stmt_productos_rentables = $pdo->prepare("
         SELECT 
             p.id,
-            p.name as nombre,
-            p.price as precio,
+            ANY_VALUE(p.name) as nombre,
+            ANY_VALUE(p.price) as precio,
             COALESCE(SUM(dp.cantidad), 0) as unidades_vendidas,
             COALESCE(SUM(dp.subtotal), 0) as ingresos_totales
         FROM products p

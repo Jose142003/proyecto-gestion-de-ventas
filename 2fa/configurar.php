@@ -15,6 +15,7 @@ register_shutdown_function(function () {
 });
 
 require_once __DIR__ . '/../conexion/conexion.php';
+require_once __DIR__ . '/totp.php';
 requerirAdmin();
 
 function columnaExiste($pdo, $tabla, $columna): bool {
@@ -51,7 +52,7 @@ try {
         $userId = $_SESSION['user_id'];
         $email = $_SESSION['user_correo'] ?? 'admin@pic.com.ve';
         $issuer = 'PIC - Sistema de Gestion Comercial';
-        $qrContent = "otpauth://totp/$issuer:$email?secret=$secret&issuer=$issuer&algorithm=SHA1&digits=6&period=30";
+        $qrContent = generarOtpAuthUrl($secret, $email, $issuer);
 
         $backupCodes = [];
         for ($i = 0; $i < 8; $i++) $backupCodes[] = bin2hex(random_bytes(4)) . '-' . bin2hex(random_bytes(2));
@@ -59,7 +60,7 @@ try {
         $stmt = $pdo->prepare("UPDATE admin_users SET 2fa_secret = ?, 2fa_backup_codes = ? WHERE id = ?");
         $stmt->execute([$secret, json_encode($backupCodes), $userId]);
 
-        echo json_encode(['success' => true, 'secret' => $secret, 'qr_content' => $qrContent, 'backup_codes' => $backupCodes], JSON_UNESCAPED_UNICODE);
+        echo json_encode(['success' => true, 'secret' => $secret, 'qr_content' => $qrContent, 'backup_codes' => $backupCodes, 'server_time' => time()], JSON_UNESCAPED_UNICODE);
 
     } elseif ($action === 'verificar') {
         $code = $_POST['code'] ?? '';
@@ -110,7 +111,7 @@ function verificarTOTP($pdo, int $userId, string $secret, string $code): bool {
     if (strlen($code) !== 6 || !ctype_digit($code)) return false;
 
     $timeSlice = floor(time() / 30);
-    for ($i = -1; $i <= 1; $i++) {
+    for ($i = -2; $i <= 2; $i++) {
         if (hash_equals(generarTOTP($secret, $timeSlice + $i), $code)) return true;
     }
 
@@ -129,27 +130,4 @@ function verificarTOTP($pdo, int $userId, string $secret, string $code): bool {
         }
     }
     return false;
-}
-
-function generarTOTP(string $secret, int $timeSlice): string {
-    $secret = base32Decode($secret);
-    $timeBytes = pack('J', $timeSlice);
-    $hash = hash_hmac('sha1', $timeBytes, $secret, true);
-    $offset = ord($hash[19]) & 0x0F;
-    $code = (((ord($hash[$offset]) & 0x7F) << 24) | ((ord($hash[$offset + 1]) & 0xFF) << 16) | ((ord($hash[$offset + 2]) & 0xFF) << 8) | (ord($hash[$offset + 3]) & 0xFF)) % 1000000;
-    return str_pad((string)$code, 6, '0', STR_PAD_LEFT);
-}
-
-function base32Decode(string $data): string {
-    $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-    $data = strtoupper(str_replace('=', '', $data));
-    $bits = '';
-    for ($i = 0; $i < strlen($data); $i++) {
-        $pos = strpos($chars, $data[$i]);
-        if ($pos === false) continue;
-        $bits .= str_pad(decbin($pos), 5, '0', STR_PAD_LEFT);
-    }
-    $result = '';
-    for ($i = 0; $i + 8 <= strlen($bits); $i += 8) $result .= chr(bindec(substr($bits, $i, 8)));
-    return $result;
 }

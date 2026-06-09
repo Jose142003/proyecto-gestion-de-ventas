@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
 
+if (!class_exists('Database')) {
 class Database {
     private static ?PDO $instance = null;
 
@@ -50,179 +51,209 @@ class Database {
         }
     }
 }
-
-function conectarDB(): PDO {
-    return Database::getConnection();
 }
 
-function jsonResponse(mixed $data, int $status = 200): void {
-    http_response_code($status);
-    echo json_encode($data, JSON_UNESCAPED_UNICODE);
-    exit;
+if (!function_exists('conectarDB')) {
+    function conectarDB(): PDO {
+        return Database::getConnection();
+    }
 }
 
-function errorResponse(string $message, int $status = 400): void {
-    jsonResponse(['success' => false, 'message' => $message], $status);
+if (!function_exists('jsonResponse')) {
+    function jsonResponse(mixed $data, int $status = 200): void {
+        http_response_code($status);
+        echo json_encode($data, JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+}
+
+if (!function_exists('errorResponse')) {
+    function errorResponse(string $message, int $status = 400): void {
+        jsonResponse(['success' => false, 'message' => $message], $status);
+    }
 }
 
 // ========== HELPER DE SESIÓN (CLIENTE + ADMIN) ==========
 
-function iniciarSesion(): void {
-    if (session_status() !== PHP_SESSION_NONE) return;
+if (!function_exists('iniciarSesion')) {
+    function iniciarSesion(): void {
+        if (session_status() !== PHP_SESSION_NONE) return;
 
-    seguridadConfigurarCookies();
+        seguridadConfigurarCookies();
 
-    $referer = $_SERVER['HTTP_REFERER'] ?? '';
+        $referer = $_SERVER['HTTP_REFERER'] ?? '';
 
-    // Si la llamada viene del panel admin, usar sesión por defecto (PHPSESSID)
-    if (strpos($referer, '/panel_admin/') !== false || strpos($referer, '/admin/') !== false) {
-        @session_start();
-        seguridadVerificarTimeoutSesion();
-        seguridadRegenerarSesion();
-        return;
-    }
-
-    // Si viene del área de cliente o desconocido, intentar CLIENTSESSID primero
-    if (isset($_COOKIE['CLIENTSESSID'])) {
-        session_name('CLIENTSESSID');
-        @session_start();
-        if (isset($_SESSION['user_id'])) {
+        if (strpos($referer, '/panel_admin/') !== false || strpos($referer, '/admin/') !== false) {
+            @session_start();
             seguridadVerificarTimeoutSesion();
             seguridadRegenerarSesion();
             return;
         }
-        @session_write_close();
-    }
 
-    // Fallback a sesión por defecto (admin/PHPSESSID)
-    @session_start();
-    seguridadVerificarTimeoutSesion();
-    seguridadRegenerarSesion();
+        if (isset($_COOKIE['CLIENTSESSID'])) {
+            session_name('CLIENTSESSID');
+            @session_start();
+            if (isset($_SESSION['user_id'])) {
+                seguridadVerificarTimeoutSesion();
+                seguridadRegenerarSesion();
+                return;
+            }
+            @session_write_close();
+        }
+
+        @session_start();
+        seguridadVerificarTimeoutSesion();
+        seguridadRegenerarSesion();
+    }
 }
 
 // ========== CSRF PROTECTION ==========
 
-function generarTokenCSRF(): string {
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
-    }
-    if (empty($_SESSION['_csrf_token'])) {
-        $_SESSION['_csrf_token'] = bin2hex(random_bytes(32));
-    }
-    return $_SESSION['_csrf_token'];
-}
-
-function validarTokenCSRF(?string $token): bool {
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
-    }
-    if (empty($_SESSION['_csrf_token']) || empty($token)) {
-        return false;
-    }
-    return hash_equals($_SESSION['_csrf_token'], $token);
-}
-
-function verificarCSRF(): void {
-    $token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['_csrf_token'] ?? '';
-    if (!validarTokenCSRF($token)) {
-        http_response_code(403);
-        echo json_encode(['success' => false, 'message' => 'Token CSRF inválido']);
-        exit;
+if (!function_exists('generarTokenCSRF')) {
+    function generarTokenCSRF(): string {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        if (empty($_SESSION['_csrf_token'])) {
+            $_SESSION['_csrf_token'] = bin2hex(random_bytes(32));
+        }
+        return $_SESSION['_csrf_token'];
     }
 }
 
-function campoCSRF(): string {
-    return '<input type="hidden" name="_csrf_token" value="' . generarTokenCSRF() . '">';
+if (!function_exists('validarTokenCSRF')) {
+    function validarTokenCSRF(?string $token): bool {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        if (empty($_SESSION['_csrf_token']) || empty($token)) {
+            return false;
+        }
+        return hash_equals($_SESSION['_csrf_token'], $token);
+    }
 }
 
-function headerCSRF(): void {
-    header('X-CSRF-Token: ' . generarTokenCSRF());
+if (!function_exists('verificarCSRF')) {
+    function verificarCSRF(): void {
+        $token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['_csrf_token'] ?? '';
+        if (!validarTokenCSRF($token)) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Token CSRF inválido']);
+            exit;
+        }
+    }
+}
+
+if (!function_exists('campoCSRF')) {
+    function campoCSRF(): string {
+        return '<input type="hidden" name="_csrf_token" value="' . generarTokenCSRF() . '">';
+    }
+}
+
+if (!function_exists('headerCSRF')) {
+    function headerCSRF(): void {
+        header('X-CSRF-Token: ' . generarTokenCSRF());
+    }
 }
 
 // ========== AUTH HELPERS ==========
 
-function requerirAdmin(): void {
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
-    }
-    if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true ||
-        !isset($_SESSION['es_admin']) || $_SESSION['es_admin'] !== true) {
-        header('Content-Type: application/json');
-        http_response_code(403);
-        echo json_encode(['success' => false, 'message' => 'No autorizado']);
-        exit;
-    }
-}
-
-function requerirSesion(): void {
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
-    }
-    if (!isset($_SESSION['user_id'])) {
-        header('Content-Type: application/json');
-        http_response_code(401);
-        echo json_encode(['success' => false, 'message' => 'No autenticado']);
-        exit;
+if (!function_exists('requerirAdmin')) {
+    function requerirAdmin(): void {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true ||
+            !isset($_SESSION['es_admin']) || $_SESSION['es_admin'] !== true) {
+            header('Content-Type: application/json');
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'No autorizado']);
+            exit;
+        }
     }
 }
 
-function esAdmin(): bool {
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
+if (!function_exists('requerirSesion')) {
+    function requerirSesion(): void {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        if (!isset($_SESSION['user_id'])) {
+            header('Content-Type: application/json');
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'No autenticado']);
+            exit;
+        }
     }
-    return isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true &&
-           isset($_SESSION['es_admin']) && $_SESSION['es_admin'] === true;
+}
+
+if (!function_exists('esAdmin')) {
+    function esAdmin(): bool {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        return isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true &&
+               isset($_SESSION['es_admin']) && $_SESSION['es_admin'] === true;
+    }
 }
 
 // ========== URL HELPER ==========
 
-function url(string $path = ''): string {
-    $base = rtrim(BASE_URL, '/');
-    return $base . '/' . ltrim($path, '/');
+if (!function_exists('url')) {
+    function url(string $path = ''): string {
+        $base = rtrim(BASE_URL, '/');
+        return $base . '/' . ltrim($path, '/');
+    }
 }
 
 // ========== LOGGER ==========
 
-function logSistema(string $mensaje, string $nivel = 'INFO'): void {
-    $logDir = __DIR__ . '/../logs';
-    if (!is_dir($logDir)) {
-        @mkdir($logDir, 0755, true);
+if (!function_exists('logSistema')) {
+    function logSistema(string $mensaje, string $nivel = 'INFO'): void {
+        $logDir = __DIR__ . '/../logs';
+        if (!is_dir($logDir)) {
+            @mkdir($logDir, 0755, true);
+        }
+        $archivo = $logDir . '/sistema_' . date('Y-m-d') . '.log';
+        $linea = '[' . date('Y-m-d H:i:s') . '] [' . $nivel . '] ' . $mensaje . PHP_EOL;
+        @file_put_contents($archivo, $linea, FILE_APPEND | LOCK_EX);
     }
-    $archivo = $logDir . '/sistema_' . date('Y-m-d') . '.log';
-    $linea = '[' . date('Y-m-d H:i:s') . '] [' . $nivel . '] ' . $mensaje . PHP_EOL;
-    @file_put_contents($archivo, $linea, FILE_APPEND | LOCK_EX);
 }
 
 // ========== AUDITORÍA CENTRALIZADA ==========
 
-function auditoriaRegistrar(string $accion, string $modulo, string $descripcion, ?int $usuarioId = null, ?string $usuarioNombre = null): void {
-    try {
-        $pdo = Database::getConnection();
-        $usuarioId = $usuarioId ?? ($_SESSION['user_id'] ?? null);
-        $usuarioNombre = $usuarioNombre ?? ($_SESSION['user_nombre'] ?? 'sistema');
-        $ip = $_SERVER['REMOTE_ADDR'] ?? '';
-        $stmt = $pdo->prepare("INSERT INTO auditoria_logs (usuario_id, usuario_nombre, accion, modulo, descripcion, ip_address, fecha) VALUES (?, ?, ?, ?, ?, ?, NOW())");
-        $stmt->execute([$usuarioId, $usuarioNombre, $accion, $modulo, $descripcion, $ip]);
-    } catch (Exception $e) {
-        logSistema("Error registrando auditoría: " . $e->getMessage(), 'ERROR');
+if (!function_exists('auditoriaRegistrar')) {
+    function auditoriaRegistrar(string $accion, string $modulo, string $descripcion, ?int $usuarioId = null, ?string $usuarioNombre = null): void {
+        try {
+            $pdo = Database::getConnection();
+            $usuarioId = $usuarioId ?? ($_SESSION['user_id'] ?? null);
+            $usuarioNombre = $usuarioNombre ?? ($_SESSION['user_nombre'] ?? 'sistema');
+            $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+            $stmt = $pdo->prepare("INSERT INTO auditoria_logs (usuario_id, usuario_nombre, accion, modulo, descripcion, ip_address, fecha_creacion) VALUES (?, ?, ?, ?, ?, ?, NOW())");
+            $stmt->execute([$usuarioId, $usuarioNombre, $accion, $modulo, $descripcion, $ip]);
+        } catch (Exception $e) {
+            logSistema("Error registrando auditoría: " . $e->getMessage(), 'ERROR');
+        }
     }
 }
 
-function auditoriaRegistrarConDetalle(string $accion, string $modulo, string $descripcion, mixed $datosAntes = null, mixed $datosDespues = null): void {
-    try {
-        $pdo = Database::getConnection();
-        $usuarioId = $_SESSION['user_id'] ?? null;
-        $usuarioNombre = $_SESSION['user_nombre'] ?? 'sistema';
-        $ip = $_SERVER['REMOTE_ADDR'] ?? '';
-        $stmt = $pdo->prepare("INSERT INTO auditoria_logs (usuario_id, usuario_nombre, accion, modulo, descripcion, datos_antes, datos_despues, ip_address, fecha) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
-        $stmt->execute([
-            $usuarioId, $usuarioNombre, $accion, $modulo, $descripcion,
-            $datosAntes ? json_encode($datosAntes, JSON_UNESCAPED_UNICODE) : null,
-            $datosDespues ? json_encode($datosDespues, JSON_UNESCAPED_UNICODE) : null,
-            $ip
-        ]);
-    } catch (Exception $e) {
-        logSistema("Error registrando auditoría con detalle: " . $e->getMessage(), 'ERROR');
+if (!function_exists('auditoriaRegistrarConDetalle')) {
+    function auditoriaRegistrarConDetalle(string $accion, string $modulo, string $descripcion, mixed $datosAntes = null, mixed $datosDespues = null): void {
+        try {
+            $pdo = Database::getConnection();
+            $usuarioId = $_SESSION['user_id'] ?? null;
+            $usuarioNombre = $_SESSION['user_nombre'] ?? 'sistema';
+            $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+            $stmt = $pdo->prepare("INSERT INTO auditoria_logs (usuario_id, usuario_nombre, accion, modulo, descripcion, datos_anteriores, datos_nuevos, ip_address, fecha_creacion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+            $stmt->execute([
+                $usuarioId, $usuarioNombre, $accion, $modulo, $descripcion,
+                $datosAntes ? json_encode($datosAntes, JSON_UNESCAPED_UNICODE) : null,
+                $datosDespues ? json_encode($datosDespues, JSON_UNESCAPED_UNICODE) : null,
+                $ip
+            ]);
+        } catch (Exception $e) {
+            logSistema("Error registrando auditoría con detalle: " . $e->getMessage(), 'ERROR');
+        }
     }
 }
 

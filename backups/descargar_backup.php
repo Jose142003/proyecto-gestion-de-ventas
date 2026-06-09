@@ -84,7 +84,8 @@ try {
     exit;
     
 } catch (Exception $e) {
+    error_log("Error descargando backup: " . $e->getMessage());
     header('HTTP/1.0 500 Internal Server Error');
-    die('Error: ' . $e->getMessage());
+    die('Error interno del servidor');
 }
 ?>

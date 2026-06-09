@@ -722,8 +722,13 @@ async function programarMantenimiento() {
     };
     if (!data.producto_id) { toast('Ingrese un ID de producto', 'err'); return; }
     const res = await fetchApi('/proyecto/asistente/mantenimiento.php', data);
-    if (res.success) { toast('✓ Alerta: ' + res.proximo_mantenimiento, 'ok'); cargarAlertas(); }
-    else { toast('Error: ' + (res.error || ''), 'err'); }
+    if (res.success) {
+        let msg = '✓ Alerta: ' + res.proximo_mantenimiento;
+        if (res.telegram_notificado) msg += ' | Telegram OK';
+        else if (res.telegram_error) msg += ' | Telegram: ' + res.telegram_error;
+        toast(msg, 'ok');
+        cargarAlertas();
+    } else { toast('Error: ' + (res.error || ''), 'err'); }
 }
 
 async function cargarRecomendacionesMant() {

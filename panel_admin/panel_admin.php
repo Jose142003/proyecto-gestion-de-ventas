@@ -3,6 +3,7 @@
 
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../conexion/seguridad.php';
+require_once __DIR__ . '/../conexion/conexion.php';
 
 seguridadConfigurarCookies();
 seguridadEnviarHeaders();
@@ -24,8 +25,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                 $expected_sig = hash_hmac('sha256', $parts[0] . '|' . $parts[1] . '|' . $parts[2], BASE_URL);
                 if (hash_equals($expected_sig, $token_sig) && $token_tabla === 'admin_users') {
                     try {
-                        $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8", DB_USER, DB_PASS);
-                        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                        $pdo = conectarDB();
                         $stmt = $pdo->prepare("SELECT id, nombre, correo, rol, activo FROM admin_users WHERE id = ? AND activo = 1");
                         $stmt->execute([$token_id]);
                         $admin = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -54,7 +54,12 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     }
 }
 
-error_log("panel_admin.php - SESSION: " . print_r($_SESSION, true));
+error_log("panel_admin.php - Admin ID: " . ($_SESSION['user_id'] ?? 'none') . ", Rol: " . ($_SESSION['user_rol'] ?? 'none'));
+
+// Generar CSRF token para la sesion
+if (function_exists('generarTokenCSRF')) {
+    generarTokenCSRF();
+}
 
 // ========== VERIFICACIÓN ESTRICTA DE ADMIN ==========
 
@@ -136,7 +141,7 @@ try {
     <title>Panel de Administrador - PIC</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" type="image/png" href="/proyecto/img/pic.png">
-    <meta name="csrf-token" content="<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>">
+    <meta name="csrf-token" content="<?php echo htmlspecialchars($_SESSION['_csrf_token'] ?? ''); ?>">
     <link rel="shortcut icon" href="/proyecto/img/pic.png">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
@@ -755,6 +760,8 @@ try {
             display: flex;
             align-items: center;
             gap: 10px;
+            max-width: 400px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
         .notification-message.success { background: var(--success); }
         .notification-message.error { background: var(--danger); }
@@ -1718,6 +1725,7 @@ try {
                 <div class="menu-section-title">Ventas</div>
                 <div class="menu-item" data-section="pedidosSection"><i class="fas fa-clipboard-list"></i> Pedidos</div>
                 <div class="menu-item" data-section="cotizacionesSection"><i class="fas fa-file-signature"></i> Cotizaciones</div>
+                <div class="menu-item" data-section="crmSection"><i class="fas fa-handshake"></i> CRM</div>
                 <div class="menu-item" data-section="facturacionSection"><i class="fas fa-file-invoice-dollar"></i> Facturacion</div>
                 <div class="menu-item" data-section="cajaSection"><i class="fas fa-cash-register"></i> Caja / Arqueo</div>
                 <div class="menu-section-title">Herramientas</div>
@@ -2003,99 +2011,27 @@ try {
                 </div>
             </div>
 
-            <!-- Modal Cotización -->
-            <div id="cotizacionModal" class="modal" style="display:none">
-                <div class="modal-content" style="max-width:800px">
-                    <div class="modal-header">
-                        <h3 id="cotizacionModalTitle"><i class="fas fa-file-signature"></i> Nueva Cotización</h3>
-                        <span class="modal-close" onclick="cerrarModalCotizacion()">&times;</span>
+            <!-- CRM Section -->
+            <div id="crmSection" class="content-section">
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3><i class="fas fa-handshake"></i> CRM - Interacciones con Clientes</h3>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap">
+                            <input type="text" id="buscarClienteCRM" placeholder="Buscar cliente..." class="form-control" style="width:200px">
+                            <button class="btn-primary" onclick="abrirModalCRM(0)" style="background:var(--success)"><i class="fas fa-plus"></i> Nueva Interacción</button>
+                            <button class="btn-primary" onclick="cargarInteraccionesCRM()" style="background:var(--info)"><i class="fas fa-sync-alt"></i> Actualizar</button>
+                        </div>
                     </div>
-                    <div class="modal-body">
-                        <input type="hidden" id="editCotizacionId">
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:15px">
-                            <div>
-                                <label>Nombre del Cliente *</label>
-                                <input type="text" id="cotClienteNombre" class="form-control" required>
-                            </div>
-                            <div>
-                                <label>Email</label>
-                                <input type="email" id="cotClienteEmail" class="form-control">
-                            </div>
-                            <div>
-                                <label>Teléfono</label>
-                                <input type="text" id="cotClienteTelefono" class="form-control">
-                            </div>
-                            <div>
-                                <label>Fecha de Vencimiento</label>
-                                <input type="date" id="cotFechaVencimiento" class="form-control">
-                            </div>
-                            <div style="grid-column:1/-1">
-                                <label>Dirección</label>
-                                <input type="text" id="cotClienteDireccion" class="form-control">
-                            </div>
-                        </div>
-
-                        <h4 style="margin-bottom:10px">Productos</h4>
-                        <div style="display:flex;gap:8px;margin-bottom:10px">
-                            <select id="cotProductoSelect" class="form-control" style="flex:2">
-                                <option value="">Seleccionar producto existente...</option>
-                            </select>
-                            <input type="text" id="cotProductoNombre" class="form-control" placeholder="O escribir nombre..." style="flex:2">
-                            <input type="number" id="cotProductoCantidad" class="form-control" placeholder="Cantidad" value="1" min="1" style="width:80px">
-                            <input type="number" id="cotProductoPrecio" class="form-control" placeholder="Precio Bs." step="0.01" min="0" style="width:120px">
-                            <button class="btn-primary" id="btnAgregarItemCotizacion" style="background:var(--success)"><i class="fas fa-plus"></i></button>
-                        </div>
-                        <table class="data-table" style="margin-bottom:15px">
-                            <thead><tr><th>Producto</th><th>Cantidad</th><th>Precio Unit.</th><th>Subtotal</th><th>Acción</th></tr></thead>
-                            <tbody id="cotizacionItemsBody"></tbody>
+                    <div class="table-content">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>Fecha</th><th>Cliente</th><th>Tipo</th><th>Título</th><th>Descripción</th><th>Registrado por</th><th>Acciones</th></tr>
+                            </thead>
+                            <tbody id="crmInteraccionesBody"><tr><td colspan="7" style="text-align:center">Cargando...</tbody>
                         </table>
-                        <div style="text-align:right;margin-bottom:15px">
-                            <div>Subtotal: <strong id="cotSubtotal">Bs. 0.00</strong></div>
-                            <div>IVA: <strong id="cotIva">Bs. 0.00</strong></div>
-                            <div style="font-size:1.2rem">Total: <strong id="cotTotal">Bs. 0.00</strong></div>
-                        </div>
-                        <div>
-                            <label>Notas</label>
-                            <textarea id="cotNotas" class="form-control" rows="3"></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn-primary" onclick="cerrarModalCotizacion()" style="background:var(--danger)">Cancelar</button>
-                        <button class="btn-primary" id="btnGuardarCotizacion" style="background:var(--success)"><i class="fas fa-save"></i> Guardar Cotización</button>
                     </div>
                 </div>
-            </div>
 
-            <!-- Modal Seguimiento Cotización -->
-            <div id="seguimientoModal" class="modal" style="display:none">
-                <div class="modal-content" style="max-width:500px">
-                    <div class="modal-header">
-                        <h3><i class="fas fa-history"></i> Seguimiento de Cotización</h3>
-                        <span class="modal-close" onclick="document.getElementById('seguimientoModal').style.display='none'">&times;</span>
-                    </div>
-                    <div class="modal-body">
-                        <input type="hidden" id="segCotizacionId">
-                        <div style="margin-bottom:15px">
-                            <label>Cambiar Estado</label>
-                            <select id="segNuevoEstado" class="form-control">
-                                <option value="pendiente">Pendiente</option>
-                                <option value="aprobada">Aprobada</option>
-                                <option value="rechazada">Rechazada</option>
-                                <option value="vencida">Vencida</option>
-                                <option value="convertida">Convertida</option>
-                            </select>
-                        </div>
-                        <div style="margin-bottom:15px">
-                            <label>Nota de seguimiento</label>
-                            <textarea id="segNota" class="form-control" rows="3" placeholder="Agregar nota sobre esta cotización..."></textarea>
-                        </div>
-                        <div id="segHistorial" style="max-height:200px;overflow-y:auto;background:var(--secondary-color);padding:10px;border-radius:6px;font-size:0.85rem"></div>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn-primary" onclick="document.getElementById('seguimientoModal').style.display='none'" style="background:var(--danger)">Cerrar</button>
-                        <button class="btn-primary" id="btnGuardarSeguimiento" style="background:var(--info)"><i class="fas fa-save"></i> Actualizar Estado</button>
-                    </div>
-                </div>
             </div>
 
             <!-- FACTURACION Section -->
@@ -2147,7 +2083,7 @@ try {
             <div id="ventasClienteSection" class="content-section">
                 <div class="resumen-cards"><div class="resumen-card"><div class="resumen-value" id="clientesTotal">0</div><div class="resumen-label">Total Clientes</div></div><div class="resumen-card"><div class="resumen-value" id="ventasClienteTotal">0</div><div class="resumen-label">Total Ventas</div></div><div class="resumen-card"><div class="resumen-value" id="montoClienteTotal">Bs. 0</div><div class="resumen-label">Monto Total</div></div></div>
                 <div class="table-container">
-                    <div class="table-header"><h3>Ventas por Cliente</h3><div style="display:flex;gap:8px"><input type="text" id="buscarCliente" placeholder="Buscar..." class="form-control"><button class="btn-primary" onclick="imprimirTabla('ventasClienteBody')" style="background:var(--purple)"><i class="fas fa-print"></i></button><button class="btn-primary" onclick="exportarExcel('ventasClienteBody','Ventas_por_Cliente')" style="background:var(--success)"><i class="fas fa-file-excel"></i></button></div></div>
+                    <div class="table-header"><h3>Ventas por Cliente</h3><div style="display:flex;gap:8px"><input type="text" id="buscarCliente" placeholder="Buscar..." class="form-control"><button class="btn-primary" onclick="abrirModalCRM(0)" title="Añadir interacción CRM" style="background:var(--purple)"><i class="fas fa-handshake"></i> CRM</button><button class="btn-primary" onclick="imprimirTabla('ventasClienteBody')" style="background:var(--purple)"><i class="fas fa-print"></i></button><button class="btn-primary" onclick="exportarExcel('ventasClienteBody','Ventas_por_Cliente')" style="background:var(--success)"><i class="fas fa-file-excel"></i></button></div></div>
                     <div class="table-content">
                         <table class="data-table">
                             <thead><tr><th>ID</th><th>Cliente</th><th>Email</th><th>Telefono</th><th>Ventas</th><th>Productos</th><th>Monto</th><th>Ultima Compra</th><th>Acciones</th></tr></thead>
@@ -2629,6 +2565,49 @@ try {
         </main>
     </div>
 
+    <!-- MODAL CRM -->
+    <div id="crmModal" class="modal" style="display:none">
+        <div class="modal-content" style="max-width:500px">
+            <div class="modal-header">
+                <h3><i class="fas fa-handshake"></i> Nueva Interacción</h3>
+                <span class="modal-close" onclick="cerrarModalCRM()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="crmClienteId">
+                <div style="margin-bottom:12px">
+                    <label>Cliente *</label>
+                    <select id="crmClienteSelect" class="form-control" required>
+                        <option value="">Seleccionar cliente...</option>
+                    </select>
+                </div>
+                <div style="margin-bottom:12px">
+                    <label>Tipo de Interacción *</label>
+                    <select id="crmTipo" class="form-control">
+                        <option value="llamada">📞 Llamada</option>
+                        <option value="correo">✉️ Correo</option>
+                        <option value="reunion">🤝 Reunión</option>
+                        <option value="nota">📝 Nota</option>
+                        <option value="seguimiento">🔄 Seguimiento</option>
+                        <option value="recordatorio">⏰ Recordatorio</option>
+                    </select>
+                </div>
+                <div style="margin-bottom:12px">
+                    <label>Título *</label>
+                    <input type="text" id="crmTitulo" class="form-control" placeholder="Ej: Llamada de seguimiento" required>
+                </div>
+                <div style="margin-bottom:12px">
+                    <label>Descripción</label>
+                    <textarea id="crmDescripcion" class="form-control" rows="3" placeholder="Detalles de la interacción..."></textarea>
+                </div>
+                <div style="margin-bottom:12px">
+                    <label>Fecha de interacción</label>
+                    <input type="datetime-local" id="crmFecha" class="form-control">
+                </div>
+                <button class="btn-primary" id="btnGuardarInteraccion" style="width:100%"><i class="fas fa-save"></i> Guardar Interacción</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODALES -->
     <div id="verDetalleModal" class="modal" style="display: none;">
         <div class="modal-content" style="max-width: 900px;">
@@ -3060,6 +3039,7 @@ try {
         async function subirFotoPerfil(file) {
             const formData = new FormData();
             formData.append('foto', file);
+            formData.append('_csrf_token', csrfToken);
             
             mostrarLoading('Subiendo foto...');
             try {
@@ -3234,6 +3214,26 @@ try {
                     document.getElementById('cajaHoy').innerHTML = formatMoney(data.caja_hoy);
                 }
             } catch(e) { console.error('Error cargando dashboard:', e); }
+        }
+
+        // ====================================================================
+        // NOTIFICACIONES DE PAGOS EN TIEMPO REAL
+        // ====================================================================
+        let ultimoPagoMovilId = 0;
+
+        async function verificarPagosMoviles() {
+            try {
+                const response = await fetch('/proyecto/admin/verificar_pagos_pendientes.php?ultimo_id=' + ultimoPagoMovilId, { credentials: 'include' });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.nuevos && data.nuevos.length > 0) {
+                        data.nuevos.forEach(p => {
+                            mostrarNotificacion(p.mensaje || `Nuevo pago de ${p.cliente}`, 'info');
+                        });
+                    }
+                    if (data.max_id > ultimoPagoMovilId) ultimoPagoMovilId = data.max_id;
+                }
+            } catch(e) { /* Silencio */ }
         }
 
         async function cargarProveedores() {
@@ -3766,6 +3766,131 @@ function renderCompras() {
             } catch(e) { mostrarNotificacion('Error de conexión', 'error'); }
         }
 
+        // ====================================================================
+        // CRM INTERACCIONES - FUNCIONES
+        // ====================================================================
+        let crmInteraccionesData = [];
+
+        async function cargarInteraccionesCRM() {
+            try {
+                const busqueda = document.getElementById('buscarClienteCRM')?.value || '';
+                const urlSimple = '/proyecto/reportes/ventas_por_cliente.php?simple=1' + (busqueda ? '&buscar=' + encodeURIComponent(busqueda) : '');
+                const resClientes = await fetch(urlSimple, { credentials: 'include' });
+                if (!resClientes.ok) { document.getElementById('crmInteraccionesBody').innerHTML = '<tr><td colspan="7" style="text-align:center">Error al cargar clientes</td></tr>'; return; }
+                const dataClientes = await resClientes.json();
+                const clientes = Array.isArray(dataClientes) ? dataClientes : (dataClientes.clientes || []);
+
+                if (clientes.length === 0) {
+                    document.getElementById('crmInteraccionesBody').innerHTML = '<tr><td colspan="7" style="text-align:center">No se encontraron clientes</td></tr>';
+                    return;
+                }
+
+                let todas = [];
+                const lote = clientes.slice(0, 20);
+                for (const cli of lote) {
+                    try {
+                        const res = await fetch('/proyecto/clientes/obtener_interacciones.php?cliente_id=' + cli.id, { credentials: 'include' });
+                        if (res.ok) {
+                            const data = await res.json();
+                            if (data.success && data.interacciones) {
+                                data.interacciones.forEach(int => {
+                                    if (!int.cliente_nombre) int.cliente_nombre = cli.nombre || cli.cliente || 'Cliente #' + cli.id;
+                                    todas.push(int);
+                                });
+                            }
+                        }
+                    } catch(e) { /* ignorar error individual */ }
+                }
+
+                todas.sort((a, b) => new Date(b.fecha_interaccion) - new Date(a.fecha_interaccion));
+                const maxMostrar = 50;
+                const mostrar = todas.slice(0, maxMostrar);
+                crmInteraccionesData = mostrar;
+
+                const tbody = document.getElementById('crmInteraccionesBody');
+                if (!tbody) return;
+                if (mostrar.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center">No hay interacciones registradas</td></tr>';
+                    return;
+                }
+                const iconos = { llamada: 'fa-phone', correo: 'fa-envelope', reunion: 'fa-handshake', nota: 'fa-sticky-note', seguimiento: 'fa-redo', recordatorio: 'fa-bell' };
+                const colores = { llamada: '#3498db', correo: '#2ed573', reunion: '#9b59b6', nota: '#f39c12', seguimiento: '#1abc9c', recordatorio: '#e74c3c' };
+                tbody.innerHTML = mostrar.map(int => `<tr>
+                    <td style="white-space:nowrap">${new Date(int.fecha_interaccion).toLocaleString('es-ES')}</td>
+                    <td><strong>${escapeHtml(int.cliente_nombre || 'Cliente')}</strong></td>
+                    <td><span style="background:${colores[int.tipo]||'#95a5a6'};color:white;padding:2px 8px;border-radius:4px;font-size:0.75rem"><i class="fas ${iconos[int.tipo]||'fa-comment'}"></i> ${int.tipo}</span></td>
+                    <td>${escapeHtml(int.titulo || '')}</td>
+                    <td>${escapeHtml((int.descripcion || '').substring(0, 80))}${(int.descripcion || '').length > 80 ? '...' : ''}</td>
+                    <td>${escapeHtml(int.usuario_nombre || 'Sistema')}</td>
+                    <td><button class="btn-pdf" onclick="eliminarInteraccionCRM(${int.id})" title="Eliminar" style="background:#e74c3c"><i class="fas fa-trash"></i></button></td>
+                </tr>`).join('');
+            } catch(e) { console.error('Error cargando CRM:', e); }
+        }
+
+        async function abrirModalCRM(clienteId) {
+            document.getElementById('crmClienteId').value = clienteId || '';
+            document.getElementById('crmTitulo').value = '';
+            document.getElementById('crmDescripcion').value = '';
+            document.getElementById('crmFecha').value = new Date().toISOString().slice(0, 16);
+
+            try {
+                const res = await fetch('/proyecto/reportes/ventas_por_cliente.php?simple=1', { credentials: 'include' });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+                const clientes = Array.isArray(data) ? data : (data.clientes || []);
+                const sel = document.getElementById('crmClienteSelect');
+                sel.innerHTML = '<option value="">Seleccionar cliente...</option>' + clientes.map(c => `<option value="${c.id}" ${c.id == clienteId ? 'selected' : ''}>${escapeHtml(c.nombre || c.cliente || 'Cliente #' + c.id)}</option>`).join('');
+            } catch(e) { console.error('Error cargando clientes CRM:', e); }
+            document.getElementById('crmModal').style.display = 'flex';
+        }
+
+        function cerrarModalCRM() {
+            document.getElementById('crmModal').style.display = 'none';
+        }
+
+        async function guardarInteraccionCRM() {
+            const clienteId = document.getElementById('crmClienteSelect')?.value || document.getElementById('crmClienteId')?.value;
+            const tipo = document.getElementById('crmTipo')?.value;
+            const titulo = document.getElementById('crmTitulo')?.value.trim();
+            const descripcion = document.getElementById('crmDescripcion')?.value.trim();
+            const fecha = document.getElementById('crmFecha')?.value;
+
+            if (!clienteId || !tipo || !titulo) {
+                mostrarNotificacion('Complete los campos requeridos (Cliente, Tipo, Título)', 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch('/proyecto/clientes/agregar_interaccion.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cliente_id: parseInt(clienteId), tipo, titulo, descripcion, fecha_interaccion: fecha || new Date().toISOString().slice(0, 19).replace('T', ' ') }),
+                    credentials: 'include'
+                });
+                const data = await res.json();
+                mostrarNotificacion(data.message, data.success ? 'success' : 'error');
+                if (data.success) {
+                    cerrarModalCRM();
+                    cargarInteraccionesCRM();
+                }
+            } catch(e) { mostrarNotificacion('Error de conexión', 'error'); }
+        }
+
+        async function eliminarInteraccionCRM(id) {
+            if (!confirm('¿Eliminar esta interacción?')) return;
+            try {
+                const res = await fetch('/proyecto/clientes/eliminar_interaccion.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id }),
+                    credentials: 'include'
+                });
+                const data = await res.json();
+                mostrarNotificacion(data.message, data.success ? 'success' : 'error');
+                if (data.success) cargarInteraccionesCRM();
+            } catch(e) { mostrarNotificacion('Error de conexión', 'error'); }
+        }
+
         async function cargarFacturas() {
             mostrarLoading('Cargando facturas...');
             try {
@@ -3862,6 +3987,39 @@ function renderCompras() {
             } catch(e) { console.error('Error cargando movimientos:', e); }
         }
 
+        async function imprimirCierreCaja() {
+            try {
+                const response = await fetch('/proyecto/caja/obtener_estado_caja.php', { credentials: 'include' });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.estado === 'abierta') {
+                        if (cajaData && cajaData.caja_id) {
+                            window.open('/proyecto/caja/imprimir_cierre_pdf.php?id=' + cajaData.caja_id, '_blank');
+                        } else {
+                            window.open('/proyecto/caja/imprimir_cierre_pdf.php', '_blank');
+                        }
+                    } else {
+                        window.open('/proyecto/caja/imprimir_cierre_pdf.php', '_blank');
+                    }
+                }
+            } catch(e) { console.error('Error imprimiendo cierre:', e); }
+        }
+
+        async function limpiarCaja() {
+            if (!confirm('¿Estás seguro de limpiar todos los movimientos de la caja actual?\n\nEsta acción eliminará todos los movimientos del día y reiniciará los montos.')) return;
+            if (!confirm('⚠️ CONFIRMACIÓN: ¿Estás completamente seguro? Esta operación no se puede deshacer.')) return;
+            try {
+                const response = await fetch('/proyecto/caja/limpiar_caja.php', { method: 'POST', body: JSON.stringify({ accion: 'limpiar' }), headers: { 'Content-Type': 'application/json' }, credentials: 'include' });
+                const data = await response.json();
+                if (data.success) {
+                    mostrarNotificacion(data.message, 'success');
+                    await cargarCaja();
+                } else {
+                    mostrarNotificacion(data.message, 'error');
+                }
+            } catch(e) { console.error('Error limpiando caja:', e); mostrarNotificacion('Error al limpiar caja', 'error'); }
+        }
+
         async function cargarVentasCliente() {
             mostrarLoading('Cargando ventas por cliente...');
             try {
@@ -3914,7 +4072,10 @@ function renderCompras() {
                     <td>${c.total_productos || 0}</td>
                     <td>${formatMoney(c.monto_total)}</td>
                     <td>${ultimaCompra}</td>
-                    <td class="action-buttons"><button class="btn-action btn-view" onclick="verDetalleCliente(${c.id})"><i class="fas fa-eye"></i></button></td>
+                    <td class="action-buttons">
+                        <button class="btn-action btn-view" onclick="verDetalleCliente(${c.id})" title="Ver cliente"><i class="fas fa-eye"></i></button>
+                        <button class="btn-action btn-edit" onclick="abrirModalCRM(${c.id})" title="Añadir interacción CRM" style="background:var(--purple)"><i class="fas fa-handshake"></i></button>
+                    </td>
                 </tr>`;
             }
             tbody.innerHTML = html;
@@ -5107,7 +5268,7 @@ function renderConfiguracion() {
             try {
                 const response = await fetch('/proyecto/admin/enviar_recomendaciones.php', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
                     body: JSON.stringify({ accion: 'recomendar_masivo' })
                 });
                 const data = await response.json();
@@ -5121,7 +5282,7 @@ function renderConfiguracion() {
                 mostrarNotificacion('Error al enviar recomendaciones', 'error');
             } finally { ocultarLoading(); }
         }
-        
+
         function descargarBackup(id) { window.open(`/proyecto/backups/descargar_backup.php?id=${id}`, '_blank'); }
         
         async function eliminarBackup(id) {
@@ -5592,6 +5753,8 @@ async function cambiarPasswordRecuperacion(event) {
         // BI DASHBOARD - FUNCIONES
         // ====================================================================
         async function cargarBIDashboard() {
+            const btns = ['btnActualizarBI', 'btnFiltrarBI'].map(id => document.getElementById(id)).filter(Boolean);
+            btns.forEach(b => { b.disabled = true; b.innerHTML = '<i class=\"fas fa-spinner fa-spin\"></i> Cargando...'; });
             try {
                 const fechaDesde = document.getElementById('biFechaDesde')?.value || '';
                 const fechaHasta = document.getElementById('biFechaHasta')?.value || '';
@@ -5600,8 +5763,9 @@ async function cambiarPasswordRecuperacion(event) {
                 if (fechaHasta) params.append('fecha_hasta', fechaHasta);
                 const url = '/proyecto/bi/obtener_datos_bi.php?' + params.toString();
                 const response = await fetch(url, { credentials: 'include' });
+                if (!response.ok) throw new Error('Error HTTP: ' + response.status);
                 const data = await response.json();
-                if (!data.success) throw new Error('Error al cargar BI');
+                if (!data.success) throw new Error(data.error || 'Error al cargar BI');
 
                 if (data.kpis) {
                     document.getElementById('biFacturasHoy').textContent = data.kpis.facturas_hoy || 0;
@@ -5640,8 +5804,13 @@ async function cambiarPasswordRecuperacion(event) {
                         </div>
                     `).join('');
                 }
+
+                mostrarNotificacion('Datos del BI actualizados correctamente', 'success');
             } catch (e) {
                 console.error('Error BI:', e);
+                mostrarNotificacion('Error al actualizar BI: ' + e.message, 'error');
+            } finally {
+                btns.forEach(b => { b.disabled = false; b.innerHTML = b.id === 'btnActualizarBI' ? '<i class=\"fas fa-sync-alt\"></i> Actualizar Datos' : '<i class=\"fas fa-filter\"></i> Filtrar'; });
             }
         }
 
@@ -5902,6 +6071,7 @@ async function cambiarPasswordRecuperacion(event) {
         }
 
         async function cargarMarketing() {
+            mostrarLoading('Cargando historial de marketing...');
             try {
                 const res = await fetch('/proyecto/admin/enviar_recomendaciones.php?accion=historial');
                 const data = await res.json();
@@ -5925,7 +6095,7 @@ async function cambiarPasswordRecuperacion(event) {
             } catch (e) {
                 console.error('Error cargarMarketing:', e);
                 mostrarNotificacion('Error de conexión al cargar marketing', 'error');
-            }
+            } finally { ocultarLoading(); }
         }
 
         async function configurar2FA() {
@@ -6168,6 +6338,7 @@ async function cambiarPasswordRecuperacion(event) {
                 'comprasSection': cargarCompras,
                 'pedidosSection': cargarPedidos,
                 'cotizacionesSection': cargarCotizaciones,
+                'crmSection': cargarInteraccionesCRM,
                 'facturacionSection': cargarFacturas,
                 'cajaSection': cargarCaja, 
                 'ventasClienteSection': cargarVentasCliente,
@@ -6231,6 +6402,9 @@ async function cambiarPasswordRecuperacion(event) {
             document.getElementById('btnListarFacturas')?.addEventListener('click', function() { window.location.href = '/proyecto/facturacion/listar_facturas.php'; });
             document.getElementById('btnFiltrarCotizaciones')?.addEventListener('click', cargarCotizaciones);
             document.getElementById('btnNuevaCotizacion')?.addEventListener('click', () => abrirModalCotizacion(0));
+            document.getElementById('btnLimpiarCaja')?.addEventListener('click', limpiarCaja);
+            document.getElementById('btnGuardarInteraccion')?.addEventListener('click', guardarInteraccionCRM);
+            document.getElementById('buscarClienteCRM')?.addEventListener('keyup', (e) => { if(e.key === 'Enter') cargarInteraccionesCRM(); });
             document.getElementById('btnAgregarItemCotizacion')?.addEventListener('click', agregarItemCotizacion);
             document.getElementById('btnGuardarCotizacion')?.addEventListener('click', guardarCotizacion);
             document.getElementById('btnGuardarSeguimiento')?.addEventListener('click', guardarSeguimiento);
@@ -6240,10 +6414,7 @@ async function cambiarPasswordRecuperacion(event) {
             document.getElementById('btnGuardarConfig')?.addEventListener('click', guardarConfiguracion);
             document.getElementById('btnCrearBackup')?.addEventListener('click', crearBackup);
             document.getElementById('btnEnviarRecomendaciones')?.addEventListener('click', enviarRecomendacionesMasivo);
-            document.getElementById('btnHistorialEnvios')?.addEventListener('click', () => {
-                const section = document.querySelector('#marketingSection');
-                if (section) cargarMarketing();
-            });
+            document.getElementById('btnHistorialEnvios')?.addEventListener('click', cargarMarketing);
             document.getElementById('btnFiltrarAuditoria')?.addEventListener('click', cargarAuditoria);
             document.getElementById('filtroVendedor')?.addEventListener('change', cargarVentasVendedor);
             document.getElementById('btnActualizarVendedores')?.addEventListener('click', cargarVentasVendedor);
@@ -6310,6 +6481,10 @@ async function cambiarPasswordRecuperacion(event) {
 
             // Periodic 2FA re-verification (every 60 seconds)
             setInterval(verificarReverificacion2FA, 60000);
+
+            // Verificar pagos móviles periódicamente
+            setInterval(verificarPagosMoviles, 15000);
+            setTimeout(verificarPagosMoviles, 2000);
         });
 
         async function verificarReverificacion2FA() {

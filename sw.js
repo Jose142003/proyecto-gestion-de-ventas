@@ -117,7 +117,11 @@ function networkFirst(request) {
       }
       var responseClone = response.clone();
       caches.open(CACHE_NAME).then(function(cache) {
-        cache.put(request, responseClone);
+        cache.put(request, responseClone).catch(function(err) {
+          console.warn('[SW] Error al cachear:', request.url, err);
+        });
+      }).catch(function(err) {
+        console.warn('[SW] Error al abrir cache:', err);
       });
       return response;
     })

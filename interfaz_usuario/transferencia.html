@@ -501,8 +501,15 @@ async function procesarPago() {
         
         if (result.success) {
             sessionStorage.setItem('pedido_procesado', JSON.stringify(result));
-            // Incluir clientType en la URL
-            window.location.href = `pedido_confirmado.php?numero=${result.numero_pedido}&total=${totalPagar}&metodo=transferencia&referencia=${encodeURIComponent(referencia)}&usuario_id=${user_id}&clientType=${clientType}`;
+            // Preparar productos para respaldo en URL
+            const productosJson = encodeURIComponent(JSON.stringify(cartItems.map(item => ({
+                id: item.product_id || item.id,
+                nombre: item.name,
+                precio: parseFloat(item.price),
+                cantidad: parseInt(item.quantity)
+            }))));
+            // Incluir clientType y productos en la URL
+            window.location.href = `pedido_confirmado.php?numero=${result.numero_pedido}&total=${totalPagar}&metodo=transferencia&referencia=${encodeURIComponent(referencia)}&usuario_id=${user_id}&productos=${productosJson}&clientType=${clientType}`;
         } else {
             throw new Error(result.message || 'Error al procesar el pago');
         }

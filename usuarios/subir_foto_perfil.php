@@ -2,7 +2,7 @@
 require_once dirname(__DIR__) . '/conexion/conexion.php';
 iniciarSesion();
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Origin: http://localhost');
 header('Access-Control-Allow-Methods: POST');
 header('Access-Control-Allow-Headers: Content-Type');
 
@@ -105,11 +105,15 @@ try {
         echo json_encode(['success' => false, 'message' => 'La imagen no puede superar los 2MB']);
         exit;
     }
+    if ($archivo['size'] === 0) {
+        echo json_encode(['success' => false, 'message' => 'El archivo está vacío']);
+        exit;
+    }
 
     // Crear directorio si no existe
     $upload_dir = $_SERVER['DOCUMENT_ROOT'] . '/uploads/perfiles/';
     if (!file_exists($upload_dir)) {
-        if (!mkdir($upload_dir, 0777, true)) {
+        if (!mkdir($upload_dir, 0755, true)) {
             echo json_encode(['success' => false, 'message' => 'No se pudo crear el directorio de uploads']);
             exit;
         }
@@ -130,9 +134,6 @@ try {
         echo json_encode(['success' => false, 'message' => 'Error al guardar el archivo']);
         exit;
     }
-
-    // Conectar a la base de datos
-    require_once dirname(__DIR__) . '/conexion/conexion.php';
 
     verificarCSRF();
 
@@ -204,7 +205,7 @@ try {
         if (file_exists($ruta_completa)) {
             unlink($ruta_completa);
         }
-        echo json_encode(['success' => false, 'message' => 'Error de base de datos: ' . $e->getMessage()]);
+        echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
     }
     
 } catch (Exception $e) {

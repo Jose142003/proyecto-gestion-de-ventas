@@ -143,7 +143,7 @@ function scrapingBCVDirecto() {
                 $textoPlano = strip_tags($html);
                 if (preg_match('/USD\s*(\d{1,3}(?:[.,]\d+)?)/i', $textoPlano, $matches)) {
                     $tasa = convertirTasaUSD($matches[1]);
-                    if ($tasa !== null && $tasa > 20 && $tasa < 200) {
+                    if ($tasa !== null && $tasa > 20 && $tasa < 2000) {
                         error_log("BCV Scraping (texto) desde $url: {$matches[1]} -> $tasa");
                         return $tasa;
                     }
@@ -311,7 +311,7 @@ function guardarEnCacheLocal($tasa, $fuente = '') {
 $tasa = obtenerTasaBCV();
 
 if ($tasa === null) {
-    $tasa = 50.05; // Tasa aproximada actual
+    $tasa = 549; // Tasa aproximada actual
 }
 
 $tasa = round($tasa, 2);

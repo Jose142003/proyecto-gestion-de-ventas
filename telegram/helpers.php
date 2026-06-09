@@ -16,7 +16,7 @@ function telegramEnviar(string $token, string $chatId, string $mensaje): array {
     $payload = [
         'chat_id' => $chatId,
         'text' => $mensaje,
-        'parse_mode' => 'Markdown',
+        'parse_mode' => 'HTML',
         'disable_web_page_preview' => true
     ];
 
@@ -42,5 +42,46 @@ function telegramEnviar(string $token, string $chatId, string $mensaje): array {
         'success' => false,
         'http_code' => $httpCode,
         'error' => $data['description'] ?? 'Error desconocido'
+    ];
+}
+
+function telegramEnviarDocumento(string $token, string $chatId, string $filePath, string $caption = ''): array {
+    if (!file_exists($filePath)) {
+        return ['success' => false, 'error' => 'Archivo no encontrado: ' . $filePath];
+    }
+
+    $url = "https://api.telegram.org/bot{$token}/sendDocument";
+    $file = new CURLFile($filePath);
+
+    $post = [
+        'chat_id' => $chatId,
+        'document' => $file,
+    ];
+    if ($caption) {
+        $post['caption'] = $caption;
+    }
+
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => $post,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 30,
+    ]);
+
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    $data = json_decode($response, true);
+
+    if ($httpCode >= 200 && $httpCode < 300 && ($data['ok'] ?? false)) {
+        return ['success' => true, 'http_code' => $httpCode];
+    }
+
+    return [
+        'success' => false,
+        'http_code' => $httpCode,
+        'error' => $data['description'] ?? 'Error enviando documento'
     ];
 }

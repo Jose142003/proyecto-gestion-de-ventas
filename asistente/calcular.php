@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Origin: http://localhost');
 require_once __DIR__ . '/conexion.php';
 
 $input = json_decode(file_get_contents('php://input'), true);
@@ -61,7 +61,9 @@ try {
                 'breaker_tipo' => 'Curva D (motores)',
                 'contactor_ac3' => round($contactorAC3, 0) . 'A',
                 'rele_termico' => round($releMin, 0) . 'A - ' . round($releMax, 0) . 'A',
-                'cable_recomendado' => $cableReal,
+                'cable_recomendado' => $cableReal['suficiente']
+                    ? 'Cable AWG #' . $cableReal['awg'] . ' (' . $cableReal['mm2'] . ' mm²)'
+                    : 'Se requiere cable de mayor calibre. Consulte tabla AWG.',
                 'potencia_kw' => round($hp * 0.746, 2),
             ],
             'productos_sugeridos' => [
@@ -97,7 +99,9 @@ try {
                 'corriente_nominal' => round($corrienteNominal, 1) . 'A',
                 'corriente_arranque' => round($corrienteArranque, 1) . 'A',
                 'breaker_recomendado' => round($breaker, 0) . 'A (Curva C)',
-                'cable_recomendado' => $cable,
+                'cable_recomendado' => $cable['suficiente']
+                    ? 'Cable AWG #' . $cable['awg'] . ' (' . $cable['mm2'] . ' mm²)'
+                    : 'Se requiere cable de mayor calibre. Consulte tabla AWG.',
             ]
         ]);
     }
@@ -121,7 +125,9 @@ try {
             'resultados' => [
                 'corriente_nominal' => round($corriente, 1) . 'A',
                 'breaker_recomendado' => round($breaker, 0) . 'A (Curva C)',
-                'cable_recomendado' => $cable,
+                'cable_recomendado' => $cable['suficiente']
+                    ? 'Cable AWG #' . $cable['awg'] . ' (' . $cable['mm2'] . ' mm²)'
+                    : 'Se requiere cable de mayor calibre. Consulte tabla AWG.',
                 'potencia_kw' => round($potencia / 1000, 2) . ' kW',
             ]
         ]);

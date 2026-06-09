@@ -2,7 +2,7 @@
 require_once dirname(__DIR__) . '/conexion/conexion.php';
 iniciarSesion();
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Origin: http://localhost');
 header('Access-Control-Allow-Methods: GET');
 header('Access-Control-Allow-Headers: Content-Type');
 
@@ -26,7 +26,6 @@ $es_admin = $_SESSION['es_admin'] ?? false;
 $tabla_origen = $_SESSION['tabla_origen'] ?? null;
 
 try {
-    require_once dirname(__DIR__) . '/conexion/conexion.php';
     $db = conectarDB();
     
     $foto = null;

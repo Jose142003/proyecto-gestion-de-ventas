@@ -492,6 +492,46 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
             border: 1px solid #ced4da;
         }
 
+        .shipping-info {
+            margin: 18px 0;
+            padding: 12px;
+            background: var(--bg-color);
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .shipping-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: var(--text-color);
+        }
+
+        .shipping-carriers {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+
+        .carrier-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            background: var(--accent-color);
+            color: white;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .shipping-note {
+            font-size: 12px;
+            color: var(--text-muted, #6c757d);
+            margin: 0;
+        }
+
         #floating-cart {
             position: fixed;
             bottom: 25px;
@@ -871,6 +911,15 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                         <div id="modal-product-rating" class="rating"></div>
                         <h3 id="modal-product-price"></h3>
                         <p id="modal-product-description"></p>
+                        <div class="shipping-info">
+                            <p class="shipping-title"><i class="fas fa-truck"></i> Opciones de Envío</p>
+                            <div class="shipping-carriers">
+                                <span class="carrier-badge"><i class="fas fa-shipping-fast"></i> MRW</span>
+                                <span class="carrier-badge"><i class="fas fa-shipping-fast"></i> Tealca</span>
+                                <span class="carrier-badge"><i class="fas fa-shipping-fast"></i> Zoom</span>
+                            </div>
+                            <p class="shipping-note" id="modal-shipping-note">Envío disponible a todo el país. Calcula el costo al finalizar la compra.</p>
+                        </div>
                         <div class="quantity-selector">
                             <button class="quantity-btn" id="qty-minus">-</button>
                             <input type="number" class="quantity-input" id="product-quantity" value="1" min="1">
@@ -1256,6 +1305,7 @@ async function subirFotoPerfil(file) {
     
     const formData = new FormData();
     formData.append('foto', file);
+    formData.append('_csrf_token', csrfToken);
     
     showNotification('Subiendo foto...');
     
@@ -1297,7 +1347,7 @@ async function eliminarFotoPerfil() {
     try {
         const response = await fetch('/proyecto/usuarios/eliminar_foto_perfil.php', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
             credentials: 'include'
         });
         
@@ -1966,7 +2016,7 @@ async function addToCart(productId, quantity) {
     try {
         const response = await fetch('/proyecto/carrito/anadir_carrito.php', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
             body: JSON.stringify({ user_id: CURRENT_USER.id, product_id: productId, quantity: quantity })
         });
         const data = await response.json();
@@ -2074,7 +2124,7 @@ async function handleQtyMinus(e) {
     const id = parseInt(btn.getAttribute('data-id'));
     const currentQty = parseInt(btn.getAttribute('data-current-qty'));
     if (currentQty > 1) {
-        await actualizarCantidadCarrito(id, currentQty - 1);
+        await actualizarCantidadCarrito(id, -1);
     } else {
         await removeFromCart(id);
     }
@@ -2085,7 +2135,7 @@ async function handleQtyPlus(e) {
     const btn = e.currentTarget;
     const id = parseInt(btn.getAttribute('data-id'));
     const currentQty = parseInt(btn.getAttribute('data-current-qty'));
-    await actualizarCantidadCarrito(id, currentQty + 1);
+    await actualizarCantidadCarrito(id, 1);
 }
 
 async function handleRemove(e) {
@@ -2101,7 +2151,7 @@ async function actualizarCantidadCarrito(productId, quantity) {
     try {
         const response = await fetch('/proyecto/carrito/anadir_carrito.php', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
             body: JSON.stringify({ user_id: CURRENT_USER.id, product_id: productId, quantity: quantity })
         });
         const data = await response.json();
@@ -2123,7 +2173,7 @@ async function removeFromCart(productId) {
     try {
         const response = await fetch('/proyecto/carrito/remover_carrito.php', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
             body: JSON.stringify({ user_id: CURRENT_USER.id, product_id: productId })
         });
         const data = await response.json();

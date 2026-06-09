@@ -41,17 +41,13 @@ try {
     }
     
     // Configurar carpeta de backups
-    $directorio_backups = __DIR__ . '/backups/';
-    if (!file_exists($directorio_backups)) {
-        mkdir($directorio_backups, 0777, true);
-    }
-    
+    $directorio_backups = __DIR__;
     if (!is_writable($directorio_backups)) {
         responder(false, 'El directorio ' . $directorio_backups . ' no tiene permisos de escritura');
     }
     
     $nombre_archivo = 'backup_' . date('Y-m-d_H-i-s') . '.sql';
-    $ruta_completa = $directorio_backups . $nombre_archivo;
+    $ruta_completa = $directorio_backups . '/' . $nombre_archivo;
     
     // Obtener SOLO tablas, excluir vistas
     $tablas = [];
@@ -92,10 +88,9 @@ try {
                     $contenido .= "--\n-- Datos de tabla: $tabla\n--\n";
                     foreach ($filas_datos as $fila_datos) {
                         $columnas = array_keys($fila_datos);
-                        $valores = array_map(function($v) {
+                        $valores = array_map(function($v) use ($conn) {
                             if ($v === null) return 'NULL';
-                            $v = str_replace("'", "''", $v);
-                            return "'" . $v . "'";
+                            return $conn->quote($v);
                         }, array_values($fila_datos));
                         $contenido .= "INSERT INTO `$tabla` (`" . implode('`, `', $columnas) . "`) VALUES (" . implode(',', $valores) . ");\n";
             }

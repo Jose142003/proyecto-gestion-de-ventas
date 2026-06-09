@@ -5,9 +5,7 @@ header('Content-Type: text/html; charset=utf-8');
 
 echo "<h2>Prueba de Envío de Correo</h2>";
 
-require_once __DIR__ . '/../usuarios/PHPMailer.php';
-require_once __DIR__ . '/../usuarios/SMTP.php';
-require_once __DIR__ . '/../usuarios/Exception.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;

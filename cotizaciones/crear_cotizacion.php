@@ -8,6 +8,7 @@ header('Access-Control-Allow-Credentials: true');
 
 require_once __DIR__ . '/../conexion/conexion.php';
 requerirAdmin();
+verificarCSRF();
 
 try {
     $pdo = conectarDB();
@@ -82,5 +83,5 @@ try {
 } catch (Throwable $e) {
     if (isset($pdo) && $pdo->inTransaction()) $pdo->rollBack();
     http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Error al crear cotización: ' . $e->getMessage()]);
+    echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
 }

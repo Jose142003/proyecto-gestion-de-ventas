@@ -2,8 +2,7 @@
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_WARNING & ~E_NOTICE);
 ini_set('display_errors', 0);
 
-require_once __DIR__ . '/../conexion/conexion.php';
-require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../usuarios/config_email.php';
 
 use Dompdf\Dompdf;
@@ -15,8 +14,8 @@ try {
     $pdo = conectarDB();
 
     $stmt = $pdo->query("
-        SELECT am.*, p.nombre AS producto_nombre, 
-               p.precio AS producto_precio, p.stock AS producto_stock,
+        SELECT am.*, COALESCE(p.name, am.producto_nombre) AS producto_nombre,
+               p.price AS producto_precio, p.stock AS producto_stock,
                DATEDIFF(am.proximo_mantenimiento, CURDATE()) AS dias_restantes,
                CASE 
                    WHEN am.estado = 'completado' THEN 'Completado'
@@ -25,7 +24,7 @@ try {
                    ELSE 'Programado'
                END AS estado_texto
         FROM alertas_mantenimiento am
-        LEFT JOIN productos p ON am.producto_id = p.id
+        LEFT JOIN products p ON am.producto_id = p.id
         ORDER BY 
             CASE WHEN am.proximo_mantenimiento < CURDATE() THEN 0 ELSE 1 END,
             am.proximo_mantenimiento ASC
@@ -57,8 +56,6 @@ try {
         fclose($output);
         exit;
     }
-
-    require_once __DIR__ . '/../vendor/autoload.php';
 
     $options = new Options();
     $options->set('defaultFont', 'Helvetica');

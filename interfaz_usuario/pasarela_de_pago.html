@@ -950,16 +950,26 @@ async function obtenerUsuarioYCarrito() {
         if (userData.success && userData.usuario) {
             currentUserId = userData.usuario.id;
             localStorage.setItem('user_id', currentUserId);
+            await fetchData(currentUserId);
         } else {
-            currentUserId = localStorage.getItem('user_id') || 1;
+            const storedId = localStorage.getItem('user_id');
+            if (storedId) {
+                currentUserId = storedId;
+                await fetchData(currentUserId);
+            } else {
+                window.location.href = 'login.html';
+            }
         }
-        
-        await fetchData(currentUserId);
         
     } catch (error) {
         console.error('Error al obtener usuario:', error);
-        currentUserId = localStorage.getItem('user_id') || 1;
-        await fetchData(currentUserId);
+        const storedId = localStorage.getItem('user_id');
+        if (storedId) {
+            currentUserId = storedId;
+            await fetchData(currentUserId);
+        } else {
+            window.location.href = 'login.html';
+        }
     }
 }
 

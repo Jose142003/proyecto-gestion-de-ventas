@@ -2,7 +2,7 @@
 session_start();
 header('Content-Type: application/json');
 
-require_once '../conexion/conexion.php';
+require_once __DIR__ . '/../conexion/conexion.php';
 
 if (!isset($_SESSION['user_id'])) {
     echo json_encode(['success' => false, 'message' => 'No autorizado']);

@@ -34,7 +34,7 @@ $stmt->execute();
 $pedidos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Productos más vendidos - CORREGIDO: usa pedido_detalles
-$query_top = "SELECT p.name as nombre, SUM(pd.cantidad) as unidades, SUM(pd.subtotal) as ingresos 
+$query_top = "SELECT ANY_VALUE(p.name) as nombre, SUM(pd.cantidad) as unidades, SUM(pd.subtotal) as ingresos 
               FROM pedido_detalles pd 
               JOIN products p ON pd.producto_id = p.id 
               JOIN pedidos ped ON pd.pedido_id = ped.id 

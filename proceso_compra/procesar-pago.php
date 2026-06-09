@@ -16,6 +16,7 @@ session_start();
 $user_id = $_SESSION['user_id'] ?? null;
 
 if (!$user_id || !isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+    http_response_code(401);
     echo json_encode([
         'success' => false, 
         'message' => 'Debes iniciar sesión para continuar',
@@ -32,6 +33,7 @@ require_once __DIR__ . '/../conexion/conexion.php';
 $input = json_decode(file_get_contents('php://input'), true);
 
 if (!$input) {
+    http_response_code(400);
     echo json_encode(['success' => false, 'message' => 'Datos inválidos']);
     exit;
 }
@@ -43,6 +45,7 @@ $client_type = $input['client_type'] ?? 'regular';
 $items = $input['items'] ?? [];
 
 if (empty($items)) {
+    http_response_code(400);
     echo json_encode(['success' => false, 'message' => 'El carrito está vacío']);
     exit;
 }
@@ -60,10 +63,10 @@ try {
     $pdo = conectarDB();
     $pdo->beginTransaction();
 
-    // Verificar si existe columna referencia_pago
+    // Verificar si existe columna referencia_pago (usando fetch, no rowCount que es poco confiable en PDO)
     $check = "SHOW COLUMNS FROM pedidos LIKE 'referencia_pago'";
     $result = $pdo->query($check);
-    $has_referencia = $result->rowCount() > 0;
+    $has_referencia = $result && $result->fetch(PDO::FETCH_ASSOC) !== false;
     
     if (!$has_referencia) {
         $pdo->exec("ALTER TABLE pedidos ADD COLUMN referencia_pago VARCHAR(100) DEFAULT NULL");
@@ -188,52 +191,46 @@ try {
         'message' => 'Pedido procesado correctamente'
     ]);
     
-    // Enviar factura por correo (después de responder para no ralentizar)
-    try {
-        if (ob_get_level()) ob_flush();
-        flush();
-        
-        require_once __DIR__ . '/../usuarios/enviar_factura_email.php';
-        
-        $stmt_f = $pdo->prepare("SELECT f.*, c.nombre as cliente_nombre, c.email as cliente_email, c.documento as cliente_documento, c.telefono as cliente_telefono, c.direccion as cliente_direccion, p.metodo_pago as pedido_metodo_pago, p.referencia_pago as pedido_referencia_pago, p.observaciones as pedido_observaciones, a.nombre as vendedor_nombre, a.correo as vendedor_email FROM facturas f LEFT JOIN clientes c ON f.cliente_id = c.id LEFT JOIN admin_users a ON f.usuario_id = a.id LEFT JOIN pedidos p ON f.pedido_id = p.id WHERE f.id = ?");
-        $stmt_f->execute([$factura_id]);
-        $factura_data = $stmt_f->fetch(PDO::FETCH_ASSOC);
-        
-        if ($factura_data && !empty($factura_data['cliente_email'])) {
-            $stmt_d = $pdo->prepare("SELECT fd.*, p.name as producto_nombre, p.sku FROM factura_detalles fd LEFT JOIN products p ON fd.producto_id = p.id WHERE fd.factura_id = ?");
-            $stmt_d->execute([$factura_id]);
-            $detalles_data = $stmt_d->fetchAll(PDO::FETCH_ASSOC);
-            
-            $html = generarHTMLFacturaEmail($factura_data, $detalles_data);
-            enviarCorreo($factura_data['cliente_email'], 'Factura Electrónica #' . $factura_data['numero_factura'] . ' - PIC Sistema', $html, 'PIC Sistema de Facturación');
-        }
-    } catch (Exception $e) {
-        error_log("Error enviando factura email: " . $e->getMessage());
-    }
-
-    // Notificar nuevo pedido por Telegram
-    try {
-        require_once __DIR__ . '/../telegram/notificar_pedido.php';
-        telegramNotificarPedido($pdo, $pedido_id);
-    } catch (Throwable $e) {
-        error_log("Error notificando pedido por Telegram: " . $e->getMessage());
-    }
-
-    // Enviar encuesta de satisfacción
-    if (!empty($factura_data['cliente_email'])) {
-        try {
-            require_once __DIR__ . '/../admin/enviar_encuesta_satisfaccion.php';
-            enviarEncuestaSatisfaccion($pdo, $pedido_id, $factura_data['cliente_email'], $factura_data['cliente_nombre'] ?? 'Cliente', $factura_data['numero_factura'] ?? '');
-        } catch (Throwable $e) {
-            error_log("Error enviando encuesta: " . $e->getMessage());
-        }
-    }
-    
 } catch (Exception $e) {
     if (isset($pdo) && $pdo instanceof PDO && $pdo->inTransaction()) {
         $pdo->rollBack();
     }
+    http_response_code(500);
     error_log("Error en procesar-pago.php: " . $e->getMessage() . " | Line: " . $e->getLine());
     echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
+}
+
+// Enviar notificaciones en segundo plano (asíncrono mediante cola)
+// EJECUTADO FUERA DEL TRY-CATCH PRINCIPAL para que un error en notificaciones
+// no sobreescriba la respuesta JSON de éxito ya enviada al cliente
+if (isset($pedido_id) && isset($factura_id)) {
+    try {
+        ignore_user_abort(true);
+        if (ob_get_level()) ob_flush();
+        flush();
+    } catch (Throwable $e) {
+        // ignorar errores de flush
+    }
+
+    session_write_close();
+
+    require_once __DIR__ . '/../notificaciones/cola.php';
+
+    try {
+        colaNotificacionesAgregar('email_factura', $pedido_id, $factura_id);
+        colaNotificacionesAgregar('telegram_pedido', $pedido_id, $factura_id);
+
+        if (!empty($user_data['correo'])) {
+            colaNotificacionesAgregar('encuesta_satisfaccion', $pedido_id, null, [
+                'email' => $user_data['correo'],
+                'nombre' => $user_data['nombre'] ?? 'Cliente',
+                'numero_factura' => $numero_factura ?? ''
+            ]);
+        }
+
+        colaNotificacionesDispararProcesador();
+    } catch (Throwable $e) {
+        error_log("Error en notificaciones POST-pedido: " . $e->getMessage());
+    }
 }
 ?>

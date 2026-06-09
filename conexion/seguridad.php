@@ -93,29 +93,11 @@ function seguridadRegenerarSesion(): void {
 
 // ========== 4. PROTECCIÓN BRUTE FORCE - BLOQUEO POR IP ==========
 function seguridadObtenerIp(): string {
-    $headers = [
-        'HTTP_X_FORWARDED_FOR',
-        'HTTP_X_REAL_IP',
-        'HTTP_CLIENT_IP',
-        'HTTP_X_FORWARDED',
-        'HTTP_FORWARDED_FOR',
-        'HTTP_FORWARDED',
-        'REMOTE_ADDR'
-    ];
-
-    foreach ($headers as $header) {
-        if (!empty($_SERVER[$header])) {
-            $ip = $_SERVER[$header];
-            if (str_contains($ip, ',')) {
-                $ip = trim(explode(',', $ip)[0]);
-            }
-            if (filter_var($ip, FILTER_VALIDATE_IP)) {
-                return $ip;
-            }
-        }
+    $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+    if (filter_var($ip, FILTER_VALIDATE_IP)) {
+        return $ip;
     }
-
-    return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+    return '0.0.0.0';
 }
 
 function seguridadRegistrarIntentoFallido(string $tipo = 'login'): void {

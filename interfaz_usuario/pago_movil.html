@@ -504,9 +504,9 @@ async function procesarPago() {
             user_id = 1;
         }
         
-        // Preparar productos con el formato correcto (usar product_id, no el ID del carrito)
+        // Preparar productos con el formato correcto
         const productosEnvio = cartItems.map(item => ({
-            id: item.product_id,
+            id: item.product_id || item.id,
             name: item.name,
             price: parseFloat(item.price),
             quantity: parseInt(item.quantity)
@@ -533,9 +533,9 @@ async function procesarPago() {
             // Guardar productos en sessionStorage para respaldo
             sessionStorage.setItem('productos_pedido', JSON.stringify(productosEnvio));
             
-            // Convertir productos a JSON para pasar por URL (usar product_id)
+            // Convertir productos a JSON para pasar por URL
             const productosJson = encodeURIComponent(JSON.stringify(cartItems.map(item => ({
-                id: item.product_id,
+                id: item.id,
                 nombre: item.name,
                 precio: parseFloat(item.price),
                 cantidad: parseInt(item.quantity)

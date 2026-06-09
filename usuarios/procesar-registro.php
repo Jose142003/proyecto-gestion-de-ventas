@@ -39,6 +39,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
     
     if (!empty($campos_faltantes)) {
+        http_response_code(400);
         echo json_encode([
             "success" => false, 
             "message" => "Campos obligatorios faltantes: " . implode(', ', $campos_faltantes)
@@ -48,30 +49,35 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     // Validar email
     if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+        http_response_code(400);
         echo json_encode(["success" => false, "message" => "El formato del correo no es válido"]);
         exit;
     }
     
     // Validar cédula
     if (!preg_match('/^[0-9]{6,12}$/', $cedula)) {
+        http_response_code(400);
         echo json_encode(["success" => false, "message" => "La cédula debe tener entre 6 y 12 dígitos numéricos"]);
         exit;
     }
     
     // Validar teléfono
     if (!preg_match('/^0[0-9]{10}$/', $telefono)) {
+        http_response_code(400);
         echo json_encode(["success" => false, "message" => "El teléfono debe tener 11 dígitos (código + número)"]);
         exit;
     }
     
     // Validar contraseña
     if (strlen($password) < 6) {
+        http_response_code(400);
         echo json_encode(["success" => false, "message" => "La contraseña debe tener al menos 6 caracteres"]);
         exit;
     }
     
     // Validar dirección
     if (strlen($direccion) < 5) {
+        http_response_code(400);
         echo json_encode(["success" => false, "message" => "La dirección debe tener al menos 5 caracteres"]);
         exit;
     }
@@ -204,7 +210,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // ========== REGISTRAR EN users ==========
             $rol = 'usuario';
             $estado = 'activo';
-            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+            $hashed_password = password_hash($password, PASSWORD_BCRYPT);
             
             $query = "INSERT INTO users (nombre, cedula, telefono, correo, password, direccion, estado, rol, is_active, email_verified, created_at) 
                       VALUES (:nombre, :cedula, :telefono, :correo, :password, :direccion, :estado, :rol, 1, 1, NOW())";

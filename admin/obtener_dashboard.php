@@ -32,8 +32,8 @@ try {
     $stmtTotalVentas = $pdo->query($sqlTotalVentas);
     $totalVentas = $stmtTotalVentas->fetch(PDO::FETCH_ASSOC);
     
-    // Total de clientes
-    $sqlClientes = "SELECT COUNT(*) as total_clientes FROM clientes WHERE estado = 'activo'";
+    // Total de clientes (usuarios registrados)
+    $sqlClientes = "SELECT COUNT(*) as total_clientes FROM users";
     $stmtClientes = $pdo->query($sqlClientes);
     $totalClientes = $stmtClientes->fetch(PDO::FETCH_ASSOC);
     
@@ -42,8 +42,8 @@ try {
     $stmtCotizaciones = $pdo->query($sqlCotizaciones);
     $cotizaciones = $stmtCotizaciones->fetch(PDO::FETCH_ASSOC);
 
-    // Total de pedidos y pendientes
-    $sqlPedidos = "SELECT COUNT(*) as total_pedidos, SUM(CASE WHEN estado = 'pendiente' THEN 1 ELSE 0 END) as pedidos_pendientes FROM pedidos";
+    // Total de pedidos y pendientes (solo efectivo/mixto requieren cobro manual)
+    $sqlPedidos = "SELECT COUNT(*) as total_pedidos, SUM(CASE WHEN estado = 'pendiente' AND metodo_pago IN ('efectivo', 'mixto') THEN 1 ELSE 0 END) as pedidos_pendientes FROM pedidos";
     $stmtPedidos = $pdo->query($sqlPedidos);
     $pedidos = $stmtPedidos->fetch(PDO::FETCH_ASSOC);
     

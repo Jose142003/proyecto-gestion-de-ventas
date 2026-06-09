@@ -71,8 +71,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
             
-            $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+            $hashedPassword = password_hash($newPassword, PASSWORD_BCRYPT);
             $tabla = $user['tipo'];
+            $tablas_permitidas = ['users', 'admin_users'];
+            if (!in_array($tabla, $tablas_permitidas)) {
+                $response['message'] = 'Tipo de usuario inválido';
+                ob_end_clean();
+                echo json_encode($response);
+                exit;
+            }
             $columnaPass = ($tabla === 'admin_users') ? 'contrasena' : 'password';
             $stmt = $db->prepare("UPDATE $tabla SET $columnaPass = ?, verification_token = NULL WHERE id = ?");
             $stmt->execute([$hashedPassword, $user['id']]);

@@ -83,6 +83,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $info && !$yaRespondio) {
             <div class="success-icon"><i class="fas fa-check-circle"></i></div>
             <h1>¡Gracias por tu feedback!</h1>
             <p><?= $yaRespondio ? 'Ya habías respondido esta encuesta anteriormente.' : 'Tu opinión nos ayuda a mejorar. ¡Apreciamos tu tiempo!' ?></p>
+            <p style="margin-top:15px;font-size:0.85rem;color:#999;"><i class="fas fa-spinner fa-pulse"></i> Serás redirigido a tu cuenta en <span id="countdown">5</span> segundos...</p>
+            <script>
+                let segundos = 5;
+                const intervalo = setInterval(() => {
+                    segundos--;
+                    document.getElementById('countdown').textContent = segundos;
+                    if (segundos <= 0) {
+                        clearInterval(intervalo);
+                        window.location.href = '/proyecto/interfaz_usuario/pagina_modernizada.html';
+                    }
+                }, 1000);
+            </script>
         <?php else: ?>
             <h1><i class="fas fa-star" style="color:#f1c40f"></i> ¿Cómo fue tu experiencia?</h1>
             <p>Ayúdanos a mejorar calificando tu compra #<?= htmlspecialchars($info['pedido_numero'] ?? '') ?></p>

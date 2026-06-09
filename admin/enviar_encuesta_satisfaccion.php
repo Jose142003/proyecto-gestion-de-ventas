@@ -17,7 +17,7 @@ function enviarEncuestaSatisfaccion(PDO $pdo, int $pedidoId, string $clienteEmai
         $stmt->execute([$pedidoId, $numeroPedido, $clienteEmail, $clienteNombre]);
         $encuestaId = $pdo->lastInsertId();
 
-        $token = md5($encuestaId . $clienteEmail . $pedidoId);
+        $token = hash_hmac('sha256', $encuestaId . '|' . $clienteEmail . '|' . $pedidoId, defined('BASE_URL') ? BASE_URL : 'pic-secret-key');
         $surveyUrl = rtrim((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '/proyecto/interfaz_usuario/encuesta_satisfaccion.php?token=' . urlencode($token) . '&pedido=' . $encuestaId);
 
         $html = "<html><body style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px'>";
@@ -35,7 +35,13 @@ function enviarEncuestaSatisfaccion(PDO $pdo, int $pedidoId, string $clienteEmai
         $html .= "<div style='text-align:center;padding:15px;color:#999;font-size:0.8em'>Proyectos Industriales del Centro &copy; " . date('Y') . "</div>";
         $html .= "</body></html>";
 
-        enviarCorreo($clienteEmail, '¿Cómo fue tu experiencia? - Proyectos Industriales del Centro', $html, 'Atención al Cliente PIC');
+        $correoRes = enviarCorreo($clienteEmail, '¿Cómo fue tu experiencia? - Proyectos Industriales del Centro', $html, 'Atención al Cliente PIC');
+
+        if (!$correoRes['success']) {
+            $pdo->prepare("DELETE FROM encuestas_satisfaccion WHERE id = ?")->execute([$encuestaId]);
+            error_log("Encuesta: fallo envio correo a {$clienteEmail}: " . ($correoRes['message'] ?? ''));
+            return ['success' => false, 'message' => 'Error al enviar correo: ' . ($correoRes['message'] ?? 'desconocido')];
+        }
 
         return ['success' => true, 'message' => 'Encuesta enviada correctamente'];
     } catch (Throwable $e) {
@@ -47,13 +53,14 @@ function enviarEncuestaSatisfaccion(PDO $pdo, int $pedidoId, string $clienteEmai
 // Solo ejecutar lógica principal si se accede directamente (no por include)
 if (basename($_SERVER['SCRIPT_FILENAME']) === 'enviar_encuesta_satisfaccion.php') {
     header('Content-Type: application/json');
-    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Origin: http://localhost');
     header('Access-Control-Allow-Methods: POST, OPTIONS');
     header('Access-Control-Allow-Headers: Content-Type');
 
     if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        verificarCSRF();
         try {
             $pdo = conectarDB();
             $input = json_decode(file_get_contents('php://input'), true);

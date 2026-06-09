@@ -1,15 +1,18 @@
 <?php
 require_once '../conexion/conexion.php';
+iniciarSesion();
 
 header('Content-Type: application/json');
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    verificarCSRF();
     $input = json_decode(file_get_contents('php://input'), true);
     
     $user_id = $input['user_id'] ?? 0;
     $product_id = $input['product_id'] ?? 0;
     
     if ($user_id == 0 || $product_id == 0) {
+        http_response_code(400);
         echo json_encode(["success" => false, "message" => "Datos incompletos"]);
         exit;
     }
@@ -29,6 +32,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 "message" => "Producto eliminado del carrito"
             ]);
         } else {
+            http_response_code(404);
             echo json_encode([
                 "success" => false, 
                 "message" => "Producto no encontrado en el carrito"
@@ -37,12 +41,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
     } catch (PDOException $e) {
         error_log("Error en remover_carrito: " . $e->getMessage());
+        http_response_code(500);
         echo json_encode([
             "success" => false, 
             "message" => "Error de base de datos"
         ]);
     }
 } else {
+    http_response_code(405);
     echo json_encode(["success" => false, "message" => "Método no permitido"]);
 }
 ?>

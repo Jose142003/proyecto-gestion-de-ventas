@@ -635,16 +635,6 @@ function generarHTMLFacturaEmail($factura, $detalles) {
                             <span class="info-label" style="font-weight: 600; color: #666; min-width: 75px;">Fecha:</span>
                             <span class="info-value" style="color: #333; flex: 1;">' . $fecha_emision . '</span>
                         </div>
-                        <div class="info-row" style="display: flex; flex-wrap: wrap; margin-bottom: 6px; font-size: 11px;">
-                             <span class="info-label" style="font-weight: 600; color: #666; min-width: 75px;">Pago:</span>
-                             <span class="info-value" style="color: #333; flex: 1;">' . $metodo_pago . '</span>
-                         </div>
-                         ' . ($mostrar_referencia ? '
-                         <div class="info-row" style="display: flex; flex-wrap: wrap; margin-bottom: 6px; font-size: 11px;">
-                             <span class="info-label" style="font-weight: 600; color: #3498db; min-width: 75px;"><i class="fas fa-hashtag"></i> Referencia:</span>
-                             <span class="info-value" style="color: #333; flex: 1; font-weight: bold; font-size: 12px;">' . htmlspecialchars($referencia_pago) . '</span>
-                         </div>
-                         ' : '') . '
                      </div>
                      
                      <!-- CLIENTE -->
@@ -670,6 +660,16 @@ function generarHTMLFacturaEmail($factura, $detalles) {
                             <span class="info-label" style="font-weight: 600; color: #666; min-width: 75px;">Dirección:</span>
                             <span class="info-value" style="color: #333; flex: 1;">' . htmlspecialchars(!empty($factura['cliente_direccion']) ? $factura['cliente_direccion'] : 'No especificada') . '</span>
                         </div>
+                        <div class="info-row" style="display: flex; flex-wrap: wrap; margin-bottom: 6px; font-size: 11px;">
+                             <span class="info-label" style="font-weight: 600; color: #666; min-width: 75px;">Pago:</span>
+                             <span class="info-value" style="color: #333; flex: 1;">' . $metodo_pago . '</span>
+                         </div>
+                         ' . ($mostrar_referencia ? '
+                         <div class="info-row" style="display: flex; flex-wrap: wrap; margin-bottom: 6px; font-size: 11px;">
+                             <span class="info-label" style="font-weight: 600; color: #3498db; min-width: 75px;"><i class="fas fa-hashtag"></i> Referencia:</span>
+                             <span class="info-value" style="color: #333; flex: 1; font-weight: bold; font-size: 12px;">' . htmlspecialchars($referencia_pago) . '</span>
+                         </div>
+                         ' : '') . '
                     </div>
                 </div>
                 
@@ -748,16 +748,23 @@ function generarHTMLFacturaEmail($factura, $detalles) {
  * Convierte un número a letras
  */
 function numeroALetras($numero) {
-    $formatter = new NumberFormatter("es", NumberFormatter::SPELLOUT);
-    $entero = floor($numero);
-    $decimal = round(($numero - $entero) * 100);
-    
-    $texto = ucfirst($formatter->format($entero)) . " BOLÍVARES";
-    
-    if ($decimal > 0) {
-        $texto .= " CON " . $formatter->format($decimal) . " CÉNTIMOS";
+    try {
+        if (class_exists('NumberFormatter')) {
+            $formatter = new NumberFormatter("es", NumberFormatter::SPELLOUT);
+            $entero = floor($numero);
+            $decimal = round(($numero - $entero) * 100);
+            
+            $texto = ucfirst($formatter->format($entero)) . " BOLÍVARES";
+            
+            if ($decimal > 0) {
+                $texto .= " CON " . $formatter->format($decimal) . " CÉNTIMOS";
+            }
+            
+            return $texto;
+        }
+    } catch (Throwable $e) {
+        error_log("Error en numeroALetras: " . $e->getMessage());
     }
-    
-    return $texto;
+    return number_format($numero, 2, ',', '.') . " Bs.";
 }
 ?>

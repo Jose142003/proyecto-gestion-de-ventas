@@ -4,6 +4,7 @@ session_start();
 
 // Verificar si es admin
 if (!isset($_SESSION['user_rol']) || $_SESSION['user_rol'] !== 'admin') {
+    http_response_code(403);
     echo json_encode(['success' => false, 'message' => 'No autorizado']);
     exit;
 }
@@ -13,11 +14,13 @@ $data = json_decode(file_get_contents('php://input'), true);
 $pedido_id = $data['pedido_id'] ?? 0;
 
 if (!$pedido_id) {
+    http_response_code(400);
     echo json_encode(['success' => false, 'message' => 'ID de pedido no válido']);
     exit;
 }
 
   require_once __DIR__ . '/../conexion/conexion.php';
+  verificarCSRF();
 
  try {
      $pdo = conectarDB();
@@ -72,9 +75,6 @@ if (!$pedido_id) {
     }
     
     // 3. Generar número de factura
-    require_once 'generar_numero_factura.php'; // Asumo que tienes esta función
-    
-    // Si no tienes generador de números, usa este:
     $numero_factura = 'FAC-' . date('Y') . '-' . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
     
     // 4. Crear factura - usar PHP para fechas con zona horaria correcta
@@ -177,12 +177,10 @@ if (!$pedido_id) {
     
     $pdo->commit();
 
-    try {
-        require_once __DIR__ . '/../telegram/notificar_pedido.php';
-        telegramNotificarPedido($pdo, $pedido_id);
-    } catch (Throwable $e) {
-        error_log("Error notificando pedido por Telegram: " . $e->getMessage());
-    }
+    require_once __DIR__ . '/../notificaciones/cola.php';
+    colaNotificacionesAgregar('email_factura', $pedido_id, $factura_id);
+    colaNotificacionesAgregar('telegram_pedido', $pedido_id, $factura_id);
+    colaNotificacionesDispararProcesador();
     
     echo json_encode([
         'success' => true,
@@ -193,7 +191,8 @@ if (!$pedido_id) {
     ]);
     
 } catch (Exception $e) {
-    $pdo->rollBack();
+    if (isset($pdo) && $pdo->inTransaction()) $pdo->rollBack();
+    http_response_code(500);
     echo json_encode([
         'success' => false,
         'message' => 'Error interno del servidor'

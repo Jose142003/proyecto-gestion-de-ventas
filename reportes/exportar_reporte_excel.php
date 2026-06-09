@@ -101,7 +101,7 @@ if ($tipo === 'general') {
     $sheet->setCellValue('B9', 'Bs. ' . formatMoney($stats['ticket_promedio']));
 
     // Top productos
-    $query_top = "SELECT p.name as nombre, SUM(pd.cantidad) as unidades, SUM(pd.subtotal) as ingresos
+    $query_top = "SELECT ANY_VALUE(p.name) as nombre, SUM(pd.cantidad) as unidades, SUM(pd.subtotal) as ingresos
                   FROM pedido_detalles pd
                   JOIN products p ON pd.producto_id = p.id
                   JOIN pedidos ped ON pd.pedido_id = ped.id

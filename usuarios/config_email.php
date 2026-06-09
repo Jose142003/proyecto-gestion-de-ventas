@@ -1,9 +1,7 @@
 <?php
 // config_email.php - Configuración SMTP con variables de entorno
 require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/PHPMailer.php';
-require_once __DIR__ . '/SMTP.php';
-require_once __DIR__ . '/Exception.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;

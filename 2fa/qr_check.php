@@ -4,7 +4,7 @@ ini_set('display_errors', 0);
 
 header('Content-Type: application/json');
 
-require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../conexion/conexion.php';
 
 $token = trim($_GET['token'] ?? '');
 if (empty($token)) {
@@ -14,8 +14,7 @@ if (empty($token)) {
 }
 
 try {
-    $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8", DB_USER, DB_PASS);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = Database::getConnection();
 
     $stmt = $pdo->prepare("SELECT estado, user_id, user_table, user_data, expires_at FROM qr_login_sessions WHERE token = ?");
     $stmt->execute([$token]);

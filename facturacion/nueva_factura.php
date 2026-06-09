@@ -14,7 +14,11 @@ try {
 $page_title = 'Nueva Factura';
 
 // Obtener información del usuario de la sesión
-$usuario_id = $_SESSION['user_id'] ?? 1; // Default a admin si no hay sesión
+if (!isset($_SESSION['user_id'])) {
+    header('Location: /proyecto/interfaz_usuario/login.html');
+    exit;
+}
+$usuario_id = $_SESSION['user_id'];
 $usuario_nombre = $_SESSION['user_name'] ?? 'Administrador';
 
 // Obtener clientes

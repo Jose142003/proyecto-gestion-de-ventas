@@ -7,7 +7,9 @@ ini_set('display_errors', 0);
 
 require_once __DIR__ . '/../config/database.php';
 
-session_name('CLIENTSESSID');
+if (isset($_COOKIE['CLIENTSESSID'])) {
+    session_name('CLIENTSESSID');
+}
 session_start();
 
 // ============================================================================
@@ -17,13 +19,14 @@ session_start();
 
 $es_cliente = false;
 $usuario_id = null;
+$usuario_id_url = 0;
 $usuario_nombre = null;
 $usuario_correo = null;
 $usuario_telefono = null;
 $usuario_cedula = null;
 
 // Verificar si hay sesión de cliente (desde tabla 'users')
-if (isset($_SESSION['user_id']) && isset($_SESSION['user_type']) && $_SESSION['user_type'] === 'cliente') {
+if (isset($_SESSION['user_id']) && isset($_SESSION['user_tipo']) && $_SESSION['user_tipo'] === 'cliente') {
     $es_cliente = true;
     $usuario_id = $_SESSION['user_id'];
     $usuario_nombre = $_SESSION['user_nombre'] ?? null;
@@ -183,7 +186,7 @@ if (!empty($usuario_cedula)) {
         $nombre_cliente = !empty($usuario_nombre) ? $usuario_nombre : '';
         $email_cliente = !empty($usuario_correo) ? $usuario_correo : '';
         $telefono_cliente = !empty($usuario_telefono) ? $usuario_telefono : '';
-        mysqli_stmt_bind_param($stmt_insert, 'sssss', $usuario_cedula, $nombre_cliente, $email_cliente, $telefono_cliente);
+        mysqli_stmt_bind_param($stmt_insert, 'ssss', $usuario_cedula, $nombre_cliente, $email_cliente, $telefono_cliente);
         mysqli_stmt_execute($stmt_insert);
         $cliente_id = mysqli_insert_id($conn);
         mysqli_stmt_close($stmt_insert);
@@ -199,7 +202,7 @@ if (!$cliente_id) {
     $insert_cliente = "INSERT INTO clientes (tipo_documento, documento, nombre, email, telefono, estado) 
                       VALUES ('cedula', ?, ?, ?, ?, 'activo')";
     $stmt_insert = mysqli_prepare($conn, $insert_cliente);
-    mysqli_stmt_bind_param($stmt_insert, 'sssss', $doc_generico, $nombre_cliente, $email_cliente, $telefono_cliente);
+    mysqli_stmt_bind_param($stmt_insert, 'ssss', $doc_generico, $nombre_cliente, $email_cliente, $telefono_cliente);
     mysqli_stmt_execute($stmt_insert);
     $cliente_id = mysqli_insert_id($conn);
     mysqli_stmt_close($stmt_insert);
@@ -352,6 +355,22 @@ if (!$pedido_id && !empty($productosDesdeURL)) {
     }
 }
 
+// Si el pedido ya existía (creado por procesar-pago.php), obtener la factura existente
+if (empty($factura_id) && !empty($pedido_id)) {
+    $sql_fact = "SELECT id FROM facturas WHERE pedido_id = ? ORDER BY id DESC LIMIT 1";
+    $stmt_fact = mysqli_prepare($conn, $sql_fact);
+    if ($stmt_fact) {
+        mysqli_stmt_bind_param($stmt_fact, 'i', $pedido_id);
+        mysqli_stmt_execute($stmt_fact);
+        $res_fact = mysqli_stmt_get_result($stmt_fact);
+        $row_fact = mysqli_fetch_assoc($res_fact);
+        if ($row_fact) {
+            $factura_id = $row_fact['id'];
+        }
+        mysqli_stmt_close($stmt_fact);
+    }
+}
+
 // Enviar factura por correo si se creó
 if (!empty($factura_id)) {
     try {
@@ -391,6 +410,19 @@ if (!empty($factura_id)) {
         }
     } catch (Throwable $e) {
         error_log("Error notificando pedido por Telegram: " . $e->getMessage());
+    }
+
+    // Enviar encuesta de satisfacción
+    $emailEncuesta = $factura_data['cliente_email'] ?? $usuario_correo ?? '';
+    $nombreEncuesta = $factura_data['cliente_nombre'] ?? $usuario_nombre ?? 'Cliente';
+    if ($pedido_id && $emailEncuesta) {
+        try {
+            require_once __DIR__ . '/../admin/enviar_encuesta_satisfaccion.php';
+            $pdoEncuesta = Database::getConnection();
+            enviarEncuestaSatisfaccion($pdoEncuesta, $pedido_id, $emailEncuesta, $nombreEncuesta, $numero_pedido);
+        } catch (Throwable $e) {
+            error_log("Error enviando encuesta satisfaccion: " . $e->getMessage());
+        }
     }
 }
 

@@ -15,6 +15,7 @@ $tipo_mensaje = ''; // success, error, warning
 
 // Procesar formulario si se envió
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    verificarCSRF();
     try {
         $pdo = conectarDB();
         

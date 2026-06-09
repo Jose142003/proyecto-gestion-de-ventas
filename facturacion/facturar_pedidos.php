@@ -4,6 +4,7 @@ header('Content-Type: application/json');
 
 // Verificar autenticación
 if (!isset($_SESSION['user_id']) && !isset($_SESSION['usuario_id'])) {
+    http_response_code(401);
     echo json_encode(['success' => false, 'message' => 'No autorizado']);
     exit;
 }
@@ -12,6 +13,7 @@ $usuario_id = $_SESSION['user_id'] ?? $_SESSION['usuario_id'];
 $data = json_decode(file_get_contents('php://input'), true);
 
 if (!isset($data['pedidos']) || empty($data['pedidos'])) {
+    http_response_code(400);
     echo json_encode(['success' => false, 'message' => 'No se seleccionaron pedidos']);
     exit;
 }
@@ -19,6 +21,7 @@ if (!isset($data['pedidos']) || empty($data['pedidos'])) {
 $pedidos_ids = $data['pedidos'];
 
 require_once __DIR__ . '/../conexion/conexion.php';
+verificarCSRF();
 
 try {
     $pdo = conectarDB();
@@ -183,12 +186,9 @@ try {
             $pdo->commit();
             $facturados[] = $pedido_id;
 
-            try {
-                require_once __DIR__ . '/../telegram/notificar_pedido.php';
-                telegramNotificarPedido($pdo, $pedido_id);
-            } catch (Throwable $e) {
-                error_log("Error notificando pedido por Telegram: " . $e->getMessage());
-            }
+            require_once __DIR__ . '/../notificaciones/cola.php';
+            colaNotificacionesAgregar('telegram_pedido', $pedido_id, $factura_id);
+            colaNotificacionesDispararProcesador();
             
         } catch (PDOException $e) {
             $pdo->rollBack();
@@ -210,6 +210,7 @@ try {
     ]);
     
 } catch(PDOException $e) {
+    http_response_code(500);
     echo json_encode([
         'success' => false, 
         'message' => 'Error interno del servidor'

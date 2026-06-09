@@ -60,17 +60,17 @@ function tablaExiste($pdo, string $tabla): bool {
     try { return (bool)$pdo->query("SHOW TABLES LIKE " . $pdo->quote($tabla))->fetch(); } catch (Throwable $e) { return false; }
 }
 
-function whereFecha($campo, $fecha_desde, $fecha_hasta) {
+function whereFecha($pdo, $campo, $fecha_desde, $fecha_hasta) {
     $w = '';
-    if ($fecha_desde) $w .= " AND $campo >= " . (is_numeric($fecha_desde) ? $fecha_desde : "'$fecha_desde'");
-    if ($fecha_hasta) $w .= " AND $campo <= " . (is_numeric($fecha_hasta) ? $fecha_hasta : "'$fecha_hasta' 23:59:59'");
+    if ($fecha_desde) $w .= " AND $campo >= " . (is_numeric($fecha_desde) ? $fecha_desde : $pdo->quote($fecha_desde));
+    if ($fecha_hasta) $w .= " AND $campo <= " . (is_numeric($fecha_hasta) ? $fecha_hasta : $pdo->quote($fecha_hasta . ' 23:59:59'));
     return $w;
 }
 
 function kpis($pdo, $fecha_desde = null, $fecha_hasta = null) {
     $r = [];
-    $wf = whereFecha('fecha_emision', $fecha_desde, $fecha_hasta);
-    $wp = whereFecha('fecha_pedido', $fecha_desde, $fecha_hasta);
+    $wf = whereFecha($pdo, 'fecha_emision', $fecha_desde, $fecha_hasta);
+    $wp = whereFecha($pdo, 'fecha_pedido', $fecha_desde, $fecha_hasta);
 
     $r['facturas_hoy'] = (int)q1($pdo, "SELECT COUNT(*) FROM facturas WHERE DATE(fecha_emision) = CURDATE() AND estado != 'anulada'");
     $r['ventas_hoy'] = (float)q1($pdo, "SELECT COALESCE(SUM(total), 0) FROM facturas WHERE DATE(fecha_emision) = CURDATE() AND estado != 'anulada'");
@@ -104,33 +104,34 @@ function kpis($pdo, $fecha_desde = null, $fecha_hasta = null) {
 }
 
 function ventasPorMes($pdo, $fecha_desde = null, $fecha_hasta = null) {
-    $wf = whereFecha('fecha_emision', $fecha_desde, $fecha_hasta);
+    $wf = whereFecha($pdo, 'fecha_emision', $fecha_desde, $fecha_hasta);
     if (!$fecha_desde) {
         $wf = " AND fecha_emision >= DATE_SUB(CURRENT_DATE, INTERVAL 12 MONTH)";
     }
-    $data = q($pdo, "SELECT DATE_FORMAT(fecha_emision, '%Y-%m') as mes, DATE_FORMAT(fecha_emision, '%M %Y') as mes_nombre, COUNT(*) as total_facturas, ROUND(SUM(total), 2) as total_ventas, ROUND(AVG(total), 2) as ticket_promedio FROM facturas WHERE estado != 'anulada' $wf GROUP BY DATE_FORMAT(fecha_emision, '%Y-%m') ORDER BY mes ASC");
+    $data = q($pdo, "SELECT DATE_FORMAT(fecha_emision, '%Y-%m') as mes, ANY_VALUE(DATE_FORMAT(fecha_emision, '%M %Y')) as mes_nombre, COUNT(*) as total_facturas, ROUND(SUM(total), 2) as total_ventas, ROUND(AVG(total), 2) as ticket_promedio FROM facturas WHERE estado != 'anulada' $wf GROUP BY DATE_FORMAT(fecha_emision, '%Y-%m') ORDER BY mes ASC");
     if (empty($data)) {
-        $wp = whereFecha('fecha_pedido', $fecha_desde, $fecha_hasta);
+        $wp = whereFecha($pdo, 'fecha_pedido', $fecha_desde, $fecha_hasta);
         if (!$fecha_desde) {
             $wp = " AND fecha_pedido >= DATE_SUB(CURRENT_DATE, INTERVAL 12 MONTH)";
         }
-        $data = q($pdo, "SELECT DATE_FORMAT(fecha_pedido, '%Y-%m') as mes, DATE_FORMAT(fecha_pedido, '%M %Y') as mes_nombre, COUNT(*) as total_facturas, ROUND(SUM(total), 2) as total_ventas, ROUND(AVG(total), 2) as ticket_promedio FROM pedidos WHERE estado NOT IN ('cancelado') $wp GROUP BY DATE_FORMAT(fecha_pedido, '%Y-%m') ORDER BY mes ASC");
+        $data = q($pdo, "SELECT DATE_FORMAT(fecha_pedido, '%Y-%m') as mes, ANY_VALUE(DATE_FORMAT(fecha_pedido, '%M %Y')) as mes_nombre, COUNT(*) as total_facturas, ROUND(SUM(total), 2) as total_ventas, ROUND(AVG(total), 2) as ticket_promedio FROM pedidos WHERE estado NOT IN ('cancelado') $wp GROUP BY DATE_FORMAT(fecha_pedido, '%Y-%m') ORDER BY mes ASC");
     }
     $meses = [];
-    $start = $fecha_desde ? new DateTime($fecha_desde) : new DateTime();
+    $start = $fecha_desde ? new DateTime($fecha_desde) : (new DateTime())->modify('-12 months');
     $start->modify('first day of this month');
     $end = $fecha_hasta ? new DateTime($fecha_hasta) : new DateTime();
+    $end->modify('first day of this month');
     $interval = $start->diff($end);
     $months = $interval->m + ($interval->y * 12);
-    for ($i = $months; $i >= 0; $i--) {
-        $fecha = clone $end;
-        $fecha->modify("-{$i} months");
+    for ($i = 0; $i <= $months; $i++) {
+        $fecha = clone $start;
+        $fecha->modify("+{$i} months");
         $mesKey = $fecha->format('Y-m');
         $meses[$mesKey] = ['mes' => $mesKey, 'mes_nombre' => ucfirst($fecha->format('F Y')), 'total_facturas' => 0, 'total_ventas' => 0, 'ticket_promedio' => 0];
     }
     foreach ($data as $row) {
         if (isset($meses[$row['mes']])) {
-            $meses[$row['mes']] = $row;
+            $meses[$row['mes']] = array_merge($meses[$row['mes']], $row);
         }
     }
     return array_values($meses);
@@ -138,39 +139,39 @@ function ventasPorMes($pdo, $fecha_desde = null, $fecha_hasta = null) {
 
 function topProductos($pdo, $fecha_desde = null, $fecha_hasta = null) {
     if (!tablaExiste($pdo, 'pedido_detalles')) return [];
-    $wp = whereFecha('pe.fecha_pedido', $fecha_desde, $fecha_hasta);
-    return q($pdo, "SELECT p.id, p.name, p.sku, p.category, p.stock, SUM(pd.cantidad) as total_vendido, COUNT(DISTINCT pd.pedido_id) as veces_comprado, ROUND(SUM(pd.subtotal), 2) as ingresos_totales FROM pedido_detalles pd JOIN products p ON pd.producto_id = p.id JOIN pedidos pe ON pd.pedido_id = pe.id WHERE pe.estado NOT IN ('cancelado') $wp GROUP BY pd.producto_id ORDER BY SUM(pd.cantidad) DESC LIMIT 10");
+    $wp = whereFecha($pdo, 'pe.fecha_pedido', $fecha_desde, $fecha_hasta);
+    return q($pdo, "SELECT p.id, ANY_VALUE(p.name) as name, ANY_VALUE(p.sku) as sku, ANY_VALUE(p.category) as category, ANY_VALUE(p.stock) as stock, SUM(pd.cantidad) as total_vendido, COUNT(DISTINCT pd.pedido_id) as veces_comprado, ROUND(SUM(pd.subtotal), 2) as ingresos_totales FROM pedido_detalles pd JOIN products p ON pd.producto_id = p.id JOIN pedidos pe ON pd.pedido_id = pe.id WHERE pe.estado NOT IN ('cancelado') $wp GROUP BY pd.producto_id ORDER BY SUM(pd.cantidad) DESC LIMIT 10");
 }
 
 function topClientes($pdo, $fecha_desde = null, $fecha_hasta = null) {
-    $wp = whereFecha('pe.fecha_pedido', $fecha_desde, $fecha_hasta);
-    return q($pdo, "SELECT c.id, c.nombre, c.email, c.telefono, COUNT(DISTINCT pe.id) as total_compras, ROUND(COALESCE(SUM(pe.total), 0), 2) as monto_total, MAX(pe.fecha_pedido) as ultima_compra FROM clientes c LEFT JOIN pedidos pe ON c.id = pe.cliente_id AND pe.estado NOT IN ('cancelado') $wp GROUP BY c.id HAVING total_compras > 0 ORDER BY monto_total DESC LIMIT 10");
+    $wp = whereFecha($pdo, 'pe.fecha_pedido', $fecha_desde, $fecha_hasta);
+    return q($pdo, "SELECT c.id, ANY_VALUE(c.nombre) as nombre, ANY_VALUE(c.email) as email, ANY_VALUE(c.telefono) as telefono, COUNT(DISTINCT pe.id) as total_compras, ROUND(COALESCE(SUM(pe.total), 0), 2) as monto_total, MAX(pe.fecha_pedido) as ultima_compra FROM clientes c LEFT JOIN pedidos pe ON c.id = pe.cliente_id AND pe.estado NOT IN ('cancelado') $wp GROUP BY c.id HAVING total_compras > 0 ORDER BY monto_total DESC LIMIT 10");
 }
 
 function ventasPorCategoria($pdo, $fecha_desde = null, $fecha_hasta = null) {
     if (!tablaExiste($pdo, 'pedido_detalles')) return [];
-    $wp = whereFecha('pe.fecha_pedido', $fecha_desde, $fecha_hasta);
+    $wp = whereFecha($pdo, 'pe.fecha_pedido', $fecha_desde, $fecha_hasta);
     return q($pdo, "SELECT p.category, COUNT(DISTINCT pd.pedido_id) as total_pedidos, SUM(pd.cantidad) as total_unidades, ROUND(SUM(pd.subtotal), 2) as ingresos, ROUND(AVG(pd.precio_unitario), 2) as precio_promedio FROM pedido_detalles pd JOIN products p ON pd.producto_id = p.id JOIN pedidos pe ON pd.pedido_id = pe.id WHERE pe.estado NOT IN ('cancelado') $wp GROUP BY p.category ORDER BY ingresos DESC");
 }
 
 function metodosPago($pdo, $fecha_desde = null, $fecha_hasta = null) {
-    $wf = whereFecha('fecha_emision', $fecha_desde, $fecha_hasta);
-    $data = q($pdo, "SELECT COALESCE(NULLIF(metodo_pago, ''), 'No especificado') as metodo_pago, COUNT(*) as total, ROUND(SUM(total), 2) as monto FROM facturas WHERE estado != 'anulada' $wf GROUP BY metodo_pago ORDER BY monto DESC");
+    $wf = whereFecha($pdo, 'fecha_emision', $fecha_desde, $fecha_hasta);
+    $data = q($pdo, "SELECT COALESCE(NULLIF(metodo_pago, ''), 'No especificado') as metodo_pago, COUNT(*) as total, ROUND(SUM(total), 2) as monto FROM facturas WHERE estado != 'anulada' $wf GROUP BY COALESCE(NULLIF(metodo_pago, ''), 'No especificado') ORDER BY monto DESC");
     if (empty($data)) {
-        $wp = whereFecha('fecha_pedido', $fecha_desde, $fecha_hasta);
-        $data = q($pdo, "SELECT COALESCE(NULLIF(metodo_pago, ''), 'No especificado') as metodo_pago, COUNT(*) as total, ROUND(SUM(total), 2) as monto FROM pedidos WHERE estado NOT IN ('cancelado') $wp GROUP BY metodo_pago ORDER BY monto DESC");
+        $wp = whereFecha($pdo, 'fecha_pedido', $fecha_desde, $fecha_hasta);
+        $data = q($pdo, "SELECT COALESCE(NULLIF(metodo_pago, ''), 'No especificado') as metodo_pago, COUNT(*) as total, ROUND(SUM(total), 2) as monto FROM pedidos WHERE estado NOT IN ('cancelado') $wp GROUP BY COALESCE(NULLIF(metodo_pago, ''), 'No especificado') ORDER BY monto DESC");
     }
     return $data;
 }
 
 function crecimiento($pdo, $fecha_desde = null, $fecha_hasta = null) {
-    $wf = whereFecha('fecha_emision', $fecha_desde, $fecha_hasta);
+    $wf = whereFecha($pdo, 'fecha_emision', $fecha_desde, $fecha_hasta);
     if (!$fecha_desde) {
         $wf = " AND fecha_emision >= DATE_SUB(CURRENT_DATE, INTERVAL 6 MONTH)";
     }
     $filas = q($pdo, "SELECT DATE_FORMAT(fecha_emision, '%Y-%m') as mes, ROUND(SUM(total), 2) as ventas FROM facturas WHERE estado != 'anulada' $wf GROUP BY DATE_FORMAT(fecha_emision, '%Y-%m') ORDER BY mes ASC");
     if (empty($filas)) {
-        $wp = whereFecha('fecha_pedido', $fecha_desde, $fecha_hasta);
+        $wp = whereFecha($pdo, 'fecha_pedido', $fecha_desde, $fecha_hasta);
         if (!$fecha_desde) {
             $wp = " AND fecha_pedido >= DATE_SUB(CURRENT_DATE, INTERVAL 6 MONTH)";
         }
@@ -186,7 +187,7 @@ function crecimiento($pdo, $fecha_desde = null, $fecha_hasta = null) {
 }
 
 function distribucionVentas($pdo, $fecha_desde = null, $fecha_hasta = null) {
-    $wf = whereFecha('fecha_emision', $fecha_desde, $fecha_hasta);
+    $wf = whereFecha($pdo, 'fecha_emision', $fecha_desde, $fecha_hasta);
     return [
         'matutino' => (int)q1($pdo, "SELECT COUNT(*) FROM facturas WHERE HOUR(fecha_emision) BETWEEN 6 AND 12 $wf"),
         'vespertino' => (int)q1($pdo, "SELECT COUNT(*) FROM facturas WHERE HOUR(fecha_emision) BETWEEN 12 AND 18 $wf"),
@@ -195,11 +196,30 @@ function distribucionVentas($pdo, $fecha_desde = null, $fecha_hasta = null) {
 }
 
 function tendenciaClientes($pdo, $fecha_desde = null, $fecha_hasta = null) {
-    $wf = whereFecha('fecha_registro', $fecha_desde, $fecha_hasta);
+    $wf = whereFecha($pdo, 'fecha_registro', $fecha_desde, $fecha_hasta);
     if (!$fecha_desde) {
         $wf = " AND fecha_registro >= DATE_SUB(CURRENT_DATE, INTERVAL 12 MONTH)";
     }
-    return q($pdo, "SELECT DATE_FORMAT(fecha_registro, '%Y-%m') as mes, COUNT(*) as nuevos_clientes FROM clientes WHERE 1=1 $wf GROUP BY DATE_FORMAT(fecha_registro, '%Y-%m') ORDER BY mes ASC");
+    $data = q($pdo, "SELECT DATE_FORMAT(fecha_registro, '%Y-%m') as mes, COUNT(*) as nuevos_clientes FROM clientes WHERE 1=1 $wf GROUP BY DATE_FORMAT(fecha_registro, '%Y-%m') ORDER BY mes ASC");
+    $meses = [];
+    $start = $fecha_desde ? new DateTime($fecha_desde) : (new DateTime())->modify('-12 months');
+    $start->modify('first day of this month');
+    $end = $fecha_hasta ? new DateTime($fecha_hasta) : new DateTime();
+    $end->modify('first day of this month');
+    $interval = $start->diff($end);
+    $months = $interval->m + ($interval->y * 12);
+    for ($i = 0; $i <= $months; $i++) {
+        $fecha = clone $start;
+        $fecha->modify("+{$i} months");
+        $mesKey = $fecha->format('Y-m');
+        $meses[$mesKey] = ['mes' => $mesKey, 'nuevos_clientes' => 0];
+    }
+    foreach ($data as $row) {
+        if (isset($meses[$row['mes']])) {
+            $meses[$row['mes']]['nuevos_clientes'] = (int)$row['nuevos_clientes'];
+        }
+    }
+    return array_values($meses);
 }
 
 function stockPorCategoria($pdo) {

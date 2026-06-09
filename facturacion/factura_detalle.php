@@ -51,7 +51,7 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Factura <?php echo $factura['numero_factura']; ?></title>
+    <title>Factura <?php echo htmlspecialchars($factura['numero_factura'] ?? ''); ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
       <!-- PWA Meta Tags -->
     <link rel="manifest" href="/proyecto/manifest.json">
@@ -93,22 +93,22 @@ try {
             <div class="invoice-info">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div>
-                        <h3>Factura #<?php echo $factura['numero_factura']; ?></h3>
-                        <p>Fecha: <?php echo date('d/m/Y', strtotime($factura['fecha_emision'])); ?></p>
-                        <p>Vence: <?php echo date('d/m/Y', strtotime($factura['fecha_vencimiento'])); ?></p>
+                        <h3>Factura #<?php echo htmlspecialchars($factura['numero_factura'] ?? ''); ?></h3>
+                        <p>Fecha: <?php echo htmlspecialchars(date('d/m/Y', strtotime($factura['fecha_emision'] ?? ''))); ?></p>
+                        <p>Vence: <?php echo htmlspecialchars(date('d/m/Y', strtotime($factura['fecha_vencimiento'] ?? ''))); ?></p>
                     </div>
                     <div style="text-align: right;">
-                        <p>Estado: <span style="color: <?php echo $factura['estado'] == 'pagada' ? '#27ae60' : '#f39c12'; ?>; font-weight: bold;">
-                            <?php echo strtoupper($factura['estado']); ?>
+                        <p>Estado: <span style="color: <?php echo ($factura['estado'] ?? '') == 'pagada' ? '#27ae60' : '#f39c12'; ?>; font-weight: bold;">
+                            <?php echo htmlspecialchars(strtoupper($factura['estado'] ?? '')); ?>
                         </span></p>
-                        <p>Método: <?php echo strtoupper($factura['metodo_pago']); ?></p>
+                        <p>Método: <?php echo htmlspecialchars(strtoupper($factura['metodo_pago'] ?? '')); ?></p>
                     </div>
                 </div>
                 
                 <div style="margin-top: 15px;">
-                    <p><strong>Cliente:</strong> <?php echo $factura['cliente_nombre']; ?></p>
-                    <p><strong>Email:</strong> <?php echo $factura['cliente_email']; ?></p>
-                    <p><strong>Teléfono:</strong> <?php echo $factura['cliente_telefono']; ?></p>
+                    <p><strong>Cliente:</strong> <?php echo htmlspecialchars($factura['cliente_nombre'] ?? ''); ?></p>
+                    <p><strong>Email:</strong> <?php echo htmlspecialchars($factura['cliente_email'] ?? ''); ?></p>
+                    <p><strong>Teléfono:</strong> <?php echo htmlspecialchars($factura['cliente_telefono'] ?? ''); ?></p>
                 </div>
             </div>
             
@@ -125,7 +125,7 @@ try {
                 <tbody>
                     <?php foreach ($detalles as $detalle): ?>
                     <tr>
-                        <td><?php echo $detalle['producto_nombre']; ?></td>
+                        <td><?php echo htmlspecialchars($detalle['producto_nombre'] ?? ''); ?></td>
                         <td><?php echo $detalle['cantidad']; ?></td>
                         <td>$<?php echo number_format($detalle['precio_unitario'], 2); ?></td>
                         <td>$<?php echo number_format($detalle['subtotal'], 2); ?></td>

@@ -123,7 +123,7 @@ try {
         // Calcular entradas y salidas de inventario
         $entradas = isset($movimientos_inventario['entrada']) ? $movimientos_inventario['entrada']['cantidad_total'] : 0;
         $salidas = isset($movimientos_inventario['salida']) ? $movimientos_inventario['salida']['cantidad_total'] : 0;
-        $stock_inicial = $entradas - $salidas + $producto['stock'];
+        $stock_inicial = $producto['stock'] - $entradas + $salidas;
         
         // Estadísticas de ventas
         $total_vendido = $estadisticas_ventas['total_vendido'] ?: 0;

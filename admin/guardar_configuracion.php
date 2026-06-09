@@ -4,6 +4,8 @@ header('Content-Type: application/json');
 require_once __DIR__ . '/../conexion/conexion.php';
 requerirAdmin();
 
+verificarCSRF();
+
 try {
     $pdo = conectarDB();
 } catch (PDOException $e) {

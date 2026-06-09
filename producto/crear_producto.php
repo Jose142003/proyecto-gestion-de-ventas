@@ -4,18 +4,24 @@
 
 session_start();
 
+require_once __DIR__ . '/../conexion/conexion.php';
+
 // Verificar autenticación y permisos de administrador
 $isAdmin = false;
 if (isset($_SESSION['user_id']) && isset($_SESSION['user_rol']) && $_SESSION['user_rol'] === 'admin') {
     $isAdmin = true;
 } elseif (isset($_SESSION['user_correo'])) {
-    $tmpPdo = Database::getConnection();
-    $tmpStmt = $tmpPdo->prepare("SELECT es_admin FROM admin_users WHERE correo = ?");
-    $tmpStmt->execute([$_SESSION['user_correo']]);
-    $tmpUser = $tmpStmt->fetch(PDO::FETCH_ASSOC);
-    if ($tmpUser && $tmpUser['es_admin']) {
-        $isAdmin = true;
-        $_SESSION['user_rol'] = 'admin';
+    try {
+        $tmpPdo = Database::getConnection();
+        $tmpStmt = $tmpPdo->prepare("SELECT es_admin FROM admin_users WHERE correo = ?");
+        $tmpStmt->execute([$_SESSION['user_correo']]);
+        $tmpUser = $tmpStmt->fetch(PDO::FETCH_ASSOC);
+        if ($tmpUser && $tmpUser['es_admin']) {
+            $isAdmin = true;
+            $_SESSION['user_rol'] = 'admin';
+        }
+    } catch (Throwable $e) {
+        $isAdmin = false;
     }
 }
 
@@ -23,8 +29,6 @@ if (!$isAdmin) {
     header('Location: /proyecto/login.html');
     exit;
 }
-
-require_once __DIR__ . '/../conexion/conexion.php';
 
 $pdo = Database::getConnection();
 $palabras_prohibidas = ['spam', 'violencia', 'prueba', 'test', 'demo', 'xxxx', 'basura', 'eliminar'];
@@ -160,7 +164,7 @@ function crearProducto(PDO $pdo, array $datos, ?int $usuario_id, ?string $usuari
         return ['success' => true, 'sku' => $sku, 'id' => $productoId];
     } catch (PDOException $e) {
         error_log("Error creando producto: " . $e->getMessage());
-        return ['success' => false, 'error' => 'Error al crear el producto: ' . $e->getMessage()];
+        return ['success' => false, 'error' => 'Error interno del servidor al crear el producto'];
     }
 }
 

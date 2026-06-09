@@ -14,10 +14,10 @@ try {
 // Consulta para productos más vendidos
 $sql = "SELECT 
             p.id as id,
-            p.name as nombre,
-            p.category as categoria,
-            p.price as precio,
-            p.stock as stock_actual,
+            ANY_VALUE(p.name) as nombre,
+            ANY_VALUE(p.category) as categoria,
+            ANY_VALUE(p.price) as precio,
+            ANY_VALUE(p.stock) as stock_actual,
             COUNT(DISTINCT pd.pedido_id) as veces_vendido,
             COALESCE(SUM(pd.cantidad), 0) as unidades_vendidas,
             COALESCE(SUM(pd.subtotal), 0) as ingresos

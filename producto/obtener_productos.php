@@ -1,5 +1,5 @@
 <?php
-// obtener_productos.php - VERSIÓN CORREGIDA
+// obtener_productos.php - VERSIÓN CORREGIDA (usa PIC\Models\Product)
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: http://localhost');
 header('Access-Control-Allow-Credentials: true');
@@ -8,12 +8,15 @@ header('Access-Control-Allow-Credentials: true');
 error_reporting(0); ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 
-require_once __DIR__ . '/../conexion/conexion.php';
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use PIC\Models\Product;
 
 try {
     $pdo = conectarDB();
+    $productModel = new Product($pdo);
     
-    error_log("Conexión exitosa a la base de datos: $dbname");
+    error_log("Conexión exitosa a la base de datos");
     
     // ==============================================
     // VERIFICAR Y CREAR COLUMNA 'active' SI NO EXISTE
@@ -31,6 +34,8 @@ try {
     $incluir_ocultos = isset($_GET['incluir_ocultos']) && $_GET['incluir_ocultos'] === 'true';
     $solo_ocultos = isset($_GET['solo_ocultos']) && $_GET['solo_ocultos'] === 'true';
     $solo_visibles = isset($_GET['solo_visibles']) && $_GET['solo_visibles'] === 'true';
+    $category = $_GET['category'] ?? null;
+    $search = $_GET['search'] ?? null;
     
     error_log("Filtros - incluir_ocultos: $incluir_ocultos, solo_ocultos: $solo_ocultos, solo_visibles: $solo_visibles");
     

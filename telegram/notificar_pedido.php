@@ -35,29 +35,32 @@ function telegramNotificarPedido($pdo, int $pedido_id): bool {
         $correo = $p['cliente_email'] ?: $p['user_correo'] ?: 'N/A';
         $telefono = $p['cliente_telefono'] ?: $p['user_telefono'] ?: 'N/A';
 
-        $mensaje = "🛒 *NUEVO PEDIDO - PIC*\n\n";
-        $mensaje .= "📋 *Pedido:* {$p['numero_pedido']}\n";
-        $mensaje .= "📅 *Fecha:* {$p['fecha_pedido']}\n\n";
+        $e = function ($v) { return htmlspecialchars($v ?? '', ENT_QUOTES, 'UTF-8'); };
 
-        $mensaje .= "👤 *Cliente:* $nombre\n";
-        $mensaje .= "📧 *Email:* $correo\n";
-        $mensaje .= "📞 *Teléfono:* $telefono\n";
-        if (!empty($p['cedula'])) $mensaje .= "🆔 *Cédula:* {$p['cedula']}\n";
-        if (!empty($p['direccion'])) $mensaje .= "📍 *Dirección:* {$p['direccion']}\n";
+        $mensaje = "🛒 <b>NUEVO PEDIDO - PIC</b>\n\n";
+        $mensaje .= "📋 <b>Pedido:</b> {$e($p['numero_pedido'])}\n";
+        $mensaje .= "📅 <b>Fecha:</b> {$e($p['created_at'] ?? $p['fecha_pedido'])}\n\n";
+
+        $mensaje .= "👤 <b>Cliente:</b> {$e($nombre)}\n";
+        $mensaje .= "📧 <b>Email:</b> {$e($correo)}\n";
+        $mensaje .= "📞 <b>Teléfono:</b> {$e($telefono)}\n";
+        if (!empty($p['cedula'])) $mensaje .= "🆔 <b>Cédula:</b> {$e($p['cedula'])}\n";
+        if (!empty($p['direccion'])) $mensaje .= "📍 <b>Dirección:</b> {$e($p['direccion'])}\n";
         $mensaje .= "\n";
 
-        $mensaje .= "🧾 *Productos:*\n";
+        $mensaje .= "🧾 <b>Productos:</b>\n";
         foreach ($items as $it) {
-            $mensaje .= "• {$it['producto_nombre']} x{$it['cantidad']} = Bs. {$it['subtotal']}\n";
+            $producto = $e($it['producto_nombre']);
+            $mensaje .= "• {$producto} x{$it['cantidad']} = Bs. {$it['subtotal']}\n";
         }
         $mensaje .= "\n";
 
-        $mensaje .= "💰 *Subtotal:* Bs. {$p['subtotal']}\n";
-        $mensaje .= "🧾 *IVA:* Bs. {$p['iva']}\n";
-        $mensaje .= "💵 *Total:* Bs. {$p['total']}\n";
-        $mensaje .= "💳 *Método:* {$p['metodo_pago']}\n";
+        $mensaje .= "💰 <b>Subtotal:</b> Bs. {$p['subtotal']}\n";
+        $mensaje .= "🧾 <b>IVA:</b> Bs. {$p['iva']}\n";
+        $mensaje .= "💵 <b>Total:</b> Bs. {$p['total']}\n";
+        $mensaje .= "💳 <b>Método:</b> {$e($p['metodo_pago'])}\n";
         if (!empty($p['referencia_pago'])) {
-            $mensaje .= "🔢 *Referencia:* {$p['referencia_pago']}\n";
+            $mensaje .= "🔢 <b>Referencia:</b> {$e($p['referencia_pago'])}\n";
         }
 
         $resultado = telegramEnviar($config['token'], $config['chat_id'], $mensaje);

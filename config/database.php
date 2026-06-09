@@ -17,19 +17,19 @@ if (file_exists($envFile)) {
     }
 }
 
-define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
-define('DB_NAME', getenv('DB_NAME') ?: 'carrito_db');
-define('DB_USER', getenv('DB_USER') ?: 'root');
-define('DB_PASS', getenv('DB_PASS') ?: '');
-define('DB_CHARSET', 'utf8mb4');
+defined('DB_HOST') or define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
+defined('DB_NAME') or define('DB_NAME', getenv('DB_NAME') ?: 'carrito_db');
+defined('DB_USER') or define('DB_USER', getenv('DB_USER') ?: 'root');
+defined('DB_PASS') or define('DB_PASS', getenv('DB_PASS') ?: '');
+defined('DB_CHARSET') or define('DB_CHARSET', 'utf8mb4');
 
 // Configuración SMTP (desde variables de entorno)
-define('SMTP_HOST', getenv('SMTP_HOST') ?: 'smtp.gmail.com');
-define('SMTP_USER', getenv('SMTP_USER') ?: '');
-define('SMTP_PASS', getenv('SMTP_PASS') ?: '');
-define('SMTP_PORT', getenv('SMTP_PORT') ?: 587);
-define('SMTP_FROM_EMAIL', getenv('SMTP_FROM_EMAIL') ?: SMTP_USER);
-define('SMTP_FROM_NAME', getenv('SMTP_FROM_NAME') ?: 'PIC - Productos Industriales');
+defined('SMTP_HOST') or define('SMTP_HOST', getenv('SMTP_HOST') ?: 'smtp.gmail.com');
+defined('SMTP_USER') or define('SMTP_USER', getenv('SMTP_USER') ?: '');
+defined('SMTP_PASS') or define('SMTP_PASS', getenv('SMTP_PASS') ?: '');
+defined('SMTP_PORT') or define('SMTP_PORT', getenv('SMTP_PORT') ?: 587);
+defined('SMTP_FROM_EMAIL') or define('SMTP_FROM_EMAIL', getenv('SMTP_FROM_EMAIL') ?: SMTP_USER);
+defined('SMTP_FROM_NAME') or define('SMTP_FROM_NAME', getenv('SMTP_FROM_NAME') ?: 'PIC - Productos Industriales');
 
 // URL base del proyecto (para evitar rutas hardcodeadas)
-define('BASE_URL', getenv('APP_URL') ?: '/proyecto');
+defined('BASE_URL') or define('BASE_URL', getenv('APP_URL') ?: '/proyecto');

@@ -2,7 +2,7 @@
 require_once dirname(__DIR__) . '/conexion/conexion.php';
 iniciarSesion();
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Origin: http://localhost');
 header('Access-Control-Allow-Methods: POST');
 header('Access-Control-Allow-Headers: Content-Type');
 
@@ -27,8 +27,6 @@ if ($es_admin || $tabla_origen === 'admin_users') {
     echo json_encode(['success' => false, 'message' => 'Las cuentas de administrador no tienen foto de perfil para eliminar']);
     exit;
 }
-
-require_once dirname(__DIR__) . '/conexion/conexion.php';
 
 verificarCSRF();
 

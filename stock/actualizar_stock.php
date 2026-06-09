@@ -12,6 +12,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 require_once __DIR__ . '/../conexion/conexion.php';
 
+session_start();
+if (!isset($_SESSION['user_id'])) {
+    http_response_code(401);
+    echo json_encode(['success' => false, 'message' => 'No autorizado']);
+    exit;
+}
+
 verificarCSRF();
 
 try {
@@ -119,6 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ]);
                 curl_exec($wspCh);
                 $wspHttpCode = curl_getinfo($wspCh, CURLINFO_HTTP_CODE);
+                curl_close($wspCh);
                 $whatsappEnviado = $wspHttpCode >= 200 && $wspHttpCode < 300;
                 if ($whatsappEnviado) {
                     auditoriaRegistrar('notificar_stock_automatico', 'whatsapp',
@@ -160,6 +168,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ]);
                 $tgResponse = curl_exec($tgCh);
                 $tgHttpCode = curl_getinfo($tgCh, CURLINFO_HTTP_CODE);
+                curl_close($tgCh);
                 $tgData = json_decode($tgResponse, true);
                 $telegramEnviado = ($tgData['ok'] ?? false) === true;
                 if ($telegramEnviado) {

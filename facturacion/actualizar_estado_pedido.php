@@ -127,14 +127,25 @@ try {
     }
 }
 
-auditoriaRegistrar('actualizar_estado_pedido', 'facturacion', "Pedido ID $pedido_id: estado '$estado_anterior' -> '$nuevo_estado'");
-echo json_encode([
+    if ($nuevo_estado === 'facturado' || $nuevo_estado === 'completado') {
+        require_once __DIR__ . '/../notificaciones/cola.php';
+        $factura_check = $pdo->prepare("SELECT id FROM facturas WHERE pedido_id = ?");
+        $factura_check->execute([$pedido_id]);
+        $factura_id = $factura_check->fetchColumn();
+
+        colaNotificacionesAgregar('email_factura', $pedido_id, $factura_id ?: null);
+        colaNotificacionesAgregar('telegram_pedido', $pedido_id, $factura_id ?: null);
+        colaNotificacionesDispararProcesador();
+    }
+
+    auditoriaRegistrar('actualizar_estado_pedido', 'facturacion', "Pedido ID $pedido_id: estado '$estado_anterior' -> '$nuevo_estado'");
+    echo json_encode([
         'success' => true,
         'message' => 'Estado actualizado correctamente',
         'estado_anterior' => $estado_anterior,
         'nuevo_estado' => $nuevo_estado
     ]);
-    
+
 } catch (PDOException $e) {
     error_log("Error al actualizar estado del pedido: " . $e->getMessage());
     echo json_encode([

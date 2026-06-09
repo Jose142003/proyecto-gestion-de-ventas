@@ -1,5 +1,6 @@
 <?php
 require_once '../conexion/conexion.php';
+iniciarSesion();
 
 header('Content-Type: application/json');
 
@@ -7,6 +8,7 @@ header('Content-Type: application/json');
 error_reporting(0); ini_set('display_errors', 0);
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    verificarCSRF();
     // Obtener datos del POST
     $input = json_decode(file_get_contents('php://input'), true);
     
@@ -25,6 +27,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     error_log("user_id: $user_id, product_id: $product_id, quantity: $quantity");
     
     if ($user_id == 0 || $product_id == 0) {
+        http_response_code(400);
         echo json_encode(["success" => false, "message" => "Datos incompletos", "debug" => $input]);
         exit;
     }
@@ -33,6 +36,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     // Verificar conexión
     if (!$db) {
+        http_response_code(500);
         echo json_encode(["success" => false, "message" => "Error de conexión a la base de datos"]);
         exit;
     }
@@ -45,6 +49,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt_user->execute();
         
         if ($stmt_user->rowCount() == 0) {
+            http_response_code(404);
             echo json_encode(["success" => false, "message" => "Usuario no encontrado"]);
             exit;
         }
@@ -58,12 +63,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $product = $stmt_check->fetch(PDO::FETCH_ASSOC);
         
         if (!$product) {
+            http_response_code(404);
             echo json_encode(["success" => false, "message" => "Producto no encontrado"]);
             exit;
         }
         
         // Verificar stock disponible
         if ($product['stock'] < $quantity) {
+            http_response_code(400);
             echo json_encode([
                 "success" => false, 
                 "message" => "Stock insuficiente. Solo quedan {$product['stock']} unidades"
@@ -84,6 +91,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Verificar que no exceda el stock al actualizar
             $new_quantity = $existing_item['quantity'] + $quantity;
             if ($new_quantity > $product['stock']) {
+                http_response_code(400);
                 echo json_encode([
                     "success" => false, 
                     "message" => "No hay suficiente stock. Máximo disponible: {$product['stock']} unidades"
@@ -101,6 +109,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $message = "Cantidad actualizada en el carrito";
                 $action = "updated";
             } else {
+                http_response_code(500);
                 echo json_encode(["success" => false, "message" => "Error al actualizar carrito"]);
                 exit;
             }
@@ -116,6 +125,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $message = "Producto añadido al carrito";
                 $action = "added";
             } else {
+                http_response_code(500);
                 echo json_encode(["success" => false, "message" => "Error al añadir al carrito"]);
                 exit;
             }
@@ -142,12 +152,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
     } catch (PDOException $e) {
         error_log("Error en anadir_carrito: " . $e->getMessage());
+        http_response_code(500);
         echo json_encode([
             "success" => false, 
             "message" => "Error de base de datos"
         ]);
     }
 } else {
+    http_response_code(405);
     echo json_encode(["success" => false, "message" => "Método no permitido"]);
 }
 ?>

@@ -8,8 +8,7 @@ ini_set('display_errors', 0);
 
 header('Content-Type: application/json');
 
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../conexion/seguridad.php';
+require_once __DIR__ . '/../conexion/conexion.php';
 
 // Verificar bloqueo por IP y rate limit antes de procesar login
 seguridadVerificarBloqueoIp();
@@ -22,8 +21,7 @@ ini_set('session.cookie_secure', 0);
 ini_set('session.cookie_samesite', 'Lax');
 
 try {
-    $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8", DB_USER, DB_PASS);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = Database::getConnection();
 } catch (PDOException $e) {
     echo json_encode(["success" => false, "message" => "Error de conexión a la base de datos"]);
     exit;
@@ -58,6 +56,7 @@ if ($ahora - $attempts['first_attempt'] > $ventanaMinutos * 60) {
 
 if ($attempts['count'] >= $maxIntentos) {
     $espera = $ventanaMinutos - floor(($ahora - $attempts['first_attempt']) / 60);
+    http_response_code(429);
     echo json_encode([
         "success" => false,
         "message" => "Demasiados intentos. Intenta de nuevo en $espera minuto(s)."
@@ -69,29 +68,28 @@ $correo = trim($_POST['correo'] ?? '');
 $password = $_POST['password'] ?? '';
 $tipo_usuario = trim($_POST['tipo_usuario'] ?? '');
 
-// ========== VERIFICACIÓN COMPATIBLE CON HASHES LEGACY (SHA-256) ==========
+// ========== VERIFICACIÓN DE CONTRASEÑA CON SOPORTE LEGACY ==========
 function verificarPassword(string $password, string $storedHash, PDO $pdo, ?int $userId = null, string $tabla = 'admin_users'): bool {
-    // Primero intentar con password_verify (bcrypt)
     if (password_verify($password, $storedHash)) {
         return true;
     }
-    // Fallback para hashes SHA-256 legacy (sin sal)
-    $lowerSha256 = hash('sha256', $password);
-    $upperSha256 = strtoupper($lowerSha256);
-    if (hash_equals($storedHash, $lowerSha256) || hash_equals($storedHash, $upperSha256)) {
-        // Actualizar a bcrypt automáticamente
-        if ($userId !== null) {
-            $newHash = password_hash($password, PASSWORD_DEFAULT);
-            $columna = ($tabla === 'admin_users') ? 'contrasena' : 'password';
-            $stmt = $pdo->prepare("UPDATE $tabla SET $columna = ? WHERE id = ?");
-            $stmt->execute([$newHash, $userId]);
+    // Fallback: SHA-256 legacy (64 hex chars)
+    if (strlen($storedHash) === 64 && ctype_xdigit($storedHash)) {
+        if (hash('sha256', $password) === $storedHash) {
+            // Migrar a bcrypt en el primer login exitoso
+            $nuevoHash = password_hash($password, PASSWORD_BCRYPT);
+            if ($userId) {
+                $col = ($tabla === 'admin_users') ? 'contrasena' : 'password';
+                $pdo->prepare("UPDATE $tabla SET $col = ? WHERE id = ?")->execute([$nuevoHash, $userId]);
+            }
+            return true;
         }
-        return true;
     }
     return false;
 }
 
 if (empty($correo) || empty($password)) {
+    http_response_code(400);
     echo json_encode(["success" => false, "message" => "Correo y contraseña son obligatorios"]);
     exit;
 }
@@ -120,7 +118,8 @@ try {
                 if (!verificarPassword($password, $user['password'], $pdo, $user['id'], 'admin_users')) {
                     $attempts['count']++;
                     seguridadRegistrarIntentoFallido('login_admin');
-                    echo json_encode(["success" => false, "message" => "Credenciales de administrador incorrectas"]);
+                    http_response_code(401);
+                    echo json_encode(["success" => false, "message" => "Credenciales incorrectas"]);
                     exit;
                 }
         }
@@ -225,8 +224,8 @@ try {
                 
                 if ($admin2fa && $admin2fa['2fa_enabled'] && !empty($admin2fa['2fa_secret'])) {
                     $tokenVerificacion = bin2hex(random_bytes(32));
-                    $expiracion = date('Y-m-d H:i:s', time() + 300);
-                    
+                    $expiracion = gmdate('Y-m-d H:i:s', time() + 300);
+
                     $stmtToken = $pdo->prepare("
                         INSERT INTO sesiones_2fa (admin_user_id, token_verificacion, expiracion)
                         VALUES (?, ?, ?)
@@ -259,8 +258,8 @@ try {
                 
                 if ($client2fa && $client2fa['2fa_enabled'] && !empty($client2fa['2fa_secret'])) {
                     $tokenVerificacion = bin2hex(random_bytes(32));
-                    $expiracion = date('Y-m-d H:i:s', time() + 300);
-                    
+                    $expiracion = gmdate('Y-m-d H:i:s', time() + 300);
+
                     $stmtToken = $pdo->prepare("
                         INSERT INTO sesiones_2fa_clientes (user_id, token_verificacion, expiracion)
                         VALUES (?, ?, ?)

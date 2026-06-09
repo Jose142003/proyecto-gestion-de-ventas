@@ -826,46 +826,15 @@ $empresa_email = "picca.ventas@gmail.com";
                         <span class="info-label">Fecha:</span>
                         <span class="info-value"><?php echo formatearFecha($factura['fecha_emision']); ?></span>
                     </div>
+                     <?php if (!empty($factura['numero_pedido'])): ?>
                      <div class="info-row">
-                         <span class="info-label">Pago:</span>
-                         <span class="info-value"><?php echo $metodo_pago_mostrar; ?></span>
-                     </div>
-                      <?php 
-                      $referencia_pago = null;
-                      $metodo_check = strtolower(trim($metodo_pago_real));
-                      if (!empty($factura['pedido_referencia_pago'])) {
-                          $referencia_pago = $factura['pedido_referencia_pago'];
-                      } else {
-                          $obs_a_buscar = [
-                              $factura['pedido_observaciones'] ?? null,
-                              $factura['factura_observaciones'] ?? $factura['observaciones'] ?? null
-                          ];
-                          foreach ($obs_a_buscar as $obs) {
-                              if ($referencia_pago === null && !empty($obs)) {
-                                  if (preg_match('/Referencia[:\s]+([^\s]+)/i', $obs, $matches)) {
-                                      $referencia_pago = $matches[1];
-                                  } elseif (preg_match('/Ref[:\s]+([^\s]+)/i', $obs, $matches)) {
-                                      $referencia_pago = $matches[1];
-                                  }
-                              }
-                          }
-                      }
-                      if (($metodo_check === 'pago_movil' || $metodo_check === 'pago movil' || $metodo_check === 'transferencia' || $metodo_check === 'transferencia_bancaria') && $referencia_pago): 
-                      ?>
-                     <div class="info-row">
-                         <span class="info-label" style="color:#3498db; font-weight:bold;"><i class="fas fa-hashtag"></i> Referencia:</span>
-                         <span class="info-value" style="font-weight:bold; font-size:0.8rem;"><?php echo htmlspecialchars($referencia_pago); ?></span>
+                         <span class="info-label">Pedido:</span>
+                         <span class="info-value"><?php echo htmlspecialchars($factura['numero_pedido']); ?></span>
                      </div>
                      <?php endif; ?>
-                     <?php if (!empty($factura['numero_pedido'])): ?>
-                    <div class="info-row">
-                        <span class="info-label">Pedido:</span>
-                        <span class="info-value"><?php echo htmlspecialchars($factura['numero_pedido']); ?></span>
-                    </div>
-                    <?php endif; ?>
-                </div>
-                
-                <!-- CLIENTE -->
+                 </div>
+                 
+                 <!-- CLIENTE -->
                 <div class="info-block">
                     <h3><i class="fas fa-user-circle"></i> CLIENTE</h3>
                     <div class="info-row">
@@ -888,6 +857,37 @@ $empresa_email = "picca.ventas@gmail.com";
                         <span class="info-label">Dirección:</span>
                         <span class="info-value"><?php echo htmlspecialchars(!empty($factura['cliente_direccion']) ? $factura['cliente_direccion'] : 'No especificada'); ?></span>
                     </div>
+                     <div class="info-row">
+                          <span class="info-label">Pago:</span>
+                          <span class="info-value"><?php echo $metodo_pago_mostrar; ?></span>
+                      </div>
+                       <?php 
+                       $referencia_pago = null;
+                       $metodo_check = strtolower(trim($metodo_pago_real));
+                       if (!empty($factura['pedido_referencia_pago'])) {
+                           $referencia_pago = $factura['pedido_referencia_pago'];
+                       } else {
+                           $obs_a_buscar = [
+                               $factura['pedido_observaciones'] ?? null,
+                               $factura['factura_observaciones'] ?? $factura['observaciones'] ?? null
+                           ];
+                           foreach ($obs_a_buscar as $obs) {
+                               if ($referencia_pago === null && !empty($obs)) {
+                                   if (preg_match('/Referencia[:\s]+([^\s]+)/i', $obs, $matches)) {
+                                       $referencia_pago = $matches[1];
+                                   } elseif (preg_match('/Ref[:\s]+([^\s]+)/i', $obs, $matches)) {
+                                       $referencia_pago = $matches[1];
+                                   }
+                               }
+                           }
+                       }
+                       if (($metodo_check === 'pago_movil' || $metodo_check === 'pago movil' || $metodo_check === 'transferencia' || $metodo_check === 'transferencia_bancaria') && $referencia_pago): 
+                       ?>
+                      <div class="info-row">
+                          <span class="info-label" style="color:#3498db; font-weight:bold;"><i class="fas fa-hashtag"></i> Referencia:</span>
+                          <span class="info-value" style="font-weight:bold; font-size:0.8rem;"><?php echo htmlspecialchars($referencia_pago); ?></span>
+                      </div>
+                      <?php endif; ?>
                 </div>
             </div>
             

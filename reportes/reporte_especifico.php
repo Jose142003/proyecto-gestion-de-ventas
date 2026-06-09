@@ -54,7 +54,7 @@ try {
                 $sql .= " AND f.estado = :estado";
             }
             if ($buscar && $buscar != '') {
-                $sql .= " AND (c.nombre LIKE :buscar OR c.email LIKE :buscar OR f.numero_factura LIKE :buscar)";
+                $sql .= " AND (c.nombre LIKE :buscar1 OR c.email LIKE :buscar2 OR f.numero_factura LIKE :buscar3)";
             }
             $sql .= " ORDER BY f.fecha_emision DESC";
             
@@ -62,11 +62,94 @@ try {
             $stmt->bindParam(':desde', $desde);
             $stmt->bindParam(':hasta', $hasta);
             if ($estado && $estado != '') $stmt->bindParam(':estado', $estado);
-            if ($buscar && $buscar != '') $stmt->bindValue(':buscar', "%$buscar%");
+            if ($buscar && $buscar != '') {
+                $stmt->bindValue(':buscar1', "%$buscar%");
+                $stmt->bindValue(':buscar2', "%$buscar%");
+                $stmt->bindValue(':buscar3', "%$buscar%");
+            }
             break;
-            
-        // ... resto de casos (pedidos, compras, clientes, productos) igual que antes ...
-        
+
+        case 'pedidos':
+            $sql = "SELECT p.id, DATE(p.created_at) as fecha, p.numero_pedido,
+                           u.nombre as cliente_nombre, u.correo as cliente_email,
+                           p.total, p.estado, p.metodo_pago
+                    FROM pedidos p
+                    LEFT JOIN users u ON p.usuario_id = u.id
+                    WHERE DATE(p.created_at) BETWEEN :desde AND :hasta";
+            if ($estado) { $sql .= " AND p.estado = :estado"; }
+            if ($buscar) { $sql .= " AND (u.nombre LIKE :buscar1 OR p.numero_pedido LIKE :buscar2)"; }
+            $sql .= " ORDER BY p.created_at DESC";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':desde', $desde);
+            $stmt->bindParam(':hasta', $hasta);
+            if ($estado) $stmt->bindParam(':estado', $estado);
+            if ($buscar) {
+                $stmt->bindValue(':buscar1', "%$buscar%");
+                $stmt->bindValue(':buscar2', "%$buscar%");
+            }
+            break;
+
+        case 'compras':
+            $sql = "SELECT c.id, c.fecha_orden as fecha, c.numero_orden,
+                           pr.nombre_comercial as proveedor_nombre, pr.ruc as proveedor_ruc,
+                           c.total, c.estado, c.metodo_pago
+                    FROM compras c
+                    LEFT JOIN proveedores pr ON c.proveedor_id = pr.id
+                    WHERE c.fecha_orden BETWEEN :desde AND :hasta";
+            if ($estado) { $sql .= " AND c.estado = :estado"; }
+            if ($buscar) { $sql .= " AND (pr.nombre_comercial LIKE :buscar1 OR c.numero_orden LIKE :buscar2)"; }
+            $sql .= " ORDER BY c.fecha_orden DESC";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':desde', $desde);
+            $stmt->bindParam(':hasta', $hasta);
+            if ($estado) $stmt->bindParam(':estado', $estado);
+            if ($buscar) {
+                $stmt->bindValue(':buscar1', "%$buscar%");
+                $stmt->bindValue(':buscar2', "%$buscar%");
+            }
+            break;
+
+        case 'clientes':
+            $sql = "SELECT id, nombre, email, telefono, ciudad, estado as cliente_estado,
+                           DATE(fecha_registro) as fecha_registro
+                    FROM clientes
+                    WHERE DATE(fecha_registro) BETWEEN :desde AND :hasta";
+            if ($estado) { $sql .= " AND estado = :estado"; }
+            if ($buscar) { $sql .= " AND (nombre LIKE :buscar1 OR email LIKE :buscar2 OR documento LIKE :buscar3)"; }
+            $sql .= " ORDER BY fecha_registro DESC";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':desde', $desde);
+            $stmt->bindParam(':hasta', $hasta);
+            if ($estado) $stmt->bindParam(':estado', $estado);
+            if ($buscar) {
+                $stmt->bindValue(':buscar1', "%$buscar%");
+                $stmt->bindValue(':buscar2', "%$buscar%");
+                $stmt->bindValue(':buscar3', "%$buscar%");
+            }
+            break;
+
+        case 'productos':
+            $sql = "SELECT id, sku, name as nombre, category as categoria,
+                           price as precio, stock, is_featured as destacado
+                    FROM products
+                    WHERE deleted_at IS NULL";
+            if ($buscar) { $sql .= " AND (name LIKE :buscar1 OR sku LIKE :buscar2 OR category LIKE :buscar3)"; }
+            $sql .= " ORDER BY created_at DESC";
+            $stmt = $pdo->prepare($sql);
+            if ($buscar) {
+                $stmt->bindValue(':buscar1', "%$buscar%");
+                $stmt->bindValue(':buscar2', "%$buscar%");
+                $stmt->bindValue(':buscar3', "%$buscar%");
+            }
+            // productos no tiene filtro de fecha ni estado igual que los demas
+            $stmt->execute();
+            $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $total_registros = count($datos);
+            $total_monto = 0;
+            $promedio = 0;
+            echo json_encode(['success' => true, 'data' => $datos, 'total_registros' => $total_registros, 'total_monto' => $total_monto, 'promedio' => $promedio]);
+            exit;
+
         default:
             echo json_encode(['success' => false, 'message' => 'Tipo de reporte no válido']);
             exit;
@@ -90,7 +173,9 @@ try {
         'promedio' => $promedio
     ]);
     
-} catch (PDOException $e) {
+} catch (Exception $e) {
+    $msg = 'Error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine();
+    error_log("[reporte_especifico] $msg");
     echo json_encode([
         'success' => false, 
         'message' => 'Error interno del servidor'

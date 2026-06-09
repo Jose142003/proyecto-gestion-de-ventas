@@ -7,8 +7,6 @@ error_reporting(0);
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 
-require_once dirname(__DIR__) . '/conexion/conexion.php';
-
 verificarCSRF();
 
 if (!isset($_SESSION['user_id'])) {
@@ -121,7 +119,7 @@ try {
         }
         
         // Actualizar nueva contraseña (bcrypt)
-        $new_hash = password_hash($newPassword, PASSWORD_DEFAULT);
+        $new_hash = password_hash($newPassword, PASSWORD_BCRYPT);
         $update = $db->prepare("UPDATE users SET password = ? WHERE id = ?");
         
         if ($update->execute([$new_hash, $user_id])) {

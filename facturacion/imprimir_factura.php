@@ -44,7 +44,7 @@ try {
     $factura = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$factura) {
-        die("Error: Factura no encontrada con ID $factura_id");
+        die("Error: Factura no encontrada");
     }
 
     // Obtener los detalles de la factura
