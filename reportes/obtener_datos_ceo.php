@@ -14,9 +14,6 @@ require_once __DIR__ . '/../conexion/conexion.php';
 try {
     $pdo = conectarDB();
     
-    // Deshabilitar ONLY_FULL_GROUP_BY temporalmente para esta conexión
-    $pdo->exec("SET SESSION sql_mode = ''");
-    
     $user_id = $_SESSION['user_id'];
 
     // 2. Validar que el usuario sea un administrador activo
@@ -124,7 +121,14 @@ try {
             COALESCE(SUM(total), 0) as total
         FROM facturas 
         WHERE metodo_pago IS NOT NULL AND metodo_pago != ''
-        GROUP BY 1
+        GROUP BY CASE 
+            WHEN metodo_pago LIKE '%efectivo%' THEN 'Efectivo'
+            WHEN metodo_pago LIKE '%transferencia%' THEN 'Transferencia'
+            WHEN metodo_pago LIKE '%pago_movil%' OR metodo_pago LIKE '%pago móvil%' THEN 'Pago Móvil'
+            WHEN metodo_pago LIKE '%mixto%' THEN 'Pago Mixto'
+            WHEN metodo_pago LIKE '%tarjeta%' THEN 'Tarjeta'
+            ELSE 'Otros'
+        END
         ORDER BY total DESC
     ");
     $metodos_pago = $stmt_metodos_pago->fetchAll(PDO::FETCH_ASSOC);
