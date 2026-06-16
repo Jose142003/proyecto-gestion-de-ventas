@@ -154,7 +154,7 @@ try {
                 <button class="btn btn-print" onclick="window.print()">
                     <i class="fas fa-print"></i> Imprimir Factura
                 </button>
-                <a href="/proyecto/interfaz_usuario/pagina_modernizada.html" class="btn btn-home">
+                <a href="/proyecto/interfaz_usuario/pagina_modernizada.php" class="btn btn-home">
                     <i class="fas fa-home"></i> Volver al Inicio
                 </a>
             </div>

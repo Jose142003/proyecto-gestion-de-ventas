@@ -501,7 +501,7 @@ if (isset($_SESSION['tabla_origen']) && $_SESSION['tabla_origen'] === 'admin_use
 }
 
 // URL base para redirección (mantener en la tienda, NO ir a panel_admin)
-$return_url = '/proyecto/interfaz_usuario/pagina_modernizada.html';
+$return_url = '/proyecto/interfaz_usuario/pagina_modernizada.php';
 ?>
 <!DOCTYPE html>
 <html lang="es">

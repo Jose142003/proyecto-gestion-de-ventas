@@ -121,7 +121,7 @@ try {
     $_SESSION['2fa_verified'] = true;
     $_SESSION['2fa_verified_at'] = time();
 
-    echo json_encode(['success' => true, 'message' => 'Autenticación exitosa', 'redirect_url' => '/proyecto/interfaz_usuario/pagina_modernizada.html']);
+    echo json_encode(['success' => true, 'message' => 'Autenticación exitosa', 'redirect_url' => '/proyecto/interfaz_usuario/pagina_modernizada.php']);
 
 } catch (Throwable $e) {
     http_response_code(500);

@@ -43,7 +43,7 @@ try {
             $stmt = $pdo->prepare("SELECT id FROM pedidos WHERE id = ? AND usuario_id = ?");
             $stmt->execute([$pedido_id, $user_id]);
             if (!$stmt->fetch()) {
-                header('Location: /proyecto/interfaz_usuario/pagina_modernizada.html');
+                header('Location: /proyecto/interfaz_usuario/pagina_modernizada.php');
                 exit;
             }
             $stmt = $pdo->prepare("SELECT id, nombre, rol FROM users WHERE id = ?");
@@ -570,6 +570,134 @@ $metodo_info = $metodos_pago[$pedido['metodo_pago'] ?? ''] ?? ['label' => $pedid
             </div>
             <div class="card-body">
                 <p><?php echo nl2br(htmlspecialchars($pedido['direccion_envio'])); ?></p>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <!-- Información de Envío / Rastreo -->
+        <?php
+        $envio_data = null;
+        $envio_historial = [];
+        $estados_envio = [
+            'preparando' => ['label' => 'Preparando', 'color' => '#ffa502', 'bg' => '#fff3e0', 'icon' => 'fa-box'],
+            'en_transito' => ['label' => 'En Tránsito', 'color' => '#1976d2', 'bg' => '#e3f2fd', 'icon' => 'fa-truck'],
+            'en_reparto' => ['label' => 'En Reparto', 'color' => '#1565c0', 'bg' => '#e3f2fd', 'icon' => 'fa-shipping-fast'],
+            'entregado' => ['label' => 'Entregado', 'color' => '#2e7d32', 'bg' => '#e8f5e9', 'icon' => 'fa-check-circle'],
+            'fallido' => ['label' => 'Fallido', 'color' => '#c62828', 'bg' => '#ffebee', 'icon' => 'fa-times-circle']
+        ];
+        if (!empty($pedido['transportista']) || !empty($pedido['numero_guia'])) {
+            try {
+                $stmt = $pdo->prepare("SELECT * FROM envios WHERE pedido_id = ? ORDER BY id DESC LIMIT 1");
+                $stmt->execute([$pedido_id]);
+                $envio_data = $stmt->fetch(PDO::FETCH_ASSOC);
+                if ($envio_data) {
+                    $stmt = $pdo->prepare("SELECT * FROM envios_historial WHERE envio_id = ? ORDER BY created_at ASC");
+                    $stmt->execute([$envio_data['id']]);
+                    $envio_historial = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                }
+            } catch (PDOException $e) {
+                error_log("Error al obtener envio: " . $e->getMessage());
+            }
+        }
+        ?>
+        <?php if ($envio_data || !empty($pedido['transportista'])): ?>
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fas fa-truck"></i> Información de Envío</h2>
+                <?php if ($envio_data): ?>
+                <a href="/proyecto/envios/envio_detalle.php?envio_id=<?php echo $envio_data['id']; ?>" class="btn btn-primary btn-sm" style="padding: 5px 10px; font-size: 0.75rem; text-decoration: none;">
+                    <i class="fas fa-external-link-alt"></i> Ver detalle completo
+                </a>
+                <?php endif; ?>
+            </div>
+            <div class="card-body">
+                <div class="grid-2">
+                    <div>
+                        <div class="cliente-detalle-row">
+                            <div class="cliente-detalle-label">Transportista:</div>
+                            <div class="cliente-detalle-value">
+                                <?php echo htmlspecialchars($envio_data['transportista'] ?? $pedido['transportista']); ?>
+                            </div>
+                        </div>
+                        <div class="cliente-detalle-row">
+                            <div class="cliente-detalle-label">N° Guía:</div>
+                            <div class="cliente-detalle-value" style="font-family: monospace;">
+                                <?php echo htmlspecialchars($envio_data['numero_guia'] ?? $pedido['numero_guia']); ?>
+                            </div>
+                        </div>
+                        <?php if (!empty($envio_data['url_rastreo'])): ?>
+                        <div class="cliente-detalle-row">
+                            <div class="cliente-detalle-label">Rastreo:</div>
+                            <div class="cliente-detalle-value">
+                                <a href="<?php echo htmlspecialchars($envio_data['url_rastreo']); ?>" target="_blank" style="color: var(--accent);">
+                                    <i class="fas fa-external-link-alt"></i> Rastrear envío
+                                </a>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+                        <?php if (!empty($pedido['costo_envio']) && floatval($pedido['costo_envio']) > 0): ?>
+                        <div class="cliente-detalle-row">
+                            <div class="cliente-detalle-label">Costo Envío:</div>
+                            <div class="cliente-detalle-value">Bs. <?php echo number_format(floatval($pedido['costo_envio']), 2, ',', '.'); ?></div>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                    <?php if ($envio_data): ?>
+                    <div>
+                        <div class="cliente-detalle-row">
+                            <div class="cliente-detalle-label">Estado:</div>
+                            <div class="cliente-detalle-value">
+                                <?php $ee = $estados_envio[$envio_data['estado']] ?? ['label' => $envio_data['estado'], 'color' => '#6c757d', 'bg' => '#f8f9fa']; ?>
+                                <span class="estado-badge" style="background: <?php echo $ee['bg']; ?>; color: <?php echo $ee['color']; ?>; padding: 5px 12px; border-radius: 50px; font-size: 0.8rem; font-weight: 600;">
+                                    <i class="fas <?php echo $ee['icon']; ?>"></i> <?php echo $ee['label']; ?>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="cliente-detalle-row">
+                            <div class="cliente-detalle-label">Fecha Envío:</div>
+                            <div class="cliente-detalle-value">
+                                <?php echo $envio_data['fecha_envio'] ? date('d/m/Y H:i', strtotime($envio_data['fecha_envio'])) : 'N/A'; ?>
+                            </div>
+                        </div>
+                        <div class="cliente-detalle-row">
+                            <div class="cliente-detalle-label">Est. Entrega:</div>
+                            <div class="cliente-detalle-value">
+                                <?php echo $envio_data['fecha_estimada_entrega'] ? date('d/m/Y', strtotime($envio_data['fecha_estimada_entrega'])) : 'N/A'; ?>
+                            </div>
+                        </div>
+                        <?php if ($envio_data['fecha_entrega']): ?>
+                        <div class="cliente-detalle-row">
+                            <div class="cliente-detalle-label">Entregado:</div>
+                            <div class="cliente-detalle-value">
+                                <?php echo date('d/m/Y H:i', strtotime($envio_data['fecha_entrega'])); ?>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                    <?php endif; ?>
+                </div>
+                <?php if (count($envio_historial) > 0): ?>
+                <h3 style="font-size: 0.95rem; font-weight: 600; color: var(--primary); margin-top: 20px; margin-bottom: 15px;">
+                    <i class="fas fa-history"></i> Timeline del Envío
+                </h3>
+                <div class="timeline">
+                    <?php foreach ($envio_historial as $h): ?>
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-date"><?php echo date('d/m/Y H:i:s', strtotime($h['created_at'])); ?></div>
+                        <div class="timeline-title">
+                            <?php echo htmlspecialchars($estados_envio[$h['estado_nuevo']]['label'] ?? $h['estado_nuevo']); ?>
+                        </div>
+                        <?php if (!empty($h['ubicacion'])): ?>
+                        <div class="timeline-desc"><i class="fas fa-map-marker-alt" style="color: var(--accent);"></i> <?php echo htmlspecialchars($h['ubicacion']); ?></div>
+                        <?php endif; ?>
+                        <?php if (!empty($h['descripcion'])): ?>
+                        <div class="timeline-desc"><?php echo htmlspecialchars($h['descripcion']); ?></div>
+                        <?php endif; ?>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+                <?php endif; ?>
             </div>
         </div>
         <?php endif; ?>

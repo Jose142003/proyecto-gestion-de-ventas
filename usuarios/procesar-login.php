@@ -354,7 +354,7 @@ try {
     // Redirección usando BASE_URL
     $redirect_url = ($tabla_origen === 'admin_users')
         ? BASE_URL . '/panel_admin/panel_admin.php'
-        : BASE_URL . '/interfaz_usuario/pagina_modernizada.html';
+        : BASE_URL . '/interfaz_usuario/pagina_modernizada.php';
     
     echo json_encode([
         "success" => true,

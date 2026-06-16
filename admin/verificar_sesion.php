@@ -48,7 +48,7 @@ if ($tabla_origen === 'users') {
     echo json_encode([
         'success' => false,
         'message' => 'Área restringida a administradores',
-        'redirect' => BASE_URL . '/interfaz_usuario/pagina_modernizada.html'
+        'redirect' => BASE_URL . '/interfaz_usuario/pagina_modernizada.php'
     ]);
     exit;
 }
@@ -72,7 +72,7 @@ if ($tabla_origen === null && isset($_SESSION['user_id'])) {
         echo json_encode([
             'success' => false,
             'message' => 'Área restringida a administradores',
-            'redirect' => BASE_URL . '/interfaz_usuario/pagina_modernizada.html'
+            'redirect' => BASE_URL . '/interfaz_usuario/pagina_modernizada.php'
         ]);
         exit;
     }

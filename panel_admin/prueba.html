@@ -12,7 +12,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
 // Verificar que sea administrador
 if (!isset($_SESSION['es_admin']) || $_SESSION['es_admin'] !== true) {
     // Si es cliente, redirigir a página de cliente
-    header('Location: /proyecto/interfaz_usuario/pagina_modernizada.html');
+    header('Location: /proyecto/interfaz_usuario/pagina_modernizada.php');
     exit;
 }
 

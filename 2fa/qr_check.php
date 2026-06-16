@@ -80,7 +80,7 @@ try {
             $_SESSION['is_admin'] = false;
             $_SESSION['is_cliente'] = true;
             $_SESSION['user_tipo'] = 'cliente';
-            $redirect = BASE_URL . '/interfaz_usuario/pagina_modernizada.html';
+            $redirect = BASE_URL . '/interfaz_usuario/pagina_modernizada.php';
         }
 
         // Cookie persistente

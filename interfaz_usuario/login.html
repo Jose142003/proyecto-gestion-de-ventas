@@ -642,7 +642,7 @@
                             if (result.is_admin === true) {
                                 window.location.href = '/proyecto/panel_admin/panel_admin.php';
                             } else {
-                                window.location.href = '/proyecto/interfaz_usuario/pagina_modernizada.html';
+                                window.location.href = '/proyecto/interfaz_usuario/pagina_modernizada.php';
                             }
                         }
                     }, 1200);
@@ -804,7 +804,7 @@
                     document.getElementById('qrStep2').style.display = 'none';
                     document.getElementById('qrBackBtn').style.display = 'none';
                     setTimeout(() => {
-                        window.location.href = data.redirect_url || '/proyecto/interfaz_usuario/pagina_modernizada.html';
+                        window.location.href = data.redirect_url || '/proyecto/interfaz_usuario/pagina_modernizada.php';
                     }, 800);
                 } else {
                     errorDiv.textContent = data.message || 'Error al iniciar sesión';

@@ -1,21 +1,4 @@
-﻿<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Redirigiendo - Proyectos Industriales Del Centro</title>
-    <meta http-equiv="refresh" content="0; url=pagina_modernizada.php">
-    <style>
-        body { font-family: sans-serif; text-align: center; padding: 80px 20px; background: #050C18; color: white; }
-        a { color: #3C91ED; }
-    </style>
-</head>
-<body>
-    <p>Redirigiendo a la tienda...</p>
-    <p>Si no eres redirigido, <a href="pagina_modernizada.php">haz clic aquí</a>.</p>
-</body>
-</html>
-<?php
+﻿<?php
 session_name('CLIENTSESSID');
 session_start();
 if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
@@ -26,8 +9,13 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     }
 }
 @session_write_close();
+require_once __DIR__ . '/../config/i18n.php';
+require_once __DIR__ . '/../config/i18n_helpers.php';
+$locale = $_GET['lang'] ?? $_COOKIE['lang'] ?? 'es';
+setcookie('lang', $locale, time() + 86400 * 30, '/');
+\I18n::load($locale);
 ?><!DOCTYPE html>
-<html lang="es">
+<html lang="<?php echo htmlspecialchars($locale); ?>">
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover" name="viewport"/>
@@ -659,6 +647,78 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
             font-weight: bold;
         }
 
+        .heart-beat {
+            animation: heartBeat 0.4s ease-in-out;
+        }
+
+        @keyframes heartBeat {
+            0% { transform: scale(1); }
+            30% { transform: scale(1.35); }
+            60% { transform: scale(0.9); }
+            100% { transform: scale(1); }
+        }
+
+        .favorites-section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px var(--shadow-color);
+        }
+
+        .favorites-section h3 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: var(--text-color);
+        }
+
+        .favorites-mini-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+        }
+
+        .favorites-mini-grid .product-card {
+            margin-bottom: 0;
+        }
+
+        .floating-favorites-btn {
+            position: fixed;
+            bottom: 95px;
+            right: 25px;
+            width: 60px;
+            height: 60px;
+            background-color: #ff4757;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1000;
+            color: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+
+        .floating-favorites-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .floating-favorites-btn .favorites-floating-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: #fff;
+            color: #ff4757;
+            border-radius: 50%;
+            padding: 1px 6px;
+            font-size: 0.7em;
+            min-width: 20px;
+            text-align: center;
+            font-weight: bold;
+            border: 2px solid #ff4757;
+        }
+
         .dark-mode-toggle-fixed {
             position: fixed;
             bottom: 25px;
@@ -820,6 +880,161 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                 justify-content: center;
             }
         }
+
+        /* ===== RESEÑAS ===== */
+        .resenas-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--shadow-color);
+        }
+        .resenas-section h5 {
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        .rating-summary {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .rating-average {
+            text-align: center;
+            min-width: 100px;
+        }
+        .rating-average .big-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+        .rating-average .stars {
+            font-size: 1rem;
+            color: #f5a623;
+        }
+        .rating-average .total-count {
+            font-size: 0.8rem;
+            color: #666;
+        }
+        .rating-bars {
+            flex: 1;
+            min-width: 180px;
+        }
+        .rating-bar-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            margin-bottom: 3px;
+        }
+        .rating-bar-row .bar-label {
+            width: 20px;
+            text-align: right;
+            color: #f5a623;
+        }
+        .rating-bar-row .bar-track {
+            flex: 1;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .rating-bar-row .bar-fill {
+            height: 100%;
+            background: #f5a623;
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+        .rating-bar-row .bar-count {
+            width: 24px;
+            text-align: left;
+            font-size: 0.75rem;
+            color: #666;
+        }
+        .resena-card {
+            background: var(--card-bg);
+            border: 1px solid var(--shadow-color);
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+        .resena-card .resena-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 6px;
+        }
+        .resena-card .resena-user {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .resena-card .resena-date {
+            font-size: 0.75rem;
+            color: #888;
+        }
+        .resena-card .resena-stars {
+            color: #f5a623;
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+        }
+        .resena-card .resena-titulo {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+        }
+        .resena-card .resena-comentario {
+            font-size: 0.85rem;
+            color: var(--text-color);
+            line-height: 1.4;
+        }
+        .resena-card .verified-badge {
+            display: inline-block;
+            font-size: 0.7rem;
+            color: #28a745;
+            margin-left: 6px;
+        }
+        .resena-card .verified-badge i {
+            font-size: 0.7rem;
+        }
+        .review-form-section {
+            background: var(--card-bg);
+            border: 1px solid var(--shadow-color);
+            border-radius: 10px;
+            padding: 16px;
+            margin-top: 15px;
+        }
+        .review-form-section h6 {
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        .star-selector {
+            display: flex;
+            gap: 4px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        .star-selector i {
+            color: #ccc;
+            transition: color 0.2s;
+        }
+        .star-selector i.active,
+        .star-selector i:hover,
+        .star-selector i:hover ~ i {
+            color: #f5a623;
+        }
+        .star-selector i.active {
+            color: #f5a623;
+        }
+        .review-form-section .form-control {
+            font-size: 0.9rem;
+        }
+        .review-form-section .btn-primary {
+            background: var(--secondary-color);
+            border: none;
+        }
+        .review-form-section .btn-primary:hover {
+            background: var(--accent-color);
+        }
     </style>
 </head>
 <body>
@@ -828,12 +1043,12 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
         <div class="header-content">
             <div>
                 <h1>Proyectos Industriales Del Centro</h1>
-                <p>Suministros industriales de alta calidad</p>
+                <p><?php echo \I18n::trans('welcome'); ?> - <?php echo \I18n::trans('products'); ?></p>
             </div>
             
             <div class="tasa-bcv-container" id="tasaBcvContainer">
                 <div class="tasa-bcv-header">
-                    <span><i class="fas fa-money-bill-wave"></i> Tasa BCV</span>
+                    <span><i class="fas fa-money-bill-wave"></i> <?php echo \I18n::trans('tasa_bcv'); ?></span>
                     <button class="btn-refresh-tasa" id="refreshTasaBtn"><i class="fas fa-sync-alt"></i></button>
                 </div>
                 <div class="tasa-usd">
@@ -842,7 +1057,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                     <span class="tasa-currency">Bs</span>
                 </div>
                 <div class="tasa-info" style="font-size: 0.65rem;">
-                    <span id="tasaBcvFecha">Cargando...</span>
+                    <span id="tasaBcvFecha"><?php echo \I18n::trans('loading'); ?></span>
                 </div>
                 <div class="tasa-bcv-ref">
                     <span id="tasaBcvReferencia"></span>
@@ -852,7 +1067,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
             <div class="header-right">
                 <div class="search-container">
                     <div class="input-group">
-                        <input type="text" class="form-control" id="search-input" placeholder="Buscar productos...">
+                        <input type="text" class="form-control" id="search-input" placeholder="<?php echo \I18n::trans('search_products'); ?>">
                         <div class="input-group-append">
                             <button class="btn btn-primary" type="button" id="search-btn"><i class="fas fa-search"></i></button>
                             <button class="btn filter-btn" type="button" id="filter-toggle-btn"><i class="fas fa-filter"></i></button>
@@ -868,7 +1083,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                     <div class="dropdown">
                         <button class="btn btn-user-menu" type="button" id="userMenuButton" data-toggle="dropdown">
                             <div class="profile-image-container">
-                                <img src="" alt="Perfil" class="profile-image" id="profileImage" style="display: none;">
+                                <img src="" alt="<?php echo \I18n::trans('profile'); ?>" class="profile-image" id="profileImage" style="display: none;">
                                 <i class="fas fa-user-circle" id="defaultProfileIcon"></i>
                             </div>
                         </button>
@@ -878,21 +1093,30 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                                     <img src="" id="dropdownProfileImage" style="width: 55px; height: 55px; border-radius: 50%; display: none;">
                                     <i class="fas fa-user-circle" id="dropdownDefaultIcon" style="font-size: 3rem;"></i>
                                 </div>
-                                <span id="usuarioNombre">Invitado</span><br>
+                                <span id="usuarioNombre"><?php echo \I18n::trans('guest'); ?></span><br>
                                 <small id="usuarioCorreo"></small>
                             </div>
                             <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="#" data-target="#changeProfilePhotoModal" data-toggle="modal"><i class="fas fa-camera"></i> Cambiar Foto</a>
-                            <a class="dropdown-item" href="#" data-target="#contactOptionsModal" data-toggle="modal"><i class="fas fa-envelope"></i> Contáctanos</a>
-                            <a class="dropdown-item" href="#" data-target="#changePasswordModal" data-toggle="modal"><i class="fas fa-lock"></i> Cambiar Contraseña</a>
-                            <a class="dropdown-item" href="#" data-target="#setup2faModal" data-toggle="modal"><i class="fas fa-shield-alt"></i> Autenticación 2FA</a>
-                            <a class="dropdown-item" href="#" id="viewHistoryBtn"><i class="fas fa-history"></i> Historial</a>
-                            <a class="dropdown-item" href="#" id="viewFavoritesBtn"><i class="fas fa-heart"></i> Favoritos</a>
-                            <a class="dropdown-item" href="#" onclick="cerrarSesion()"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
+                            <a class="dropdown-item" href="#" data-target="#changeProfilePhotoModal" data-toggle="modal"><i class="fas fa-camera"></i> <?php echo \I18n::trans('upload_photo'); ?></a>
+                            <a class="dropdown-item" href="#" data-target="#contactOptionsModal" data-toggle="modal"><i class="fas fa-envelope"></i> <?php echo \I18n::trans('contact_us'); ?></a>
+                            <a class="dropdown-item" href="#" data-target="#changePasswordModal" data-toggle="modal"><i class="fas fa-lock"></i> <?php echo \I18n::trans('change_password'); ?></a>
+                            <a class="dropdown-item" href="#" data-target="#setup2faModal" data-toggle="modal"><i class="fas fa-shield-alt"></i> <?php echo \I18n::trans('2fa_setup'); ?></a>
+                            <a class="dropdown-item" href="#" id="viewHistoryBtn"><i class="fas fa-history"></i> <?php echo \I18n::trans('history'); ?></a>
+                            <a class="dropdown-item" href="#" id="viewFavoritesBtn"><i class="fas fa-heart"></i> <?php echo \I18n::trans('my_favorites'); ?> <span class="favorites-count-badge" id="favoritesCountBadge" style="display:none;margin-left:5px;background:#ff4757;color:white;border-radius:50%;padding:1px 6px;font-size:0.65rem;vertical-align:super;"></span></a>
+                            <a class="dropdown-item" href="#" onclick="cerrarSesion()"><i class="fas fa-sign-out-alt"></i> <?php echo \I18n::trans('logout'); ?></a>
                             <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="#" onclick="eliminarCuenta()"><i class="fas fa-trash-alt"></i> Eliminar Cuenta</a>
+                            <a class="dropdown-item" href="#" onclick="eliminarCuenta()"><i class="fas fa-trash-alt"></i> <?php echo \I18n::trans('delete_account'); ?></a>
                             <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="#" id="toggleDarkMode"><i class="fas fa-moon"></i> Modo Oscuro</a>
+                            <a class="dropdown-item" href="#" id="toggleDarkMode"><i class="fas fa-moon"></i> <?php echo \I18n::trans('dark_mode'); ?></a>
+                            <div class="dropdown-divider"></div>
+                            <div class="dropdown-item" style="cursor:default;">
+                                <form method="get" style="margin:0;">
+                                    <select name="lang" onchange="this.form.submit()" class="form-control form-control-sm" style="font-size:0.8rem;">
+                                        <option value="es" <?php echo $locale === 'es' ? 'selected' : ''; ?>><?php echo \I18n::trans('spanish'); ?></option>
+                                        <option value="en" <?php echo $locale === 'en' ? 'selected' : ''; ?>><?php echo \I18n::trans('english'); ?></option>
+                                    </select>
+                                </form>
+                            </div>
                         </div>
                     </div>
 
@@ -907,44 +1131,49 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
 
     <div class="search-filters-container" id="filters-container">
         <div class="filter-group">
-            <label>Precio Mín ($)</label>
+            <label><?php echo \I18n::trans('price'); ?> Mín ($)</label>
             <input type="number" class="form-control" id="price-min" placeholder="0">
         </div>
         <div class="filter-group">
-            <label>Precio Máx ($)</label>
+            <label><?php echo \I18n::trans('price'); ?> Máx ($)</label>
             <input type="number" class="form-control" id="price-max" placeholder="1000">
         </div>
         <div class="filter-group">
-            <label>Rating</label>
+            <label><?php echo \I18n::trans('rating'); ?></label>
             <select class="form-control" id="rating-min">
-                <option value="0">Cualquiera</option>
+                <option value="0"><?php echo \I18n::trans('all'); ?></option>
                 <option value="3">3+ ⭐</option>
                 <option value="4">4+ ⭐</option>
             </select>
         </div>
         <div class="filter-group">
-            <label>Categoría</label>
+            <label><?php echo \I18n::trans('category'); ?></label>
             <select class="form-control" id="category-filter">
-                <option value="">Todas</option>
+                <option value=""><?php echo \I18n::trans('all_categories'); ?></option>
             </select>
         </div>
         <div class="filter-group">
-            <label>Ordenar</label>
+            <label><?php echo \I18n::trans('sort_by'); ?></label>
             <select class="form-control" id="sort-by">
-                <option value="newest">Más recientes</option>
-                <option value="name_asc">Nombre A-Z</option>
-                <option value="price_asc">Precio ↑</option>
-                <option value="price_desc">Precio ↓</option>
+                <option value="newest"><?php echo \I18n::trans('newest'); ?></option>
+                <option value="name_asc"><?php echo \I18n::trans('name_asc'); ?></option>
+                <option value="price_asc"><?php echo \I18n::trans('price_asc'); ?></option>
+                <option value="price_desc"><?php echo \I18n::trans('price_desc'); ?></option>
             </select>
         </div>
         <div class="filter-group">
-            <button class="btn btn-primary btn-sm" id="apply-filters-btn">Aplicar</button>
-            <button class="btn btn-secondary btn-sm mt-1" id="clear-filters-btn">Limpiar</button>
+            <button class="btn btn-primary btn-sm" id="apply-filters-btn"><?php echo \I18n::trans('apply'); ?></button>
+            <button class="btn btn-secondary btn-sm mt-1" id="clear-filters-btn"><?php echo \I18n::trans('clear_filters'); ?></button>
         </div>
     </div>
 
     <div class="active-filters" id="active-filters" style="display: none;">
-        <small>Filtros:</small>
+        <small><?php echo \I18n::trans('filter'); ?>:</small>
+    </div>
+
+    <div class="favorites-section" id="favoritesSection" style="display:none;">
+        <h3><i class="fas fa-heart" style="color:#ff4757;"></i> Tus Favoritos</h3>
+        <div class="favorites-mini-grid" id="favoritesMiniGrid"></div>
     </div>
 
     <div class="products-grid" id="product-list"></div>
@@ -963,9 +1192,14 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     <span class="cart-count">0</span>
 </div>
 
+<div class="floating-favorites-btn" id="floatingFavoritesBtn" style="display:none;">
+    <i class="fas fa-heart"></i>
+    <span class="favorites-floating-count" id="floatingFavoritesCount">0</span>
+</div>
+
 <div class="cart-notification" id="cartNotification">
     <i class="fas fa-check-circle"></i>
-    <span id="notificationMessage">Producto añadido</span>
+    <span id="notificationMessage"><?php echo \I18n::trans('product_added'); ?></span>
 </div>
 
 <footer class="footer-industrial">
@@ -982,7 +1216,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
         </div>
 
         <div class="footer-section">
-            <h4>Trabajamos con</h4>
+            <h4><?php echo \I18n::trans('providers'); ?></h4>
             <div class="footer-gallery">
                 <img src="../img/autonics.png" alt="Autonics">
                 <img src="../img/exceline.png" alt="Exceline">
@@ -992,7 +1226,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
         </div>
 
         <div class="footer-section">
-            <h4>Contacto Rápido</h4>
+            <h4><?php echo \I18n::trans('contact_us'); ?></h4>
             <p><i class="fas fa-map-marker-alt mr-2"></i> Zona Industrial, Centro Michelena</p>
             <p><i class="fas fa-phone mr-2"></i> +58 0424-8323902</p>
             <p><i class="fas fa-envelope mr-2"></i> Picca.ventas@gmail.com</p>
@@ -1009,7 +1243,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Detalle del Producto</h5>
+                <h5 class="modal-title"><?php echo \I18n::trans('product_detail'); ?></h5>
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
             <div class="modal-body">
@@ -1024,13 +1258,13 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                         <h3 id="modal-product-price"></h3>
                         <p id="modal-product-description"></p>
                         <div class="shipping-info">
-                            <p class="shipping-title"><i class="fas fa-truck"></i> Opciones de Envío</p>
+                            <p class="shipping-title"><i class="fas fa-truck"></i> <?php echo \I18n::trans('shipping_options'); ?></p>
                             <div class="shipping-carriers">
                                 <span class="carrier-badge"><i class="fas fa-shipping-fast"></i> MRW</span>
                                 <span class="carrier-badge"><i class="fas fa-shipping-fast"></i> Tealca</span>
                                 <span class="carrier-badge"><i class="fas fa-shipping-fast"></i> Zoom</span>
                             </div>
-                            <p class="shipping-note" id="modal-shipping-note">Envío disponible a todo el país. Calcula el costo al finalizar la compra.</p>
+                            <p class="shipping-note" id="modal-shipping-note"><?php echo \I18n::trans('shipping_note'); ?></p>
                         </div>
                         <div class="quantity-selector">
                             <button class="quantity-btn" id="qty-minus">-</button>
@@ -1038,20 +1272,33 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                             <button class="quantity-btn" id="qty-plus">+</button>
                         </div>
                         <div class="d-flex gap-2 mt-2" style="gap:8px;">
-                            <button class="btn btn-primary flex-grow-1" id="modal-add-to-cart-btn">Añadir al Carrito</button>
-                            <button class="btn btn-success" id="modal-share-btn" title="Compartir" style="flex:0 0 48px;">
+                            <button class="btn btn-primary flex-grow-1" id="modal-add-to-cart-btn"><?php echo \I18n::trans('add_to_cart'); ?></button>
+                            <button class="btn btn-success" id="modal-share-btn" title="<?php echo \I18n::trans('share'); ?>" style="flex:0 0 48px;">
                                 <i class="fas fa-share-alt"></i>
                             </button>
                         </div>
-                        <button class="btn btn-outline-danger w-100 mt-2" id="modal-fav-btn"><i class="far fa-heart"></i> Añadir a Favoritos</button>
+                        <button class="btn btn-outline-danger w-100 mt-2" id="modal-fav-btn"><i class="far fa-heart"></i> <?php echo \I18n::trans('add_to_favorites'); ?></button>
                     </div>
                 </div>
                 <div class="row mt-3">
                     <div class="col-12">
                         <div id="related-products" style="display:none;">
                             <hr>
-                            <h6 class="mb-3"><i class="fas fa-tags"></i> Productos Relacionados</h6>
+                            <h6 class="mb-3"><i class="fas fa-tags"></i> <?php echo \I18n::trans('related_products'); ?></h6>
                             <div class="d-flex gap-2" id="related-products-list" style="overflow-x:auto; gap:12px; padding-bottom:8px;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-12">
+                        <div class="resenas-section" id="resenas-section" style="display:none;">
+                            <hr>
+                            <h5><i class="fas fa-star"></i> Reseñas del Producto</h5>
+                            <div id="resenas-loading" class="text-center py-3">
+                                <small class="text-muted"><i class="fas fa-spinner fa-spin"></i> Cargando reseñas...</small>
+                            </div>
+                            <div id="resenas-content"></div>
+                            <div id="review-form-container"></div>
                         </div>
                     </div>
                 </div>
@@ -1064,7 +1311,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     <div class="modal-dialog modal-sm modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-share-alt"></i> Compartir</h5>
+                <h5 class="modal-title"><i class="fas fa-share-alt"></i> <?php echo \I18n::trans('share'); ?></h5>
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
             <div class="modal-body text-center">
@@ -1080,7 +1327,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                         <i class="fas fa-envelope fa-2x"></i><br><small>Email</small>
                     </a>
                     <button class="btn btn-dark btn-lg" id="shareCopyLink" style="border-radius:12px; min-width:80px;">
-                        <i class="fas fa-link fa-2x"></i><br><small>Copiar</small>
+                        <i class="fas fa-link fa-2x"></i><br>                        <small>Copiar</small>
                     </button>
                 </div>
             </div>
@@ -1092,15 +1339,15 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Carrito</h5>
+                <h5 class="modal-title"><?php echo \I18n::trans('shopping_cart'); ?></h5>
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
             <div class="modal-body" id="cart-items">
                 <p class="text-center">Carrito vacío</p>
             </div>
             <div class="modal-footer">
-                <h4 id="cart-total">Total: $0.00</h4>
-                <button class="btn btn-primary" id="checkout-btn">Pagar</button>
+                <h4 id="cart-total"><?php echo \I18n::trans('total'); ?>: $0.00</h4>
+                <button class="btn btn-primary" id="checkout-btn"><?php echo \I18n::trans('checkout'); ?></button>
             </div>
         </div>
     </div>
@@ -1110,50 +1357,50 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="passModalTitle">Cambiar Contraseña</h5>
+                <h5 class="modal-title" id="passModalTitle"><?php echo \I18n::trans('change_password'); ?></h5>
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
             <div class="modal-body" id="passModalBody">
                 <div id="passChangeSection">
                     <div class="form-group">
-                        <label>Contraseña Actual</label>
+                        <label><?php echo \I18n::trans('current_password'); ?></label>
                         <input type="password" class="form-control" id="currentPassword">
                     </div>
                     <div class="form-group">
-                        <label>Nueva Contraseña</label>
+                        <label><?php echo \I18n::trans('new_password'); ?></label>
                         <input type="password" class="form-control" id="newPassword">
                     </div>
                     <div class="form-group">
-                        <label>Confirmar Contraseña</label>
+                        <label><?php echo \I18n::trans('confirm_password'); ?></label>
                         <input type="password" class="form-control" id="confirmNewPassword">
                     </div>
                     <div class="text-center mt-2">
-                        <a href="#" id="forgotPasswordLink" style="font-size:0.85rem;color:var(--secondary-color, #2a5298);"><i class="fas fa-key"></i> ¿Olvidaste tu contraseña actual? Recupérala aquí</a>
+                        <a href="#" id="forgotPasswordLink" style="font-size:0.85rem;color:var(--secondary-color, #2a5298);"><i class="fas fa-key"></i> <?php echo \I18n::trans('recover_password'); ?></a>
                     </div>
                 </div>
                 <div id="passRecoverySection" style="display:none;">
-                    <p class="text-muted small">Te enviaremos un código PIN a tu correo para restablecer tu contraseña.</p>
+                    <p class="text-muted small"><?php echo \I18n::trans('password_recovery_email_sent'); ?></p>
                     <div class="form-group">
-                        <label>Correo electrónico</label>
+                        <label><?php echo \I18n::trans('email'); ?></label>
                         <input type="email" class="form-control" id="recoveryEmail" readonly>
                     </div>
-                    <button class="btn btn-primary btn-block" id="sendRecoveryPinBtn"><i class="fas fa-paper-plane"></i> Enviar código PIN</button>
+                    <button class="btn btn-primary btn-block" id="sendRecoveryPinBtn"><i class="fas fa-paper-plane"></i> <?php echo \I18n::trans('send_pin'); ?></button>
                     <div id="recoveryMsg" class="alert-message mt-2" style="display:none;"></div>
                     <div id="pinSection" style="display:none;" class="mt-3">
-                        <label>Código PIN</label>
-                        <input type="text" class="form-control" id="recoveryPin" maxlength="6" placeholder="Ingresa el PIN de 6 dígitos">
-                        <button class="btn btn-success btn-block mt-2" id="verifyRecoveryPinBtn">Verificar PIN</button>
+                        <label><?php echo \I18n::trans('pin_code'); ?></label>
+                        <input type="text" class="form-control" id="recoveryPin" maxlength="6" placeholder="<?php echo \I18n::trans('enter_pin'); ?>">
+                        <button class="btn btn-success btn-block mt-2" id="verifyRecoveryPinBtn"><?php echo \I18n::trans('verify_pin'); ?></button>
                         <div class="form-group mt-2" id="newPassSection" style="display:none;">
-                            <label>Nueva Contraseña</label>
-                            <input type="password" class="form-control" id="recoveryNewPassword" minlength="6" placeholder="Mínimo 6 caracteres">
-                            <button class="btn btn-primary btn-block mt-2" id="setNewPasswordBtn">Restablecer Contraseña</button>
+                            <label><?php echo \I18n::trans('new_password'); ?></label>
+                            <input type="password" class="form-control" id="recoveryNewPassword" minlength="6" placeholder="<?php echo \I18n::trans('min_chars'); ?>">
+                            <button class="btn btn-primary btn-block mt-2" id="setNewPasswordBtn"><?php echo \I18n::trans('reset_password'); ?></button>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-                <button class="btn btn-primary" id="submitPasswordChange">Guardar</button>
+                <button class="btn btn-secondary" data-dismiss="modal"><?php echo \I18n::trans('close'); ?></button>
+                <button class="btn btn-primary" id="submitPasswordChange"><?php echo \I18n::trans('save'); ?></button>
             </div>
         </div>
     </div>
@@ -1163,7 +1410,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-shield-alt"></i> Autenticación en Dos Pasos (2FA)</h5>
+                <h5 class="modal-title"><i class="fas fa-shield-alt"></i> <?php echo \I18n::trans('2fa_setup'); ?></h5>
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
             <div class="modal-body">
@@ -1177,8 +1424,8 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                 </div>
 
                 <div id="cliente2faDisabled" style="display:none">
-                    <p style="font-size:0.85rem;color:var(--text-color);opacity:0.8">Protege tu cuenta activando la autenticación en dos pasos. Cada vez que inicies sesión, se te pedirá un código de 6 dígitos generado por tu aplicación de autenticación.</p>
-                    <button class="btn btn-primary btn-block" id="btnClienteConfigurar2FA"><i class="fas fa-shield-alt"></i> Activar 2FA</button>
+                    <p style="font-size:0.85rem;color:var(--text-color);opacity:0.8"><?php echo \I18n::trans('2fa_protect_account'); ?></p>
+                    <button class="btn btn-primary btn-block" id="btnClienteConfigurar2FA"><i class="fas fa-shield-alt"></i> <?php echo \I18n::trans('2fa_activate'); ?></button>
                 </div>
 
                 <div id="cliente2faSetup" style="display:none">
@@ -1248,11 +1495,11 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     <div class="modal-dialog modal-sm modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-envelope"></i> Contáctanos</h5>
+                <h5 class="modal-title"><i class="fas fa-envelope"></i> <?php echo \I18n::trans('contact_us'); ?></h5>
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
             <div class="modal-body text-center">
-                <p class="text-muted small mb-3">Elige cómo quieres contactarnos:</p>
+                <p class="text-muted small mb-3"><?php echo \I18n::trans('contact_us'); ?>:</p>
                 <div class="d-flex flex-column gap-2" style="gap:8px;">
                     <button class="btn btn-outline-primary btn-block contact-option" data-channel="gmail">
                         <i class="fab fa-google"></i> Gmail
@@ -1276,26 +1523,26 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Contáctanos</h5>
+                <h5 class="modal-title"><?php echo \I18n::trans('contact_us'); ?></h5>
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label>Nombre</label>
+                    <label><?php echo \I18n::trans('name'); ?></label>
                     <input type="text" class="form-control" id="contactName">
                 </div>
                 <div class="form-group">
-                    <label>Email</label>
+                    <label><?php echo \I18n::trans('email'); ?></label>
                     <input type="email" class="form-control" id="contactEmail">
                 </div>
                 <div class="form-group">
-                    <label>Mensaje</label>
+                    <label><?php echo \I18n::trans('message'); ?></label>
                     <textarea class="form-control" id="contactMessage" rows="4"></textarea>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                <button class="btn btn-primary" id="submitContact">Enviar</button>
+                <button class="btn btn-secondary" data-dismiss="modal"><?php echo \I18n::trans('cancel'); ?></button>
+                <button class="btn btn-primary" id="submitContact"><?php echo \I18n::trans('send'); ?></button>
             </div>
         </div>
     </div>
@@ -1305,7 +1552,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Cambiar Foto</h5>
+                <h5 class="modal-title"><?php echo \I18n::trans('upload_photo'); ?></h5>
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
             <div class="modal-body text-center">
@@ -1313,7 +1560,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                 <input type="file" id="profilePhotoInput" accept="image/*" class="form-control mt-3">
             </div>
             <div class="modal-footer">
-                <button class="btn btn-primary" id="uploadPhotoBtn">Subir</button>
+                <button class="btn btn-primary" id="uploadPhotoBtn"><?php echo \I18n::trans('save'); ?></button>
             </div>
         </div>
     </div>
@@ -1323,11 +1570,11 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Historial</h5>
+                <h5 class="modal-title"><?php echo \I18n::trans('history'); ?></h5>
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
             <div class="modal-body" id="historyContent">
-                <p class="text-center">Cargando...</p>
+                <p class="text-center"><?php echo \I18n::trans('loading'); ?></p>
             </div>
         </div>
     </div>
@@ -1337,11 +1584,11 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-heart" style="color:#ff4757;"></i> Mis Favoritos</h5>
+                <h5 class="modal-title"><i class="fas fa-heart" style="color:#ff4757;"></i> <?php echo \I18n::trans('my_favorites'); ?></h5>
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
             <div class="modal-body" id="favoritesContent">
-                <p class="text-center">Cargando...</p>
+                <p class="text-center"><?php echo \I18n::trans('loading'); ?></p>
             </div>
         </div>
     </div>
@@ -1351,6 +1598,79 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
 <script>
+// ===== I18N =====
+const i18n = {
+    confirm_logout: '<?php echo \I18n::trans('confirm_logout'); ?>',
+    cart_empty: '<?php echo \I18n::trans('cart_empty'); ?>',
+    confirm_delete_account: '<?php echo \I18n::trans('confirm_delete_account'); ?>',
+    no_favorites: '<?php echo \I18n::trans('no_favorites'); ?>',
+    must_login: '<?php echo \I18n::trans('must_login'); ?>',
+    login_required: '<?php echo \I18n::trans('login_required'); ?>',
+    admin_no_purchase: '<?php echo \I18n::trans('admin_no_purchase'); ?>',
+    admin_account_warning: '<?php echo \I18n::trans('admin_account_warning'); ?>',
+    connection_error: '<?php echo \I18n::trans('connection_error'); ?>',
+    session_expired: '<?php echo \I18n::trans('session_expired'); ?>',
+    session_invalid: '<?php echo \I18n::trans('session_invalid'); ?>',
+    account_inactive: '<?php echo \I18n::trans('account_inactive'); ?>',
+    fill_all_fields: '<?php echo \I18n::trans('fill_all_fields'); ?>',
+    password_mismatch: '<?php echo \I18n::trans('password_mismatch'); ?>',
+    password_too_short: '<?php echo \I18n::trans('password_too_short'); ?>',
+    password_changed: '<?php echo \I18n::trans('password_changed'); ?>',
+    invalid_email: '<?php echo \I18n::trans('invalid_email'); ?>',
+    added_to_favorites: '<?php echo \I18n::trans('added_to_favorites'); ?>',
+    removed_from_favorites: '<?php echo \I18n::trans('removed_from_favorites'); ?>',
+    not_available: '<?php echo \I18n::trans('not_available'); ?>',
+    out_of_stock: '<?php echo \I18n::trans('out_of_stock'); ?>',
+    add_to_cart: '<?php echo \I18n::trans('add_to_cart'); ?>',
+    add_to_favorites: '<?php echo \I18n::trans('add_to_favorites'); ?>',
+    remove_from_favorites: '<?php echo \I18n::trans('remove_from_favorites'); ?>',
+    session_changed: '<?php echo \I18n::trans('session_changed'); ?>',
+    please_login: '<?php echo \I18n::trans('please_login'); ?>',
+    connection_restored: '<?php echo \I18n::trans('connection_restored'); ?>',
+    connection_lost: '<?php echo \I18n::trans('connection_lost'); ?>',
+    reloading_products: '<?php echo \I18n::trans('reloading_products'); ?>',
+    updating_rate: '<?php echo \I18n::trans('updating_rate'); ?>',
+    link_copied: '<?php echo \I18n::trans('link_copied'); ?>',
+    error_copying: '<?php echo \I18n::trans('error_copying'); ?>',
+    no_file_selected: '<?php echo \I18n::trans('no_file_selected'); ?>',
+    invalid_format: '<?php echo \I18n::trans('invalid_format'); ?>',
+    file_too_large: '<?php echo \I18n::trans('file_too_large'); ?>',
+    uploading_photo: '<?php echo \I18n::trans('uploading_photo'); ?>',
+    photo_updated: '<?php echo \I18n::trans('photo_updated'); ?>',
+    photo_error: '<?php echo \I18n::trans('photo_error'); ?>',
+    photo_deleted: '<?php echo \I18n::trans('photo_deleted'); ?>',
+    photo_delete_error: '<?php echo \I18n::trans('photo_delete_error'); ?>',
+    server_error: '<?php echo \I18n::trans('server_error'); ?>',
+    connecting_error: '<?php echo \I18n::trans('connecting_error'); ?>',
+    added_to_favorites: '<?php echo \I18n::trans('added_to_favorites'); ?>',
+    removed_from_favorites: '<?php echo \I18n::trans('removed_from_favorites'); ?>',
+    product_added: '<?php echo \I18n::trans('product_added'); ?>',
+    loading: '<?php echo \I18n::trans('loading'); ?>',
+    search: '<?php echo \I18n::trans('search'); ?>',
+    cart_empty_msg: '<?php echo \I18n::trans('cart_empty'); ?>',
+    login_to_view_history: '<?php echo \I18n::trans('login_to_view_history'); ?>',
+    no_orders: '<?php echo \I18n::trans('no_orders'); ?>',
+    error_loading_history: '<?php echo \I18n::trans('error_loading_history'); ?>',
+    no_products_found: '<?php echo \I18n::trans('no_products_found'); ?>',
+    no_products: '<?php echo \I18n::trans('no_products'); ?>',
+    error_loading_products: '<?php echo \I18n::trans('error_loading_products'); ?>',
+    checkout_redirect: '<?php echo \I18n::trans('checkout_redirect'); ?>',
+    deleting_photo: '<?php echo \I18n::trans('deleting_photo'); ?>',
+    delete_account_error: '<?php echo \I18n::trans('delete_account_error'); ?>',
+    select_photo_first: '<?php echo \I18n::trans('select_photo_first'); ?>',
+    '2fa_config_error': '<?php echo \I18n::trans('2fa_config_error'); ?>',
+    enter_6_digit_code: '<?php echo \I18n::trans('enter_6_digit_code'); ?>',
+    '2fa_activated': '<?php echo \I18n::trans('2fa_activated'); ?>',
+    invalid_code: '<?php echo \I18n::trans('invalid_code'); ?>',
+    '2fa_verify_error': '<?php echo \I18n::trans('2fa_verify_error'); ?>',
+    '2fa_deactivated': '<?php echo \I18n::trans('2fa_deactivated'); ?>',
+    incorrect_password: '<?php echo \I18n::trans('incorrect_password'); ?>',
+    '2fa_deactivate_error': '<?php echo \I18n::trans('2fa_deactivate_error'); ?>',
+    select_rating: '<?php echo \I18n::trans('select_rating'); ?>',
+    review_published: '<?php echo \I18n::trans('review_published'); ?>',
+    review_error: '<?php echo \I18n::trans('review_error'); ?>',
+};
+
 // ===== VARIABLES GLOBALES =====
 let allProducts = [];
 let filteredProducts = [];
@@ -1469,18 +1789,18 @@ async function cargarFotoPerfil() {
 // ===== FUNCIONES PARA FOTO DE PERFIL =====
 async function subirFotoPerfil(file) {
     if (!file) {
-        showNotification('No se seleccionó ningún archivo', true);
+        showNotification(i18n.no_file_selected, true);
         return;
     }
     
     const tiposPermitidos = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
     if (!tiposPermitidos.includes(file.type)) {
-        showNotification('Formato no permitido. Use JPG, PNG, GIF o WEBP', true);
+        showNotification(i18n.invalid_format, true);
         return;
     }
     
     if (file.size > 5 * 1024 * 1024) {
-        showNotification('La imagen no puede superar los 5MB', true);
+        showNotification(i18n.file_too_large, true);
         return;
     }
     
@@ -1488,7 +1808,7 @@ async function subirFotoPerfil(file) {
     formData.append('foto', file);
     formData.append('_csrf_token', csrfToken);
     
-    showNotification('Subiendo foto...');
+    showNotification(i18n.uploading_photo);
     
     try {
         const response = await fetch('/proyecto/usuarios/subir_foto_perfil.php', {
@@ -1503,27 +1823,27 @@ async function subirFotoPerfil(file) {
             data = JSON.parse(text);
         } catch (e) {
             console.error('Error al parsear JSON:', text);
-            showNotification('Error del servidor al procesar la foto', true);
+            showNotification(i18n.photo_error, true);
             return;
         }
         
         if (data.success) {
-            showNotification(data.message || 'Foto de perfil actualizada correctamente');
+            showNotification(data.message || i18n.photo_updated);
             await cargarFotoPerfil();
             $('#changeProfilePhotoModal').modal('hide');
         } else {
-            showNotification(data.message || 'Error al subir la foto', true);
+            showNotification(data.message || i18n.photo_error, true);
         }
     } catch (error) {
         console.error('Error en subirFotoPerfil:', error);
-        showNotification('Error al conectar con el servidor', true);
+        showNotification(i18n.connection_error, true);
     }
 }
 
 async function eliminarFotoPerfil() {
     if (!confirm('¿Estás seguro de que deseas eliminar tu foto de perfil?')) return;
     
-    showNotification('Eliminando foto...');
+    showNotification(i18n.deleting_photo);
     
     try {
         const response = await fetch('/proyecto/usuarios/eliminar_foto_perfil.php', {
@@ -1535,26 +1855,26 @@ async function eliminarFotoPerfil() {
         const data = await response.json();
         
         if (data.success) {
-            showNotification(data.message || 'Foto de perfil eliminada');
+            showNotification(data.message || i18n.photo_deleted);
             await cargarFotoPerfil();
         } else {
-            showNotification(data.message || 'Error al eliminar la foto', true);
+            showNotification(data.message || i18n.photo_delete_error, true);
         }
     } catch (error) {
         console.error('Error en eliminarFotoPerfil:', error);
-        showNotification('Error al conectar con el servidor', true);
+        showNotification(i18n.connection_error, true);
     }
 }
 
 // ===== ACCIONES DE USUARIO =====
 function cerrarSesion() {
-    if (confirm('¿Cerrar sesión?')) {
+    if (confirm(i18n.confirm_logout)) {
         window.location.href = '/proyecto/usuarios/cerrar_sesion.php';
     }
 }
 
 function eliminarCuenta() {
-    if (confirm('⚠️ ¿Estás seguro de que deseas eliminar tu cuenta?\n\nEsta acción es irreversible.')) {
+    if (confirm(i18n.confirm_delete_account)) {
         fetch('/proyecto/usuarios/eliminar_cuenta.php', { 
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }
@@ -1564,11 +1884,11 @@ function eliminarCuenta() {
             if (data.success) {
                 window.location.href = '/proyecto/interfaz_usuario/index.html';
             } else {
-                showNotification(data.message || 'Error al eliminar cuenta', true);
+                showNotification(data.message || i18n.delete_account_error, true);
             }
         })
         .catch(() => {
-            showNotification('Error de conexión', true);
+            showNotification(i18n.connection_error, true);
         });
     }
 }
@@ -1583,7 +1903,7 @@ function initDarkMode() {
             darkModeToggleFixed.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
         }
         if (darkModeToggleMenu) {
-            darkModeToggleMenu.innerHTML = isDark ? '<i class="fas fa-sun"></i> Modo Claro' : '<i class="fas fa-moon"></i> Modo Oscuro';
+            darkModeToggleMenu.innerHTML = isDark ? '<i class="fas fa-sun"></i> ' + i18n.light_mode : '<i class="fas fa-moon"></i> ' + i18n.dark_mode;
         }
     }
     
@@ -1632,7 +1952,7 @@ async function obtenerUsuarioActual() {
         
         
         if (data.is_admin === true) {
-            showNotification('⚠️ Esta cuenta es de Administrador. Los administradores no pueden realizar compras.', 'warning');
+            showNotification(i18n.admin_account_warning, 'warning');
             
             CURRENT_USER = { 
                 id: null, 
@@ -1681,7 +2001,7 @@ async function obtenerUsuarioActual() {
         }
         
         if (data.force_logout === true) {
-            showNotification('Sesión inválida. Por favor inicia sesión nuevamente.', 'warning');
+            showNotification(i18n.session_invalid, 'warning');
             
             CURRENT_USER = { 
                 id: null, 
@@ -1705,7 +2025,7 @@ async function obtenerUsuarioActual() {
         }
         
         if (data.role === 'inactive') {
-            showNotification('Tu cuenta está inactiva. Contacta al administrador.', 'error');
+            showNotification(i18n.account_inactive, 'error');
             setTimeout(() => {
                 window.location.href = '/proyecto/interfaz_usuario/login.html';
             }, 2000);
@@ -1771,7 +2091,7 @@ function iniciarVerificacionSesionPeriodica() {
             const data = await response.json();
             
             if (data.force_logout === true) {
-                showNotification('Tu sesión ha cambiado. Por favor inicia sesión nuevamente.', 'warning');
+                showNotification(i18n.session_changed, 'warning');
                 
                 CURRENT_USER = { id: null, nombre: 'Invitado', correo: '', rol: 'guest', can_purchase: false };
                 
@@ -1790,7 +2110,7 @@ function iniciarVerificacionSesionPeriodica() {
             }
             
             if (!data.success && !data.is_authenticated && CURRENT_USER && CURRENT_USER.id) {
-                showNotification('Sesión expirada. Por favor inicia sesión nuevamente.', 'warning');
+                showNotification(i18n.session_expired, 'warning');
                 setTimeout(() => {
                     window.location.href = '/proyecto/interfaz_usuario/login.html';
                 }, 2000);
@@ -2150,7 +2470,7 @@ function attachProductEvents() {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
             const id = parseInt(btn.getAttribute('data-id'));
-            toggleFavorito(id);
+            toggleFavorito(id, e);
         });
     });
 }
@@ -2178,7 +2498,7 @@ function openProductModal(product) {
     favBtn.onclick = async () => {
         await toggleFavorito(product.id);
         const nowFav = favoritosSet.has(product.id);
-        favBtn.innerHTML = nowFav ? '<i class="fas fa-heart"></i> Quitar de Favoritos' : '<i class="far fa-heart"></i> Añadir a Favoritos';
+        favBtn.innerHTML = nowFav ? '<i class="fas fa-heart"></i> ' + i18n.remove_from_favorites : '<i class="far fa-heart"></i> ' + i18n.add_to_favorites;
         favBtn.className = `btn ${nowFav ? 'btn-danger' : 'btn-outline-danger'} w-100 mt-2`;
     };
     
@@ -2208,6 +2528,13 @@ function openProductModal(product) {
         }
     }
     
+    // Load reviews
+    const resenasSection = document.getElementById('resenas-section');
+    if (resenasSection) {
+        resenasSection.style.display = 'none';
+        loadResenas(product.id);
+    }
+
     // Share button
     const shareBtn = document.getElementById('modal-share-btn');
     if (shareBtn) {
@@ -2220,10 +2547,10 @@ function openProductModal(product) {
             document.getElementById('shareEmail').href = `mailto:?subject=${encodeURIComponent('Producto: ' + shareName)}&body=${encodeURIComponent('Te recomiendo este producto:\n\n' + shareName + '\nPrecio: $' + product.price.toFixed(2) + '\n' + shareUrl)}`;
             document.getElementById('shareCopyLink').onclick = () => {
                 navigator.clipboard.writeText(shareUrl).then(() => {
-                    showNotification('Enlace copiado al portapapeles');
+                    showNotification(i18n.link_copied);
                     $('#shareModal').modal('hide');
                 }).catch(() => {
-                    showNotification('Error al copiar', true);
+                    showNotification(i18n.error_copying, true);
                 });
             };
             $('#shareModal').modal('show');
@@ -2235,12 +2562,12 @@ function openProductModal(product) {
 
 async function addToCart(productId, quantity) {
     if (CURRENT_USER && (CURRENT_USER.rol === 'admin' || CURRENT_USER.rol === 'administrador')) {
-        showNotification('⚠️ Los administradores no pueden realizar compras. Inicia sesión como cliente.', true);
+        showNotification(i18n.admin_no_purchase, true);
         return;
     }
     
     if (!CURRENT_USER || !CURRENT_USER.id) {
-        showNotification('Debes iniciar sesión como cliente', true);
+        showNotification(i18n.login_required, true);
         setTimeout(() => window.location.href = '/proyecto/interfaz_usuario/login.html', 1500);
         return;
     }
@@ -2294,7 +2621,7 @@ function renderCartModal() {
     let total = 0;
     
     if (!cartItems || cartItems.length === 0) {
-        container.innerHTML = '<p class="text-center text-muted">🛒 Carrito vacío</p>';
+        container.innerHTML = '<p class="text-center text-muted">🛒 ' + i18n.cart_empty + '</p>';
         document.getElementById('cart-total').textContent = 'Total: $0.00';
         return;
     }
@@ -2391,7 +2718,7 @@ async function actualizarCantidadCarrito(productId, quantity) {
         if (data.success) {
             await updateCartUI();
         } else {
-            showNotification(data.message || 'Error al actualizar cantidad', true);
+            showNotification(data.message || i18n.cart_update_error, true);
         }
     } catch (error) {
         console.error('Error:', error);
@@ -2414,7 +2741,7 @@ async function removeFromCart(productId) {
             showNotification(data.message);
             await updateCartUI();
         } else {
-            showNotification(data.message || 'Error al eliminar', true);
+            showNotification(data.message || i18n.cart_remove_error, true);
         }
     } catch (error) {
         console.error('Error:', error);
@@ -2422,9 +2749,9 @@ async function removeFromCart(productId) {
     }
 }
 
-async function toggleFavorito(productoId) {
+async function toggleFavorito(productoId, event) {
     if (!CURRENT_USER || !CURRENT_USER.id) {
-        showNotification('Debes iniciar sesión', true);
+        showNotification(i18n.must_login, true);
         setTimeout(() => window.location.href = '/proyecto/interfaz_usuario/login.html', 1500);
         return;
     }
@@ -2440,17 +2767,30 @@ async function toggleFavorito(productoId) {
         if (data.success) {
             if (data.favorito) {
                 favoritosSet.add(productoId);
-                showNotification('Añadido a favoritos');
+                showNotification(i18n.added_to_favorites);
+                // Animate the heart icon
+                if (event && event.currentTarget) {
+                    const btn = event.currentTarget;
+                    btn.classList.add('heart-beat');
+                    setTimeout(() => btn.classList.remove('heart-beat'), 500);
+                } else {
+                    document.querySelectorAll(`.product-favorite-btn[data-id="${productoId}"]`).forEach(el => {
+                        el.classList.add('heart-beat');
+                        setTimeout(() => el.classList.remove('heart-beat'), 500);
+                    });
+                }
             } else {
                 favoritosSet.delete(productoId);
-                showNotification('Eliminado de favoritos');
+                showNotification(i18n.removed_from_favorites);
             }
             actualizarIconosFavoritos();
+            actualizarBadgeFavoritos();
+            mostrarSeccionFavoritos();
         } else {
-            showNotification(data.message || 'Error', true);
+            showNotification(data.message || i18n.favorites_error, true);
         }
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Error en toggleFavorito:', error);
         showNotification('Error de conexión', true);
     }
 }
@@ -2466,6 +2806,71 @@ function actualizarIconosFavoritos() {
             icon.className = 'far fa-heart';
             btn.classList.remove('favorito-activo');
         }
+    });
+}
+
+function actualizarBadgeFavoritos() {
+    const count = favoritosSet.size;
+    const badge = document.getElementById('favoritesCountBadge');
+    const floatingBtn = document.getElementById('floatingFavoritesBtn');
+    const floatingCount = document.getElementById('floatingFavoritesCount');
+
+    if (badge) {
+        if (count > 0) {
+            badge.textContent = count;
+            badge.style.display = 'inline';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
+    if (floatingBtn) {
+        if (count > 0) {
+            floatingBtn.style.display = 'flex';
+            if (floatingCount) floatingCount.textContent = count;
+        } else {
+            floatingBtn.style.display = 'none';
+        }
+    }
+}
+
+function mostrarSeccionFavoritos() {
+    const section = document.getElementById('favoritesSection');
+    const container = document.getElementById('favoritesMiniGrid');
+    if (!section || !container) return;
+
+    const favoritedProducts = allProducts.filter(p => favoritosSet.has(p.id));
+    if (favoritedProducts.length === 0) {
+        section.style.display = 'none';
+        return;
+    }
+
+    const shuffled = [...favoritedProducts].sort(() => Math.random() - 0.5);
+    const selected = shuffled.slice(0, 4);
+
+    let html = '';
+    selected.forEach(product => {
+        const precioVES = (product.price * tasaBCVActual).toFixed(2);
+        html += `
+            <div class="product-card" data-id="${product.id}" style="cursor:pointer;">
+                <div class="product-img-container" style="height:120px;" data-id="${product.id}">
+                    <img src="${product.image}" alt="${escapeHtml(product.name)}" data-id="${product.id}" style="max-height:100px;" onerror="this.src='https://via.placeholder.com/300x300?text=Sin+Imagen'">
+                </div>
+                <div class="category" style="font-size:0.65rem;">${escapeHtml(product.category)}</div>
+                <h5 style="font-size:0.8rem;">${escapeHtml(product.name)}</h5>
+                <div class="price" style="font-size:0.9rem;">$${product.price.toFixed(2)}<small class="ves-price">(≈ ${precioVES} Bs)</small></div>
+            </div>`;
+    });
+
+    container.innerHTML = html;
+    section.style.display = 'block';
+
+    container.querySelectorAll('.product-card').forEach(el => {
+        el.addEventListener('click', (e) => {
+            const id = parseInt(el.getAttribute('data-id'));
+            const product = allProducts.find(p => p.id === id);
+            if (product) openProductModal(product);
+        });
     });
 }
 
@@ -2493,20 +2898,28 @@ async function mostrarFavoritos() {
             data.favoritos.forEach(f => {
                 const precioVES = (parseFloat(f.price) * tasaBCVActual).toFixed(2);
                 const inactivo = f.active === 0;
+                const stockStatus = inactivo ? 'No disponible' : (f.stock === 0 ? 'Agotado' : `Stock: ${f.stock} unid.`);
+                const stockColor = inactivo ? '#dc3545' : (f.stock === 0 ? '#dc3545' : '#28a745');
                 html += `
-                    <div class="product-card" data-id="${f.id}" style="margin-bottom:0;">
+                    <div class="product-card" data-id="${f.id}" style="margin-bottom:0; cursor:pointer;">
                         <div class="product-img-container" style="height:140px; position:relative;" data-id="${f.id}">
                             <img src="${f.image || 'https://via.placeholder.com/300x300?text=Sin+Imagen'}" alt="${escapeHtml(f.name)}" data-id="${f.id}" style="max-height:120px;" onerror="this.src='https://via.placeholder.com/300x300?text=Sin+Imagen'">
                             <div class="product-favorite-btn favorito-activo" data-id="${f.producto_id}" style="position:absolute; top:5px; left:5px; cursor:pointer; font-size:1.3rem; z-index:2;">
                                 <i class="fas fa-heart"></i>
                             </div>
+                            <span style="position:absolute; bottom:5px; right:5px; background:${stockColor}; color:white; padding:2px 8px; border-radius:10px; font-size:0.6rem; font-weight:600;">${stockStatus}</span>
                         </div>
                         <div class="category" style="font-size:0.7rem;">${escapeHtml(f.category || '')}</div>
                         <h5 data-id="${f.id}" style="font-size:0.9rem;">${escapeHtml(f.name)}</h5>
                         <div class="price" style="font-size:1rem;">$${parseFloat(f.price).toFixed(2)}<small class="ves-price">(≈ ${precioVES} Bs)</small></div>
-                        <button class="add-to-cart-btn ${(f.stock === 0 || inactivo) ? 'stock-disabled' : ''}" data-id="${f.id}" ${(f.stock === 0 || inactivo) ? 'disabled' : ''} style="font-size:0.75rem; padding:4px 12px;">
-                            <i class="fas fa-shopping-cart"></i> ${inactivo ? 'No disponible' : (f.stock === 0 ? 'Agotado' : 'Añadir')}
-                        </button>
+                        <div style="display:flex; gap:6px; margin-top:8px;">
+                            <button class="btn btn-sm btn-outline-primary ver-producto-btn" data-id="${f.id}" style="flex:1; font-size:0.7rem; padding:4px 8px; border-radius:20px;">
+                                <i class="fas fa-eye"></i> Ver producto
+                            </button>
+                            <button class="add-to-cart-btn ${(f.stock === 0 || inactivo) ? 'stock-disabled' : ''}" data-id="${f.id}" ${(f.stock === 0 || inactivo) ? 'disabled' : ''} style="flex:1; font-size:0.75rem; padding:4px 12px;">
+                                <i class="fas fa-shopping-cart"></i> ${inactivo ? 'No disponible' : (f.stock === 0 ? 'Agotado' : 'Añadir')}
+                            </button>
+                        </div>
                     </div>`;
             });
             html += '</div>';
@@ -2515,7 +2928,7 @@ async function mostrarFavoritos() {
                 btn.addEventListener('click', async (e) => {
                     e.stopPropagation();
                     const id = parseInt(btn.getAttribute('data-id'));
-                    await toggleFavorito(id);
+                    await toggleFavorito(id, e);
                     await mostrarFavoritos();
                 });
             });
@@ -2525,16 +2938,32 @@ async function mostrarFavoritos() {
                     addToCart(parseInt(btn.getAttribute('data-id')), 1);
                 });
             });
-            document.querySelectorAll('#favoritesContent .product-img-container, #favoritesContent h5').forEach(el => {
+            document.querySelectorAll('#favoritesContent .product-card').forEach(el => {
                 el.addEventListener('click', (e) => {
-                    e.stopPropagation();
+                    if (e.target.closest('.product-favorite-btn') || e.target.closest('.add-to-cart-btn')) return;
                     const id = parseInt(el.getAttribute('data-id'));
                     const product = allProducts.find(p => p.id === id);
                     if (product) openProductModal(product);
                 });
             });
+            document.querySelectorAll('#favoritesContent .ver-producto-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const id = parseInt(btn.getAttribute('data-id'));
+                    const product = allProducts.find(p => p.id === id);
+                    if (product) openProductModal(product);
+                });
+            });
         } else {
-            document.getElementById('favoritesContent').innerHTML = '<p class="text-center" style="opacity:0.7; padding:40px;">No tienes productos favoritos</p>';
+            document.getElementById('favoritesContent').innerHTML = `
+                <div class="text-center" style="padding:50px 20px;">
+                    <i class="far fa-heart" style="font-size:4rem; opacity:0.2; margin-bottom:20px; display:block;"></i>
+                    <p style="font-size:1.1rem; opacity:0.7; margin-bottom:8px;">No tienes productos favoritos</p>
+                    <p style="font-size:0.9rem; opacity:0.5; margin-bottom:20px;">Explora nuestro catálogo y añade productos a tus favoritos!</p>
+                    <button class="btn btn-primary" onclick="$('#favoritesModal').modal('hide')">
+                        <i class="fas fa-store"></i> Explorar Productos
+                    </button>
+                </div>`;
         }
     } catch (error) {
         document.getElementById('favoritesContent').innerHTML = '<p class="text-center" style="color:#ff4757; padding:40px;">Error al cargar favoritos</p>';
@@ -2579,7 +3008,7 @@ document.getElementById('submitPasswordChange')?.addEventListener('click', async
     const confirmPassword = document.getElementById('confirmNewPassword').value;
     
     if (!currentPassword || !newPassword || !confirmPassword) {
-        showNotification('Complete todos los campos', true);
+        showNotification(i18n.fill_all_fields, true);
         return;
     }
     
@@ -2770,12 +3199,12 @@ document.getElementById('submitContact')?.addEventListener('click', async () => 
     const mensaje = document.getElementById('contactMessage').value;
     
     if (!nombre || !email || !mensaje) {
-        showNotification('Complete todos los campos', true);
+        showNotification(i18n.fill_all_fields, true);
         return;
     }
     
     if (!email.includes('@') || !email.includes('.')) {
-        showNotification('Email inválido', true);
+        showNotification(i18n.invalid_email, true);
         return;
     }
     
@@ -2800,7 +3229,7 @@ document.getElementById('submitContact')?.addEventListener('click', async () => 
             document.getElementById('contactEmail').value = '';
             document.getElementById('contactMessage').value = '';
         } else {
-            showNotification(data.message || 'Error al enviar mensaje', true);
+            showNotification(data.message || i18n.error_sending_message, true);
         }
     } catch (error) {
         console.error('Error:', error);
@@ -2858,14 +3287,14 @@ function setupEventListeners() {
     
     if (refreshProductsBtn) {
         refreshProductsBtn.addEventListener('click', () => {
-            showNotification('Recargando productos...');
+            showNotification(i18n.reloading_products);
             loadProductsFromDB();
         });
     }
     
     if (refreshTasaBtn) {
         refreshTasaBtn.addEventListener('click', () => {
-            showNotification('Actualizando tasa...');
+            showNotification(i18n.updating_rate);
             cargarTasaBCV();
         });
     }
@@ -2874,17 +3303,17 @@ function setupEventListeners() {
     if (checkoutBtn) {
         checkoutBtn.addEventListener('click', () => {
             if (CURRENT_USER && (CURRENT_USER.rol === 'admin' || CURRENT_USER.rol === 'administrador')) {
-                showNotification('⚠️ Los administradores no pueden realizar compras', true);
+                showNotification(i18n.admin_no_purchase, true);
                 return;
             }
             
             if (cartItems.length === 0) {
-                showNotification('Carrito vacío', true);
+                showNotification(i18n.cart_empty, true);
                 return;
             }
             
             if (!CURRENT_USER || !CURRENT_USER.id) {
-                showNotification('Debes iniciar sesión como cliente', true);
+                showNotification(i18n.login_required, true);
                 setTimeout(() => window.location.href = '/proyecto/interfaz_usuario/login.html', 1500);
                 return;
             }
@@ -2918,9 +3347,13 @@ function setupEventListeners() {
         await mostrarFavoritos();
     });
 
+    document.getElementById('floatingFavoritesBtn')?.addEventListener('click', async () => {
+        await mostrarFavoritos();
+    });
+
     document.getElementById('viewHistoryBtn')?.addEventListener('click', async () => {
         $('#historyModal').modal('show');
-        document.getElementById('historyContent').innerHTML = '<p class="text-center">Cargando...</p>';
+        document.getElementById('historyContent').innerHTML = '<p class="text-center">' + i18n.loading + '</p>';
         if (!CURRENT_USER?.id) {
             document.getElementById('historyContent').innerHTML = '<p class="text-center" style="color:var(--text-color); opacity:0.7; padding:40px;">Inicia sesión para ver tu historial</p>';
             return;
@@ -3233,6 +3666,8 @@ async function init() {
     await loadProductsFromDB();
     await cargarFavoritos();
     await updateCartUI();
+    actualizarBadgeFavoritos();
+    mostrarSeccionFavoritos();
     setupEventListeners();
     cargarTasaBCV();
     iniciarVerificacionSesionPeriodica();
@@ -3293,6 +3728,178 @@ if ('Notification' in window && Notification.permission !== 'denied') {
 
 setInterval(() => { if (CURRENT_USER?.id) checkNotificaciones(); }, 30000);
 if (CURRENT_USER?.id) checkNotificaciones();
+
+// ============================================================
+// RESEÑAS (PRODUCT REVIEWS)
+// ============================================================
+function renderStarsHtml(count) {
+    let s = '';
+    for (let i = 1; i <= 5; i++) {
+        s += i <= count ? '<i class="fas fa-star"></i>' : '<i class="far fa-star"></i>';
+    }
+    return s;
+}
+
+async function loadResenas(productId) {
+    const section = document.getElementById('resenas-section');
+    const loading = document.getElementById('resenas-loading');
+    const content = document.getElementById('resenas-content');
+    const formContainer = document.getElementById('review-form-container');
+    if (!section) return;
+
+    section.style.display = 'block';
+    loading.style.display = 'block';
+    content.innerHTML = '';
+    formContainer.innerHTML = '';
+
+    try {
+        const res = await fetch(`/proyecto/reseñas/obtener_resenas.php?producto_id=${productId}`);
+        const data = await res.json();
+        loading.style.display = 'none';
+
+        if (!data.success) {
+            content.innerHTML = '<p class="text-danger">Error al cargar reseñas.</p>';
+            return;
+        }
+
+        const total = data.total;
+        const promedio = data.rating_promedio;
+        const dist = data.distribucion || {5:0,4:0,3:0,2:0,1:0};
+
+        let html = '';
+
+        // Rating summary
+        html += '<div class="rating-summary">';
+        html += '<div class="rating-average">';
+        html += `<div class="big-number">${promedio.toFixed(1)}</div>`;
+        html += `<div class="stars">${renderStarsHtml(Math.round(promedio))}</div>`;
+        html += `<div class="total-count">${total} reseña${total !== 1 ? 's' : ''}</div>`;
+        html += '</div>';
+        html += '<div class="rating-bars">';
+        for (let i = 5; i >= 1; i--) {
+            const pct = total > 0 ? (dist[i] / total * 100) : 0;
+            html += '<div class="rating-bar-row">';
+            html += `<span class="bar-label">${i} <i class="fas fa-star" style="font-size:0.65rem;"></i></span>`;
+            html += `<div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>`;
+            html += `<span class="bar-count">${dist[i]}</span>`;
+            html += '</div>';
+        }
+        html += '</div>';
+        html += '</div>';
+
+        // Review cards
+        if (data.resenas.length === 0) {
+            html += '<p class="text-muted small">No hay reseñas aún. ¡Sé el primero en reseñar!</p>';
+        } else {
+            data.resenas.forEach(r => {
+                html += '<div class="resena-card">';
+                html += '<div class="resena-header">';
+                html += `<span class="resena-user">${escapeHtml(r.usuario_nombre)} ${r.es_compra_verificada ? '<span class="verified-badge"><i class="fas fa-check-circle"></i> Compra verificada</span>' : ''}</span>`;
+                html += `<span class="resena-date">${r.created_at ? r.created_at.substring(0, 10) : ''}</span>`;
+                html += '</div>';
+                html += `<div class="resena-stars">${renderStarsHtml(r.puntuacion)}</div>`;
+                if (r.titulo) html += `<div class="resena-titulo">${escapeHtml(r.titulo)}</div>`;
+                if (r.comentario) html += `<div class="resena-comentario">${escapeHtml(r.comentario)}</div>`;
+                html += '</div>';
+            });
+        }
+
+        content.innerHTML = html;
+
+        // Review form (if user logged in)
+        if (CURRENT_USER && CURRENT_USER.id && CURRENT_USER.rol !== 'guest') {
+            // Check if user already reviewed this product
+            const hasReviewed = data.resenas.some(r => parseInt(r.usuario_id) === parseInt(CURRENT_USER.id));
+            if (!hasReviewed) {
+                formContainer.innerHTML = `
+                    <div class="review-form-section">
+                        <h6>Escribe tu reseña</h6>
+                        <form id="resena-form">
+                            <div class="star-selector" id="star-selector">
+                                <i class="far fa-star" data-val="1"></i>
+                                <i class="far fa-star" data-val="2"></i>
+                                <i class="far fa-star" data-val="3"></i>
+                                <i class="far fa-star" data-val="4"></i>
+                                <i class="far fa-star" data-val="5"></i>
+                            </div>
+                            <input type="text" id="resena-titulo" class="form-control mb-2" placeholder="Título (opcional)" maxlength="255">
+                            <textarea id="resena-comentario" class="form-control mb-2" rows="3" placeholder="Comentario (opcional)"></textarea>
+                            <input type="hidden" id="resena-puntuacion" value="0">
+                            <button type="button" class="btn btn-primary btn-sm" onclick="submitResena(${productId})">Enviar Reseña</button>
+                        </form>
+                    </div>
+                `;
+
+                // Star selector events
+                const stars = document.querySelectorAll('#star-selector i');
+                const puntuacionInput = document.getElementById('resena-puntuacion');
+                stars.forEach(star => {
+                    star.addEventListener('mouseenter', function() {
+                        const val = parseInt(this.getAttribute('data-val'));
+                        stars.forEach(s => {
+                            const sv = parseInt(s.getAttribute('data-val'));
+                            s.className = sv <= val ? 'fas fa-star active' : 'far fa-star';
+                        });
+                    });
+                    star.addEventListener('mouseleave', function() {
+                        const selected = parseInt(puntuacionInput.value);
+                        stars.forEach(s => {
+                            const sv = parseInt(s.getAttribute('data-val'));
+                            s.className = sv <= selected ? 'fas fa-star active' : 'far fa-star';
+                        });
+                    });
+                    star.addEventListener('click', function() {
+                        const val = parseInt(this.getAttribute('data-val'));
+                        puntuacionInput.value = val;
+                        stars.forEach(s => {
+                            const sv = parseInt(s.getAttribute('data-val'));
+                            s.className = sv <= val ? 'fas fa-star active' : 'far fa-star';
+                        });
+                    });
+                });
+            } else {
+                formContainer.innerHTML = '<p class="text-muted small mt-2"><i class="fas fa-check"></i> Ya has reseñado este producto.</p>';
+            }
+        }
+    } catch (e) {
+        loading.style.display = 'none';
+        content.innerHTML = '<p class="text-danger">Error de conexión al cargar reseñas.</p>';
+    }
+}
+
+async function submitResena(productId) {
+    const puntuacion = parseInt(document.getElementById('resena-puntuacion').value);
+    if (puntuacion < 1 || puntuacion > 5) {
+        showNotification('Selecciona una puntuación', true);
+        return;
+    }
+
+    const titulo = document.getElementById('resena-titulo').value.trim();
+    const comentario = document.getElementById('resena-comentario').value.trim();
+
+    try {
+        const res = await fetch('/proyecto/reseñas/agregar_resena.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                producto_id: productId,
+                usuario_id: CURRENT_USER.id,
+                puntuacion: puntuacion,
+                titulo: titulo,
+                comentario: comentario
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showNotification('Reseña publicada correctamente');
+            loadResenas(productId);
+        } else {
+            showNotification(data.message || 'Error al publicar reseña', true);
+        }
+    } catch (e) {
+        showNotification('Error de conexión', true);
+    }
+}
 </script>
 </body>
 </html>

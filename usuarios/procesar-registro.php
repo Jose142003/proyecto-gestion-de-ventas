@@ -257,7 +257,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 echo json_encode([
                     "success" => true, 
                     "message" => "Usuario registrado exitosamente",
-                    "redirect_url" => "/proyecto/interfaz_usuario/pagina_modernizada.html"
+                    "redirect_url" => "/proyecto/interfaz_usuario/pagina_modernizada.php"
                 ]);
             } else {
                 echo json_encode(["success" => false, "message" => "Error al registrar el usuario"]);

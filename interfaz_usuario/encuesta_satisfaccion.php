@@ -91,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $info && !$yaRespondio) {
                     document.getElementById('countdown').textContent = segundos;
                     if (segundos <= 0) {
                         clearInterval(intervalo);
-                        window.location.href = '/proyecto/interfaz_usuario/pagina_modernizada.html';
+                        window.location.href = '/proyecto/interfaz_usuario/pagina_modernizada.php';
                     }
                 }, 1000);
             </script>

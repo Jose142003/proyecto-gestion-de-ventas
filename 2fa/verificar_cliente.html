@@ -138,7 +138,7 @@
                     msgDiv.textContent = '✅ ' + (data.message || 'Verificación exitosa');
                     msgDiv.style.display = 'block';
                     setTimeout(() => {
-                        window.location.href = data.redirect_url || '/proyecto/interfaz_usuario/pagina_modernizada.html';
+                        window.location.href = data.redirect_url || '/proyecto/interfaz_usuario/pagina_modernizada.php';
                     }, 1000);
                 } else {
                     msgDiv.className = 'alert alert-danger';
