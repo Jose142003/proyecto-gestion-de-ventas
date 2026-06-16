@@ -112,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $precio = floatval($_POST['precio']);
         $stock = intval($_POST['stock']);
         $categoria = $_POST['categoria'];
-        $imagen = $_POST['imagen'];
+        $imagen = mb_substr($_POST['imagen'], 0, 512);
         $rating = floatval($_POST['rating']);
         $specs = $_POST['specs'];
         $peso = floatval($_POST['peso']);
@@ -517,6 +517,7 @@ if ($error && !$producto) {
         </div>
         <div class="card-body-custom">
             <form method="POST" action="">
+                <?php echo campoCSRF(); ?>
                 <div class="row">
                     <div class="col-md-6">
                         <div class="mb-3">

@@ -121,7 +121,7 @@ try {
                     ':nombre' => $pedido['cliente_nombre'],
                     ':email' => $pedido['cliente_email'],
                     ':telefono' => $pedido['telefono_contacto'] ?? '',
-                    ':direccion' => $pedido['direccion_entrega'] ?? $pedido['direccion'] ?? ''
+                    ':direccion' => $pedido['direccion_envio'] ?? $pedido['direccion'] ?? ''
                 ]);
                 $cliente_id = $pdo->lastInsertId();
             } else {

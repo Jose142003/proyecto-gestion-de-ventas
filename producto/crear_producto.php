@@ -34,6 +34,8 @@ $pdo = Database::getConnection();
 $palabras_prohibidas = ['spam', 'violencia', 'prueba', 'test', 'demo', 'xxxx', 'basura', 'eliminar'];
 $usuario_id = $_SESSION['user_id'] ?? null;
 $usuario_nombre = $_SESSION['user_nombre'] ?? '';
+$mensaje = '';
+$tipo_mensaje = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verificarCSRF();
@@ -70,7 +72,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $resultado = crearProducto($pdo, $datos, $usuario_id, $usuario_nombre);
             if ($resultado['success']) {
                 $importados[] = $resultado;
-                $mensaje = "✅ Producto importado correctamente. SKU: " . $resultado['sku'];
+                $producto_nombre = htmlspecialchars($datos['nombre']);
+                $mensaje = "✅ Producto \"{$producto_nombre}\" importado correctamente. SKU: " . $resultado['sku'] . ". <a href='/proyecto/interfaz_usuario/pagina_modernizada.html' target='_blank' style='color:white;text-decoration:underline'>Ver en tienda</a>";
                 $tipo_mensaje = "success";
             } else {
                 $mensaje = "❌ Error: " . $resultado['error'];
@@ -128,7 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         if (count($importados) > 0) {
-            $mensaje = "✅ Se importaron " . count($importados) . " productos correctamente";
+            $mensaje = "✅ Se importaron " . count($importados) . " productos correctamente. <a href='/proyecto/interfaz_usuario/pagina_modernizada.html' target='_blank' style='color:white;text-decoration:underline'>Ver en tienda</a>";
             $tipo_mensaje = "success";
             if (count($errores) > 0) {
                 $mensaje .= " (❌ " . count($errores) . " errores)";
@@ -148,6 +151,10 @@ function productoExiste(PDO $pdo, string $nombre): bool {
 
 function crearProducto(PDO $pdo, array $datos, ?int $usuario_id, ?string $usuario_nombre): array {
     try {
+        $datos['nombre'] = mb_substr($datos['nombre'], 0, 255);
+        $datos['imagen'] = mb_substr($datos['imagen'], 0, 512);
+        $datos['categoria'] = mb_substr($datos['categoria'], 0, 100);
+        $datos['descripcion'] = mb_substr($datos['descripcion'], 0, 65535);
         $stmt = $pdo->prepare("INSERT INTO products (name, price, image_url, category, stock, description, active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, 1, NOW(), NOW())");
         $stmt->execute([$datos['nombre'], $datos['precio'], $datos['imagen'], $datos['categoria'], $datos['stock'], $datos['descripcion']]);
         $productoId = $pdo->lastInsertId();
@@ -155,16 +162,20 @@ function crearProducto(PDO $pdo, array $datos, ?int $usuario_id, ?string $usuari
         $pdo->prepare("UPDATE products SET sku = ? WHERE id = ?")->execute([$sku, $productoId]);
 
         try {
+            ob_start();
             require_once __DIR__ . '/../admin/enviar_recomendaciones.php';
+            ob_end_clean();
+            header('Content-Type: text/html; charset=utf-8');
+            http_response_code(200);
             enviarNotificacionNuevoProducto($pdo, $productoId, $datos['nombre'], $datos['categoria']);
-        } catch (Throwable $e) {
+        } catch (Exception $e) {
             error_log("Error notificando nuevo producto: " . $e->getMessage());
         }
 
         return ['success' => true, 'sku' => $sku, 'id' => $productoId];
     } catch (PDOException $e) {
         error_log("Error creando producto: " . $e->getMessage());
-        return ['success' => false, 'error' => 'Error interno del servidor al crear el producto'];
+        return ['success' => false, 'error' => 'Error: ' . $e->getMessage()];
     }
 }
 
@@ -667,6 +678,7 @@ try {
                 <div class="card-body-custom">
                     <form method="POST" id="formIndividual">
                         <input type="hidden" name="accion" value="importar_individual">
+                        <?php echo campoCSRF(); ?>
                         
                         <div class="mb-3">
                             <label class="form-label"><i class="fas fa-tag"></i> Nombre del Producto *</label>
@@ -737,6 +749,7 @@ try {
                 <div class="card-body-custom">
                     <form method="POST" id="formMultiple">
                         <input type="hidden" name="accion" value="importar_multiple">
+                        <?php echo campoCSRF(); ?>
                         
                         <div class="mb-3">
                             <label class="form-label"><i class="fas fa-paste"></i> Pegar productos (uno por línea)</label>

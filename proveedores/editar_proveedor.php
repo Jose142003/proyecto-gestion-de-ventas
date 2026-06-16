@@ -367,6 +367,7 @@ if (!$proveedor) {
             </div>
 
             <form method="POST" action="">
+                <?php echo campoCSRF(); ?>
                 <input type="hidden" name="id" value="<?php echo $proveedor['id']; ?>">
 
                 <div class="form-group">

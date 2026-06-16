@@ -23,11 +23,12 @@ class StockService
         if ($product['stock'] < $quantity) {
             throw new \RuntimeException("Stock insuficiente para el producto ID: $productId (disponible: {$product['stock']}, solicitado: $quantity)");
         }
+        $stockAnterior = (int)$product['stock'];
         $this->pdo->beginTransaction();
         try {
             $stmt = $this->pdo->prepare("UPDATE products SET stock = stock - ? WHERE id = ?");
             $stmt->execute([$quantity, $productId]);
-            $this->logMovement($productId, $quantity, 'salida');
+            $this->logMovement($productId, $quantity, 'venta', $stockAnterior, $stockAnterior - $quantity);
             $this->pdo->commit();
             return true;
         } catch (\Exception $e) {
@@ -38,11 +39,18 @@ class StockService
 
     public function increaseStock(int $productId, int $quantity): void
     {
+        $check = $this->pdo->prepare("SELECT stock FROM products WHERE id = ?");
+        $check->execute([$productId]);
+        $product = $check->fetch(PDO::FETCH_ASSOC);
+        if (!$product) {
+            throw new \RuntimeException("Producto ID $productId no existe");
+        }
+        $stockAnterior = (int)$product['stock'];
         $this->pdo->beginTransaction();
         try {
             $stmt = $this->pdo->prepare("UPDATE products SET stock = stock + ? WHERE id = ?");
             $stmt->execute([$quantity, $productId]);
-            $this->logMovement($productId, $quantity, 'entrada');
+            $this->logMovement($productId, $quantity, 'compra', $stockAnterior, $stockAnterior + $quantity);
             $this->pdo->commit();
         } catch (\Exception $e) {
             $this->pdo->rollBack();
@@ -50,13 +58,13 @@ class StockService
         }
     }
 
-    private function logMovement(int $productId, int $quantity, string $type): void
+    private function logMovement(int $productId, int $quantity, string $type, int $stockAnterior, int $stockNuevo): void
     {
         $stmt = $this->pdo->prepare("
-            INSERT INTO historial_stock (producto_id, cantidad, tipo_movimiento, created_at)
-            VALUES (?, ?, ?, NOW())
+            INSERT INTO historial_stock (producto_id, cantidad, tipo, stock_anterior, stock_nuevo, referencia, fecha)
+            VALUES (?, ?, ?, ?, ?, ?, NOW())
         ");
-        $stmt->execute([$productId, $quantity, $type]);
+        $stmt->execute([$productId, $quantity, $type, $stockAnterior, $stockNuevo, 'StockService']);
     }
 
     public function getLowStockProducts(int $threshold = 5): array

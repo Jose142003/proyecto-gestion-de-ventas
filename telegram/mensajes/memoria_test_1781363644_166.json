@@ -1,0 +1,12 @@
+[
+    {
+        "rol": "user",
+        "texto": "Qu\u00e9 marcas trabajan?",
+        "tiempo": 1781363644
+    },
+    {
+        "rol": "bot",
+        "texto": "Trabajamos con estas marcas:\n\n- *Schneider Electric* \u2014 Material el\u00e9ctrico, protecciones, contactores\n- *Autonics* \u2014 Sensores, controladores, botoneras\n- *UNI-T* \u2014 Instrumentos de medici\u00f3n\n- *Exceline* \u2014 Equipos y accesorios el\u00e9ctricos\n\n\u00bfTe interesa alguna marca en particular? Te muestro los productos disponibles.",
+        "tiempo": 1781363644
+    }
+]

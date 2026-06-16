@@ -31,6 +31,12 @@ try {
     $pdo = conectarDB();
     $pdo->beginTransaction();
     
+    // Leer estado actual antes de modificarlo
+    $stmt = $pdo->prepare("SELECT estado FROM pedidos WHERE id = ?");
+    $stmt->execute([$pedido_id]);
+    $pedidoActual = $stmt->fetch(PDO::FETCH_ASSOC);
+    $estado_anterior = $pedidoActual ? $pedidoActual['estado'] : 'pendiente';
+    
     // Actualizar estado del pedido
     $sql = "UPDATE pedidos SET estado = 'cancelado', observaciones = CONCAT(IFNULL(observaciones, ''), ' | Cancelado: ', :motivo), updated_at = NOW() WHERE id = :pedido_id";
     $stmt = $pdo->prepare($sql);
@@ -55,7 +61,11 @@ try {
     }
     
     $pdo->commit();
-    
+
+    // Notificar al cliente vía Telegram
+    require_once __DIR__ . '/../telegram/notificar_pedido.php';
+    telegramNotificarCambioEstado($pdo, $pedido_id, $estado_anterior);
+
     echo json_encode([
         'success' => true,
         'message' => 'Pedido cancelado correctamente'

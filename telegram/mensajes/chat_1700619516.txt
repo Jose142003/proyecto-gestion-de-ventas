@@ -1,1 +1,217 @@
 2026-06-09 15:31:59 | Jose (): hola
+2026-06-09 18:09:57 | Jose (): hola
+2026-06-09 18:09:57 | Jose (): /start
+2026-06-09 18:09:58 | Jose (): hola
+2026-06-09 18:11:02 | Jose (): hola
+2026-06-09 18:11:03 | Jose (): hola
+2026-06-09 18:12:02 | Jose (): quiero ver el catalogo
+2026-06-09 18:12:03 | Jose (): ver nuestro catalogo
+2026-06-09 18:22:02 | Jose (): at8n
+2026-06-09 18:22:03 | Jose (): productos
+2026-06-09 18:23:02 | Jose (): lista
+2026-06-09 18:25:02 | Jose (): 1
+2026-06-09 18:26:02 | Jose (): productos
+2026-06-09 18:27:02 | Jose (): pdf
+2026-06-09 18:27:03 | Jose (): 2
+2026-06-09 18:28:03 | Jose (): productos
+2026-06-09 18:29:02 | Jose (): 3
+2026-06-09 18:31:01 | Jose (): 3
+2026-06-09 18:36:40 | Jose (): hola deseo saber si tienen at8n y en que precio lo tienen
+2026-06-09 18:36:52 | Jose (): at8n
+2026-06-09 18:37:40 | Jose (): quiero ver el catalogo en pdf
+2026-06-09 18:37:45 | Jose (): 1
+2026-06-09 18:39:12 | Jose (): si fue util gracias
+2026-06-09 18:39:32 | Jose (): venden scheneider
+2026-06-09 18:45:34 | Jose (): Hola
+2026-06-09 18:45:59 | Jose (): Venden uni-t
+2026-06-09 18:48:10 | Jose (): Venden uni-t
+2026-06-09 18:48:45 | Jose (): Busco un megger
+2026-06-09 18:48:46 | Jose (): Busco un megger
+2026-06-09 18:49:51 | Jose (): Busco un relé autonics que venden
+2026-06-09 18:50:07 | Jose (): Si relés
+2026-06-09 18:51:17 | Jose (): Venden relés
+2026-06-09 18:51:39 | Jose (): Hola busco un AT8N
+2026-06-09 18:51:57 | Jose (): AT8N
+2026-06-09 18:51:58 | Jose (): AT8N
+2026-06-09 19:01:09 | Jose (): Venden autonics
+2026-06-09 19:01:39 | Jose (): Me pueden dar el precio del AT8N
+2026-06-09 19:01:56 | Jose (): Lista
+2026-06-09 19:02:24 | Jose (): PDF
+2026-06-09 19:02:51 | Jose (): Pásame el PDF del catálogo
+2026-06-09 19:02:57 | Jose (): 1
+2026-06-09 19:03:17 | Jose (): Gracias
+2026-06-09 19:03:36 | Jose (): No no necesito más nada
+2026-06-10 12:26:36 | Jose (): hola necesito saber si venden at8n
+2026-06-10 12:26:37 | Jose (): hola venden autonics
+2026-06-10 12:26:38 | Jose (): necesito su catalogo
+2026-06-10 12:26:39 | Jose (): hola quiero consultar el precio de un producto
+2026-06-10 12:26:40 | Jose (): hola necito saber el precio de un producto
+2026-06-10 12:26:41 | Jose (): precio
+2026-06-10 12:26:41 | Jose (): catalogo
+2026-06-10 12:26:42 | Jose (): pasame el pdf del catalogo
+2026-06-10 12:26:43 | Jose (): hola necito saber el precio de un producto
+2026-06-10 12:27:41 | Jose (): ¿me pasarias el catalogo por pdf?
+2026-06-10 12:51:17 | Jose (): hola  ¿me puedes pasar un pdf con el catalogo?
+2026-06-10 12:51:45 | Jose (): necesito el pdf
+2026-06-10 12:51:55 | Jose (): pdf
+2026-06-10 12:52:04 | Jose (): catalogo
+2026-06-10 12:52:09 | Jose (): 1
+2026-06-10 12:57:32 | Jose (): precio de at8n
+2026-06-10 13:06:46 | Jose (): venden autonics
+2026-06-10 13:07:32 | Jose (): me podrias mandar el catalogo por pdf
+2026-06-10 13:07:54 | Jose (): ahora necesito el precio del at8n
+2026-06-10 13:10:21 | Jose (): gracias ahora que tienes que sea uni-t
+2026-06-10 13:17:29 | Jose (): que tienes que sea un-t
+2026-06-10 13:17:51 | Jose (): accesorios
+2026-06-10 13:18:09 | Jose (): en unit que tienes
+2026-06-10 13:30:13 | Jose (): me puedes dar el precio del sensor
+2026-06-10 13:31:12 | Jose (): me puedes dar el precio del sensor
+2026-06-10 13:31:28 | Jose (): precio at8n
+2026-06-10 13:32:02 | Jose (): venden autonics
+2026-06-10 13:33:36 | Jose (): venden siemens
+2026-06-10 13:34:46 | Jose (): gracias
+2026-06-10 13:34:52 | Jose (): ok
+2026-06-10 13:40:43 | Jose (): venden siemens
+2026-06-10 13:41:04 | Jose (): venden scheneider
+2026-06-10 13:41:32 | Jose (): y unit
+2026-06-10 13:41:47 | Jose (): mitsubishi
+2026-06-10 13:42:00 | Jose (): siemens
+2026-06-10 13:42:20 | Jose (): nnecesito Siemens
+2026-06-10 13:45:57 | Jose (): y tiene omron
+2026-06-10 13:46:05 | Jose (): onrom
+2026-06-10 13:47:29 | Jose (): y venden siemens
+2026-06-10 13:47:40 | Jose (): scheneider
+2026-06-10 13:54:07 | Jose (): venden siemens
+2026-06-10 13:54:35 | Jose (): venden Siemens.
+2026-06-10 13:55:24 | Jose (): venden omron
+2026-06-10 13:56:36 | Jose (): /start
+2026-06-10 13:56:47 | Jose (): venden siemens
+2026-06-10 14:17:19 | Jose (): venden siemens
+2026-06-10 14:17:20 | Jose (): hola
+2026-06-10 14:17:20 | Jose (): venden siemens
+2026-06-10 14:17:21 | Jose (): hola
+2026-06-10 14:17:42 | Jose (): y tienen omron
+2026-06-10 14:17:53 | Jose (): autonics
+2026-06-10 14:18:21 | Jose (): omron
+2026-06-10 14:18:35 | Jose (): tienes el catalogo
+2026-06-10 14:19:01 | Jose (): problema con el pedido
+2026-06-10 14:19:09 | Jose (): 123456
+2026-06-10 14:19:26 | Jose (): venden unit
+2026-06-10 14:20:09 | Jose (): me das el precio del termometro infrarrojo
+2026-06-10 14:28:09 | Jose (): me puedes pasar el catalogo
+2026-06-10 14:28:23 | Jose (): catalogo
+2026-06-10 14:30:08 | Jose (): catalogo
+2026-06-10 14:30:47 | Jose (): venden autonics
+2026-06-10 14:31:06 | Jose (): me das el precio del at8n
+2026-06-10 14:31:25 | Jose (): que mas venden
+2026-06-10 14:31:44 | Jose (): siemens
+2026-06-10 14:31:59 | Jose (): sensor m8
+2026-06-10 14:38:33 | Jose (): gracias
+2026-06-10 14:38:51 | Jose (): me volverias a pasar el catalogo
+2026-06-11 11:38:27 | Jose (): /start
+2026-06-11 11:38:37 | Jose (): /start
+2026-06-11 11:38:49 | Jose (): hola
+2026-06-11 11:38:58 | Jose (): /start
+2026-06-11 11:54:53 | Jose (): hola
+2026-06-11 11:55:20 | Jose (): que productos venden
+2026-06-11 11:56:31 | Jose (): con cuales marcas trabajan
+2026-06-11 11:58:00 | Jose (): donde se encuentran ubicados
+2026-06-11 11:58:37 | Jose (): tiene el catalogo
+2026-06-11 11:59:09 | Jose (): que marcas venden
+2026-06-11 12:11:29 | Jose (): hola que productos venden
+2026-06-11 12:11:38 | Jose (): hola
+2026-06-11 12:11:58 | Jose (): cuales productos venden
+2026-06-11 12:25:38 | Jose (): dame las especificaciones del at8n
+2026-06-11 12:26:03 | Jose (): que productos venden
+2026-06-11 12:26:38 | Jose (): cual es el precio del at8n
+2026-06-11 12:28:29 | Jose (): con cuales marcas trabajan
+2026-06-11 12:29:10 | Jose (): que marcas tienen
+2026-06-11 12:29:46 | Jose (): que tienen disponible
+2026-06-11 12:30:27 | Jose (): donde estan ubicados
+2026-06-11 12:30:56 | Jose (): tienen el catalogo
+2026-06-11 12:31:14 | Jose (): cual es su horario
+2026-06-11 12:31:36 | Jose (): hacen envios
+2026-06-11 12:32:15 | Jose (): que tienen disponible
+2026-06-11 12:32:50 | Jose (): tienen sitio web
+2026-06-11 12:35:35 | Jose (): tienen tienda fisica
+2026-06-11 13:11:08 | Jose (): hola con cuales marcas trabajan
+2026-06-11 13:12:05 | Jose (): hola que productos venden
+2026-06-11 13:22:43 | Jose (): que productos venden
+2026-06-11 13:23:05 | Jose (): que tienen
+2026-06-11 13:23:43 | Jose (): que manejan
+2026-06-11 13:32:50 | Jose (): que venden
+2026-06-11 13:32:51 | Jose (): que manejan
+2026-06-11 13:32:52 | Jose (): hola
+2026-06-11 13:32:53 | Jose (): hola
+2026-06-11 13:32:54 | Jose (): tienen el catalogo
+2026-06-11 13:33:22 | Jose (): hola con que marcas trabajan
+2026-06-11 13:34:06 | Jose (): me darian detalles del at8n
+2026-06-11 13:34:20 | Jose (): venden scheneider
+2026-06-11 13:34:47 | Jose (): venden botoneras
+2026-06-11 13:35:02 | Jose (): hasta que hora trabajan
+2026-06-11 13:35:14 | Jose (): hacen envios
+2026-06-11 13:35:32 | Jose (): donde se encuentran ubicados
+2026-06-11 13:36:27 | Jose (): me podrias dar detalles del at8n
+2026-06-11 13:36:44 | Jose (): necesito mas detalles
+2026-06-11 13:36:59 | Jose (): marcas
+2026-06-11 13:37:55 | Jose (): con cuales marcas trabajan
+2026-06-11 13:38:11 | Jose (): scheneider
+2026-06-11 13:38:34 | Jose (): gracias
+2026-06-11 13:39:05 | Jose (): tienen correo electronico
+2026-06-11 13:39:25 | Jose (): cuales son sus metodos de pago
+2026-06-12 12:30:46 | Jose (): hola necesito el precio del at8n
+2026-06-12 12:30:47 | Jose (): hola
+2026-06-12 12:31:14 | Jose (): hola
+2026-06-12 12:31:31 | Jose (): necesito detalles del at8n
+2026-06-12 12:32:09 | Jose (): me dirias cuales son los productos autonics que venden
+2026-06-12 12:32:42 | Jose (callback): categoria_Sensores
+2026-06-12 12:32:54 | Jose (callback): categoria_Sensores
+2026-06-12 12:32:56 | Jose (callback): ver_categorias
+2026-06-12 12:33:00 | Jose (callback): carrito_ver
+2026-06-12 12:33:04 | Jose (callback): ver_categorias
+2026-06-12 12:34:05 | Jose (callback): categoria_Variadores
+2026-06-12 12:34:26 | Jose (): quiero detalles de esos productos
+2026-06-12 12:34:37 | Jose (callback): categoria_Botoneras
+2026-06-12 12:34:41 | Jose (callback): carrito_ver
+2026-06-12 12:38:44 | Jose (): con cuales marcas trabajan
+2026-06-12 12:39:06 | Jose (): que venden de la marca uni-t
+2026-06-12 12:39:30 | Jose (): busco termometro
+2026-06-12 12:45:50 | Jose (): que productos autonics venden
+2026-06-12 12:46:52 | Jose (): que productos autonics venden
+2026-06-12 12:47:07 | Jose (): contactores
+2026-06-12 12:47:16 | Jose (callback): ver_categorias
+2026-06-12 12:47:27 | Jose (callback): categoria_Rel%C3%A9s
+2026-06-12 12:47:36 | Jose (callback): categoria_Rel%C3%A9s
+2026-06-12 12:47:38 | Jose (callback): buscar_producto
+2026-06-12 12:47:56 | Jose (): at8n
+2026-06-12 12:48:04 | Jose (): no
+2026-06-12 12:48:16 | Jose (): no
+2026-06-12 12:51:22 | Jose (): que productos uni-t venden
+2026-06-12 12:51:40 | Jose (): que productos autonics venden
+2026-06-12 12:52:01 | Jose (): que productos autonics venden
+2026-06-12 12:52:31 | Jose (): quiero ver todo
+2026-06-12 12:52:40 | Jose (callback): ver_categorias
+2026-06-12 12:52:57 | Jose (callback): categoria_Sensores
+2026-06-12 12:53:10 | Jose (callback): categoria_Sensores
+2026-06-13 15:34:22 | Jose (): hola tienes cables
+2026-06-13 15:34:37 | Jose (): cable
+2026-06-13 15:34:43 | Jose (callback): ver_categorias
+2026-06-13 15:34:49 | Jose (callback): categoria_Herramientas
+2026-06-13 15:34:57 | Jose (callback): carrito_ver
+2026-06-13 15:35:00 | Jose (callback): ver_categorias
+2026-06-13 15:35:04 | Jose (callback): buscar_producto
+2026-06-13 15:35:15 | Jose (): cable
+2026-06-13 15:47:51 | Jose (): hola
+2026-06-13 15:48:12 | Jose (): cable para sensor m8
+2026-06-13 15:48:46 | Jose (): me das mas detalles del producto
+2026-06-13 15:49:41 | Jose (): metodos de paho
+2026-06-13 15:50:49 | Jose (): hola
+2026-06-13 15:50:58 | Jose (): metodo des pago
+2026-06-13 16:02:25 | Jose (): hola buenas como esta necesito un cable para sensor m8 y una botonera colgante cuales son los metodos de pago
+2026-06-13 16:12:39 | Jose (): hola buenas como esta necesito un cable para sensor m8 y una botonera colgante cuales son los metodos de pago
+2026-06-13 16:15:17 | Jose (): hola buenas como esta necesito un cable para sensor m8 y una botonera colgante cuales son los metodos de pago
+2026-06-13 16:16:01 | Jose (): hola buenas como esta necesito saber cuales son sus metodos de pago
+2026-06-13 16:17:13 | Jose (): hacen envios
+2026-06-13 16:17:40 | Jose (): jose gregorio
+2026-06-13 16:18:48 | Jose (): tienen el catalogo
+2026-06-13 16:23:41 | Jose (): me pueden enviar el catalogo

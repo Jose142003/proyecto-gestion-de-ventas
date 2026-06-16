@@ -2,7 +2,10 @@
 session_start();
 
 require_once __DIR__ . '/../conexion/conexion.php';
-verificarCSRF();
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    verificarCSRF();
+}
 
 try {
     $pdo = conectarDB();
@@ -66,6 +69,7 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Nueva Factura - PIC</title>
+    <meta name="csrf-token" content="<?php echo htmlspecialchars(generarTokenCSRF()); ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
       <!-- PWA Meta Tags -->
@@ -841,6 +845,33 @@ try {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
+    // ====================================================================
+    // CSRF Protection: Incluye automáticamente el token en peticiones AJAX
+    // ====================================================================
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            if (settings.type && settings.type.toUpperCase() !== 'GET') {
+                xhr.setRequestHeader('X-CSRF-Token', csrfToken);
+            }
+        }
+    });
+    // También envolver fetch nativo para cualquier otra petición
+    const originalFetch = window.fetch;
+    window.fetch = function(input, init = {}) {
+        if (init.method && init.method.toUpperCase() !== 'GET' && csrfToken) {
+            init.headers = init.headers || {};
+            if (init.headers instanceof Headers) {
+                if (!init.headers.has('X-CSRF-Token')) init.headers.set('X-CSRF-Token', csrfToken);
+            } else if (Array.isArray(init.headers)) {
+                if (!init.headers.some(h => h[0].toLowerCase() === 'x-csrf-token')) init.headers.push(['X-CSRF-Token', csrfToken]);
+            } else {
+                if (!init.headers['X-CSRF-Token']) init.headers['X-CSRF-Token'] = csrfToken;
+            }
+        }
+        return originalFetch.call(this, input, init);
+    };
+    
     // Variables globales
     let productosAgregados = [];
     let subtotal = 0;

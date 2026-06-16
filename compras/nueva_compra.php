@@ -4,12 +4,14 @@ if (!isset($_SESSION['user_id'])) {
     header('Location: ../interfaz_usuario/login.html');
     exit;
 }
+require_once __DIR__ . '/../conexion/conexion.php';
 ?>
 <!DOCTYPE html>
 <html>
 <head>
     <title>Nueva Compra - PIC</title>
     <meta charset="UTF-8">
+    <meta name="csrf-token" content="<?php echo htmlspecialchars(generarTokenCSRF()); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- PWA Meta Tags -->
@@ -437,6 +439,23 @@ if (!isset($_SESSION['user_id'])) {
 
 <script>
     let productos = [];
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    const originalFetch = window.fetch;
+    window.fetch = function(input, init = {}) {
+        if (init.method && init.method.toUpperCase() !== 'GET') {
+            if (csrfToken) {
+                init.headers = init.headers || {};
+                if (init.headers instanceof Headers) {
+                    if (!init.headers.has('X-CSRF-Token')) init.headers.set('X-CSRF-Token', csrfToken);
+                } else if (Array.isArray(init.headers)) {
+                    if (!init.headers.some(h => h[0].toLowerCase() === 'x-csrf-token')) init.headers.push(['X-CSRF-Token', csrfToken]);
+                } else {
+                    if (!init.headers['X-CSRF-Token']) init.headers['X-CSRF-Token'] = csrfToken;
+                }
+            }
+        }
+        return originalFetch.call(this, input, init);
+    };
     
     function showError(message) {
         const errorDiv = document.getElementById('errorMsg');

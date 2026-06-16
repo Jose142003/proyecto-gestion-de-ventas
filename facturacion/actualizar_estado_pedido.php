@@ -31,7 +31,7 @@ try {
     $nuevo_estado = isset($input['estado']) ? $input['estado'] : '';
     $notas = isset($input['notas']) ? $input['notas'] : '';
     
-    $estados_validos = ['pendiente', 'procesando', 'facturado', 'completado', 'cancelado'];
+    $estados_validos = ['pendiente', 'procesando', 'enviado', 'entregado', 'facturado', 'cancelado'];
     
     if ($pedido_id <= 0 || !in_array($nuevo_estado, $estados_validos)) {
         echo json_encode([
@@ -62,7 +62,6 @@ try {
     $update_stmt = $pdo->prepare("
         UPDATE pedidos 
         SET estado = :estado, 
-            usuario_procesa_id = :usuario_id,
             notas_internas = CONCAT(IFNULL(notas_internas, ''), :notas),
             updated_at = NOW()
         WHERE id = :pedido_id
@@ -72,7 +71,6 @@ try {
     
     $update_stmt->execute([
         ':estado' => $nuevo_estado,
-        ':usuario_id' => $_SESSION['user_id'],
         ':notas' => $notas_con_formato,
         ':pedido_id' => $pedido_id
     ]);
@@ -137,6 +135,10 @@ try {
         colaNotificacionesAgregar('telegram_pedido', $pedido_id, $factura_id ?: null);
         colaNotificacionesDispararProcesador();
     }
+
+    // Notificar al cliente vía Telegram si vinculó su cuenta
+    require_once __DIR__ . '/../telegram/notificar_pedido.php';
+    telegramNotificarCambioEstado($pdo, $pedido_id, $estado_anterior);
 
     auditoriaRegistrar('actualizar_estado_pedido', 'facturacion', "Pedido ID $pedido_id: estado '$estado_anterior' -> '$nuevo_estado'");
     echo json_encode([

@@ -1,0 +1,102 @@
+[
+    {
+        "rol": "bot",
+        "texto": "Gracias a ti, Carlos. Siempre a la orden para lo que necesites. Vuelve pronto.",
+        "tiempo": 1781364703
+    },
+    {
+        "rol": "user",
+        "texto": "breaker",
+        "tiempo": 1781364704
+    },
+    {
+        "rol": "bot",
+        "texto": "Carlos, *\"breaker\"* no est\u00e1 en este momento, pero te cuento que manejamos:\n  \ud83d\udd39 *Accesorios*\n  \ud83d\udd39 *Botoneras*\n  \ud83d\udd39 *Contactores*\n  \ud83d\udd39 *Controladores*\n  \ud83d\udd39 *Controles*\n  \ud83d\udd39 *Fuentes de Poder*\n  \ud83d\udd39 *Herramientas*\n  \ud83d\udd39 *Instrumentos de Medici\u00f3n*\n  \ud83d\udd39 *Protecciones*\n  \ud83d\udd39 *Rel\u00e9s*\n  \ud83d\udd39 *Sensores*\n  \ud83d\udd39 *Temporizadores*\n  \ud83d\udd39 *Variadores*\n\n\u00bfQu\u00e9 categor\u00eda te llama la atenci\u00f3n? As\u00ed te ayudo a encontrar lo que buscas.",
+        "tiempo": 1781364704
+    },
+    {
+        "rol": "user",
+        "texto": "tienes breakers",
+        "tiempo": 1781364704
+    },
+    {
+        "rol": "bot",
+        "texto": "\u00a1Hola Carlos! No tengo *\"tienes breakers\"* registrado exactamente, pero trabajamos con *81 productos* en estas categor\u00edas:\n  \ud83d\udd39 *Accesorios*\n  \ud83d\udd39 *Botoneras*\n  \ud83d\udd39 *Contactores*\n  \ud83d\udd39 *Controladores*\n  \ud83d\udd39 *Controles*\n  \ud83d\udd39 *Fuentes de Poder*\n  \ud83d\udd39 *Herramientas*\n  \ud83d\udd39 *Instrumentos de Medici\u00f3n*\n  \ud83d\udd39 *Protecciones*\n  \ud83d\udd39 *Rel\u00e9s*\n  \ud83d\udd39 *Sensores*\n  \ud83d\udd39 *Temporizadores*\n  \ud83d\udd39 *Variadores*\n\n\u00bfTe interesa alguna? Dime cu\u00e1l y te muestro lo que tenemos.",
+        "tiempo": 1781364704
+    },
+    {
+        "rol": "user",
+        "texto": "venden cables el\u00e9ctricos",
+        "tiempo": 1781364704
+    },
+    {
+        "rol": "bot",
+        "texto": "[Productos enviados con botones]",
+        "tiempo": 1781364705
+    },
+    {
+        "rol": "user",
+        "texto": "tienen termopares",
+        "tiempo": 1781364705
+    },
+    {
+        "rol": "bot",
+        "texto": "\u00a1Hola Carlos! No tengo *\"termopares\"* registrado exactamente, pero trabajamos con *81 productos* en estas categor\u00edas:\n  \ud83d\udd39 *Accesorios*\n  \ud83d\udd39 *Botoneras*\n  \ud83d\udd39 *Contactores*\n  \ud83d\udd39 *Controladores*\n  \ud83d\udd39 *Controles*\n  \ud83d\udd39 *Fuentes de Poder*\n  \ud83d\udd39 *Herramientas*\n  \ud83d\udd39 *Instrumentos de Medici\u00f3n*\n  \ud83d\udd39 *Protecciones*\n  \ud83d\udd39 *Rel\u00e9s*\n  \ud83d\udd39 *Sensores*\n  \ud83d\udd39 *Temporizadores*\n  \ud83d\udd39 *Variadores*\n\n\u00bfTe interesa alguna? Dime cu\u00e1l y te muestro lo que tenemos.",
+        "tiempo": 1781364705
+    },
+    {
+        "rol": "user",
+        "texto": "tienes contactador",
+        "tiempo": 1781364705
+    },
+    {
+        "rol": "bot",
+        "texto": "[Productos enviados con botones]",
+        "tiempo": 1781364706
+    },
+    {
+        "rol": "user",
+        "texto": "tienes onron",
+        "tiempo": 1781364706
+    },
+    {
+        "rol": "bot",
+        "texto": "No encontramos *\"tienes onron\"* en el cat\u00e1logo actual, Carlos. Sin embargo, estos son los rubros que trabajamos:\n  \ud83d\udd39 *Accesorios*\n  \ud83d\udd39 *Botoneras*\n  \ud83d\udd39 *Contactores*\n  \ud83d\udd39 *Controladores*\n  \ud83d\udd39 *Controles*\n  \ud83d\udd39 *Fuentes de Poder*\n  \ud83d\udd39 *Herramientas*\n  \ud83d\udd39 *Instrumentos de Medici\u00f3n*\n  \ud83d\udd39 *Protecciones*\n  \ud83d\udd39 *Rel\u00e9s*\n  \ud83d\udd39 *Sensores*\n  \ud83d\udd39 *Temporizadores*\n  \ud83d\udd39 *Variadores*\n\n\u00bfAlguna de estas opciones se acerca a lo que necesitas?",
+        "tiempo": 1781364707
+    },
+    {
+        "rol": "user",
+        "texto": "qu\u00e9 categor\u00edas tienen",
+        "tiempo": 1781364707
+    },
+    {
+        "rol": "user",
+        "texto": "lista de productos",
+        "tiempo": 1781364707
+    },
+    {
+        "rol": "user",
+        "texto": "me puedes ayudar",
+        "tiempo": 1781364708
+    },
+    {
+        "rol": "bot",
+        "texto": "\u00a1Hola Carlos! Estoy aqu\u00ed para ayudarte. \u00bfQu\u00e9 producto buscas? Te digo precio, disponibilidad y todo lo que necesites.",
+        "tiempo": 1781364708
+    },
+    {
+        "rol": "user",
+        "texto": "necesito borneras",
+        "tiempo": 1781364708
+    },
+    {
+        "rol": "user",
+        "texto": "tienen plc",
+        "tiempo": 1781364708
+    },
+    {
+        "rol": "user",
+        "texto": "busco pararrayos",
+        "tiempo": 1781364708
+    }
+]

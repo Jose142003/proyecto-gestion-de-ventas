@@ -2677,6 +2677,91 @@ try {
         </div>
     </div>
 
+    <!-- Modal: Seguimiento de Cotización -->
+    <div id="seguimientoModal" class="modal" style="display:none">
+        <div class="modal-content" style="max-width:500px">
+            <div class="modal-header"><h3 class="modal-title"><i class="fas fa-history"></i> Seguimiento de Cotización</h3><button class="modal-close" onclick="document.getElementById('seguimientoModal').style.display='none'">&times;</button></div>
+            <div class="modal-body" style="padding:20px">
+                <input type="hidden" id="segCotizacionId">
+                <div class="form-group" style="margin-bottom:15px">
+                    <label style="display:block;margin-bottom:5px;font-weight:600">Nuevo Estado</label>
+                    <select id="segNuevoEstado" class="form-control" style="padding:8px;border-radius:6px;width:100%">
+                        <option value="pendiente">Pendiente</option>
+                        <option value="aprobada">Aprobada</option>
+                        <option value="rechazada">Rechazada</option>
+                        <option value="vencida">Vencida</option>
+                        <option value="convertida">Convertida</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom:15px">
+                    <label style="display:block;margin-bottom:5px;font-weight:600">Nota de Seguimiento</label>
+                    <textarea id="segNota" class="form-control" rows="4" style="padding:8px;border-radius:6px;width:100%;resize:vertical" placeholder="Escribe una nota sobre el seguimiento..."></textarea>
+                </div>
+                <div id="segHistorial" style="margin-bottom:15px;padding:10px;background:var(--card-bg);border-radius:6px;max-height:200px;overflow-y:auto"></div>
+                <button class="btn-primary" onclick="guardarSeguimiento()" style="width:100%;padding:10px"><i class="fas fa-save"></i> Guardar Seguimiento</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Nueva / Editar Cotización -->
+    <div id="cotizacionModal" class="modal" style="display:none">
+        <div class="modal-content" style="max-width:700px">
+            <div class="modal-header"><h3 class="modal-title" id="cotizacionModalTitle">Nueva Cotización</h3><button class="modal-close" onclick="cerrarModalCotizacion()">&times;</button></div>
+            <div class="modal-body" style="padding:20px;max-height:70vh;overflow-y:auto">
+                <input type="hidden" id="editCotizacionId">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:15px">
+                    <div class="form-group">
+                        <label style="display:block;margin-bottom:4px;font-weight:600">Cliente *</label>
+                        <input type="text" id="cotClienteNombre" class="form-control" placeholder="Nombre del cliente" style="padding:8px;border-radius:6px;width:100%">
+                    </div>
+                    <div class="form-group">
+                        <label style="display:block;margin-bottom:4px;font-weight:600">Email</label>
+                        <input type="email" id="cotClienteEmail" class="form-control" placeholder="cliente@email.com" style="padding:8px;border-radius:6px;width:100%">
+                    </div>
+                    <div class="form-group">
+                        <label style="display:block;margin-bottom:4px;font-weight:600">Teléfono</label>
+                        <input type="text" id="cotClienteTelefono" class="form-control" placeholder="Teléfono" style="padding:8px;border-radius:6px;width:100%">
+                    </div>
+                    <div class="form-group">
+                        <label style="display:block;margin-bottom:4px;font-weight:600">Dirección</label>
+                        <input type="text" id="cotClienteDireccion" class="form-control" placeholder="Dirección" style="padding:8px;border-radius:6px;width:100%">
+                    </div>
+                    <div class="form-group">
+                        <label style="display:block;margin-bottom:4px;font-weight:600">Fecha Vencimiento</label>
+                        <input type="date" id="cotFechaVencimiento" class="form-control" style="padding:8px;border-radius:6px;width:100%">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom:15px">
+                    <label style="display:block;margin-bottom:4px;font-weight:600">Notas</label>
+                    <textarea id="cotNotas" class="form-control" rows="2" style="padding:8px;border-radius:6px;width:100%;resize:vertical" placeholder="Notas opcionales..."></textarea>
+                </div>
+                <hr style="border-color:var(--border-color);margin:15px 0">
+                <h4 style="margin:0 0 10px"><i class="fas fa-box"></i> Productos</h4>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center">
+                    <select id="cotProductoSelect" style="flex:2;min-width:180px;padding:8px;border-radius:6px;background:var(--card-bg);color:var(--text-color);border:1px solid var(--border-color)">
+                        <option value="">Seleccionar producto...</option>
+                    </select>
+                    <input type="text" id="cotProductoNombre" placeholder="O escribe nombre" style="flex:1;min-width:120px;padding:8px;border-radius:6px;background:var(--card-bg);color:var(--text-color);border:1px solid var(--border-color);display:none">
+                    <input type="number" id="cotProductoCantidad" value="1" min="1" style="width:70px;padding:8px;border-radius:6px;background:var(--card-bg);color:var(--text-color);border:1px solid var(--border-color)">
+                    <input type="number" id="cotProductoPrecio" step="0.01" min="0" placeholder="Precio" style="width:110px;padding:8px;border-radius:6px;background:var(--card-bg);color:var(--text-color);border:1px solid var(--border-color)">
+                    <button class="btn-primary" onclick="agregarItemCotizacion()" style="padding:8px 16px;white-space:nowrap"><i class="fas fa-plus"></i> Agregar</button>
+                </div>
+                <div style="overflow-x:auto">
+                    <table class="data-table" style="width:100%;margin-bottom:10px">
+                        <thead><tr><th>Producto</th><th>Cant.</th><th>Precio Unit.</th><th>Subtotal</th><th></th></tr></thead>
+                        <tbody id="cotizacionItemsBody"><tr><td colspan="5" style="text-align:center;color:#999">Agrega productos a la cotización</td></tr></tbody>
+                    </table>
+                </div>
+                <div style="text-align:right;margin-bottom:15px">
+                    <div>Subtotal: <span id="cotSubtotal">Bs. 0.00</span></div>
+                    <div>IVA (16%): <span id="cotIva">Bs. 0.00</span></div>
+                    <div style="font-size:1.2rem;font-weight:bold">Total: <span id="cotTotal">Bs. 0.00</span></div>
+                </div>
+                <button class="btn-primary" id="btnGuardarCotizacion" onclick="guardarCotizacion()" style="width:100%;padding:10px"><i class="fas fa-save"></i> Guardar Cotización</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="loading-overlay" style="display: none;">
         <div class="loading-spinner"></div>
@@ -2722,6 +2807,33 @@ try {
         let biStockCategoriasChartInstance = null;
         let prediccionesChartInstance = null;
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+        // ====================================================================
+        // FETCH WRAPPER: Incluye automáticamente el token CSRF en peticiones POST/PUT/DELETE
+        // ====================================================================
+        const originalFetch = window.fetch;
+        window.fetch = function(input, init = {}) {
+            if (init.method && init.method.toUpperCase() !== 'GET') {
+                if (csrfToken) {
+                    init.headers = init.headers || {};
+                    if (init.headers instanceof Headers) {
+                        if (!init.headers.has('X-CSRF-Token')) {
+                            init.headers.set('X-CSRF-Token', csrfToken);
+                        }
+                    } else if (Array.isArray(init.headers)) {
+                        const hasToken = init.headers.some(h => h[0].toLowerCase() === 'x-csrf-token');
+                        if (!hasToken) {
+                            init.headers.push(['X-CSRF-Token', csrfToken]);
+                        }
+                    } else {
+                        if (!init.headers['X-CSRF-Token']) {
+                            init.headers['X-CSRF-Token'] = csrfToken;
+                        }
+                    }
+                }
+            }
+            return originalFetch.call(this, input, init);
+        };
 
         // ====================================================================
         // FUNCIONES DE BÚSQUEDA EN TIEMPO REAL

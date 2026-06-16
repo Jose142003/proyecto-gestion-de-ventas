@@ -914,6 +914,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
         <div class="filter-group">
             <label>Ordenar</label>
             <select class="form-control" id="sort-by">
+                <option value="newest">Más recientes</option>
                 <option value="name_asc">Nombre A-Z</option>
                 <option value="price_asc">Precio ↑</option>
                 <option value="price_desc">Precio ↓</option>
@@ -1358,7 +1359,7 @@ let currentFilters = {
     maxPrice: null,
     minRating: 0,
     category: '',
-    sortBy: 'name_asc'
+    sortBy: 'newest'
 };
 
 // ===== OBTENER ELEMENTOS DOM =====
@@ -2026,6 +2027,7 @@ function applyFilters() {
     }
     
     switch(currentFilters.sortBy) {
+        case 'newest': break;
         case 'name_asc': filteredProducts.sort((a,b) => a.name.localeCompare(b.name)); break;
         case 'price_asc': filteredProducts.sort((a,b) => a.price - b.price); break;
         case 'price_desc': filteredProducts.sort((a,b) => b.price - a.price); break;
@@ -2062,7 +2064,7 @@ function displayProducts() {
         card.setAttribute('data-id', product.id);
         card.innerHTML = `
             <div class="product-img-container" data-id="${product.id}">
-                <img src="${product.image}" alt="${escapeHtml(product.name)}" data-id="${product.id}">
+                <img src="${product.image}" alt="${escapeHtml(product.name)}" data-id="${product.id}" onerror="this.src='https://via.placeholder.com/300x300?text=Sin+Imagen'">
                 ${inactivo ? '<span style="position:absolute; top:5px; right:5px; background:#dc3545; color:white; padding:2px 6px; border-radius:4px; font-size:11px;">NO DISP</span>' : ''}
                 <div class="product-favorite-btn ${esFavorito ? 'favorito-activo' : ''}" data-id="${product.id}">
                     <i class="${esFavorito ? 'fas' : 'far'} fa-heart"></i>
@@ -2138,7 +2140,9 @@ function attachProductEvents() {
 
 function openProductModal(product) {
     window.currentModalProduct = product;
-    document.getElementById('modal-product-image').src = product.image;
+    const modalImg = document.getElementById('modal-product-image');
+    modalImg.src = product.image;
+    modalImg.onerror = function() { this.src = 'https://via.placeholder.com/300x300?text=Sin+Imagen'; };
     document.getElementById('modal-product-name').textContent = product.name;
     document.getElementById('modal-product-category').textContent = product.category;
     document.getElementById('modal-product-rating').innerHTML = generateStarRating(product.rating);
@@ -2169,7 +2173,7 @@ function openProductModal(product) {
         if (related.length > 0) {
             relatedList.innerHTML = related.map(r => `
                 <div class="related-product-card" data-id="${r.id}">
-                    <img src="${r.image}" alt="${escapeHtml(r.name)}" loading="lazy">
+                    <img src="${r.image}" alt="${escapeHtml(r.name)}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x300?text=Sin+Imagen'">
                     <div class="name">${escapeHtml(r.name)}</div>
                     <div class="price">$${r.price.toFixed(2)}</div>
                 </div>
@@ -2475,7 +2479,7 @@ async function mostrarFavoritos() {
                 html += `
                     <div class="product-card" data-id="${f.id}" style="margin-bottom:0;">
                         <div class="product-img-container" style="height:140px; position:relative;" data-id="${f.id}">
-                            <img src="${f.image || ''}" alt="${escapeHtml(f.name)}" data-id="${f.id}" style="max-height:120px;">
+                            <img src="${f.image || 'https://via.placeholder.com/300x300?text=Sin+Imagen'}" alt="${escapeHtml(f.name)}" data-id="${f.id}" style="max-height:120px;" onerror="this.src='https://via.placeholder.com/300x300?text=Sin+Imagen'">
                             <div class="product-favorite-btn favorito-activo" data-id="${f.producto_id}" style="position:absolute; top:5px; left:5px; cursor:pointer; font-size:1.3rem; z-index:2;">
                                 <i class="fas fa-heart"></i>
                             </div>
@@ -2828,9 +2832,9 @@ function setupEventListeners() {
             document.getElementById('price-max').value = '';
             document.getElementById('rating-min').value = '0';
             document.getElementById('category-filter').value = '';
-            document.getElementById('sort-by').value = 'name_asc';
+            document.getElementById('sort-by').value = 'newest';
             searchInput.value = '';
-            currentFilters = { searchTerm: '', minPrice: null, maxPrice: null, minRating: 0, category: '', sortBy: 'name_asc' };
+            currentFilters = { searchTerm: '', minPrice: null, maxPrice: null, minRating: 0, category: '', sortBy: 'newest' };
             applyFilters();
         });
     }

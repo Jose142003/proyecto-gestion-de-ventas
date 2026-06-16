@@ -1,0 +1,12 @@
+[
+    {
+        "rol": "user",
+        "texto": "Cu\u00e1l es el horario?",
+        "tiempo": 1781363765
+    },
+    {
+        "rol": "bot",
+        "texto": "*Horario de Atenci\u00f3n*\n\nLunes a Viernes: 8:00 AM \u2014 5:00 PM\nS\u00e1bados: 8:00 AM \u2014 12:00 PM\nDomingos y feriados: Cerrado\n\nUbicaci\u00f3n: Zona Industrial, Centro Michelena, Michelena, T\u00e1chira.\n\nPuedes escribirme a cualquier hora y te responder\u00e9 en nuestro horario laboral.\n\n\u00bfNecesitas algo?",
+        "tiempo": 1781363765
+    }
+]

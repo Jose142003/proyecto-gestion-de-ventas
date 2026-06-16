@@ -1,0 +1,102 @@
+[
+    {
+        "rol": "user",
+        "texto": "at8n",
+        "tiempo": 1781268477
+    },
+    {
+        "rol": "bot",
+        "texto": "[Productos enviados con botones]",
+        "tiempo": 1781268479
+    },
+    {
+        "rol": "user",
+        "texto": "no",
+        "tiempo": 1781268485
+    },
+    {
+        "rol": "bot",
+        "texto": "[Productos enviados con botones]",
+        "tiempo": 1781268486
+    },
+    {
+        "rol": "user",
+        "texto": "no",
+        "tiempo": 1781268497
+    },
+    {
+        "rol": "bot",
+        "texto": "[Productos enviados con botones]",
+        "tiempo": 1781268499
+    },
+    {
+        "rol": "user",
+        "texto": "que productos uni-t venden",
+        "tiempo": 1781268683
+    },
+    {
+        "rol": "bot",
+        "texto": "[Productos enviados con botones]",
+        "tiempo": 1781268685
+    },
+    {
+        "rol": "user",
+        "texto": "que productos autonics venden",
+        "tiempo": 1781268701
+    },
+    {
+        "rol": "bot",
+        "texto": "En PIC trabajamos con *suministros industriales*.\n\nTenemos *81 productos* en estas categor\u00edas:\n\n- Accesorios\n- Botoneras\n- Contactores\n- Controladores\n- Controles\n- Fuentes de Poder\n- Herramientas\n- Instrumentos de Medici\u00f3n\n- Protecciones\n- Rel\u00e9s\n- Sensores\n- Temporizadores\n- Variadores\n\n\u00bfBuscas algo en espec\u00edfico? Dime el producto o categor\u00eda.\n\nTienda online: http:\/\/localhost\/proyecto\/interfaz_usuario\/pagina_modernizada.html\n\n\u00bfQu\u00e9 producto te interesa?",
+        "tiempo": 1781268701
+    },
+    {
+        "rol": "user",
+        "texto": "que productos autonics venden",
+        "tiempo": 1781268722
+    },
+    {
+        "rol": "bot",
+        "texto": "En PIC trabajamos con *suministros industriales*.\n\nTenemos *81 productos* en estas categor\u00edas:\n\n- Accesorios\n- Botoneras\n- Contactores\n- Controladores\n- Controles\n- Fuentes de Poder\n- Herramientas\n- Instrumentos de Medici\u00f3n\n- Protecciones\n- Rel\u00e9s\n- Sensores\n- Temporizadores\n- Variadores\n\n\u00bfBuscas algo en espec\u00edfico? Dime el producto o categor\u00eda.\n\nTienda online: http:\/\/localhost\/proyecto\/interfaz_usuario\/pagina_modernizada.html\n\n\u00bfQu\u00e9 producto te interesa?",
+        "tiempo": 1781268722
+    },
+    {
+        "rol": "user",
+        "texto": "quiero ver todo",
+        "tiempo": 1781268752
+    },
+    {
+        "rol": "bot",
+        "texto": "[Productos enviados con botones]",
+        "tiempo": 1781268754
+    },
+    {
+        "rol": "user",
+        "texto": "hola tienes cables",
+        "tiempo": 1781364863
+    },
+    {
+        "rol": "bot",
+        "texto": "Hola Jose, revis\u00e9 y no encuentro *\"tienes cables\"* en nuestro cat\u00e1logo actual. \u00bfQuiz\u00e1s lo conoces por otro nombre? Tambi\u00e9n puedes ver todo nuestro inventario en la tienda online: http:\/\/localhost\/proyecto\/interfaz_usuario\/pagina_modernizada.html\n\n\u00bfQu\u00e9 producto andas buscando?",
+        "tiempo": 1781364863
+    },
+    {
+        "rol": "user",
+        "texto": "cable",
+        "tiempo": 1781364878
+    },
+    {
+        "rol": "bot",
+        "texto": "[Productos enviados con botones]",
+        "tiempo": 1781364879
+    },
+    {
+        "rol": "user",
+        "texto": "cable",
+        "tiempo": 1781364916
+    },
+    {
+        "rol": "bot",
+        "texto": "[Productos enviados con botones]",
+        "tiempo": 1781364917
+    }
+]

@@ -63,13 +63,13 @@ function marcarComoPagada($pdo, $facturaId, $usuarioId) {
     
     try {
         // Actualizar estado de la factura
-        $stmt = $pdo->prepare("UPDATE facturas SET estado = 'pagada', updated_at = NOW() WHERE id = ?");
+        $stmt = $pdo->prepare("UPDATE facturas SET estado = 'pagada' WHERE id = ?");
         $stmt->execute([$facturaId]);
         
         // Registrar movimiento en inventario (si aplica)
         $stmt = $pdo->prepare("
             INSERT INTO movimientos_inventario (producto_id, tipo_movimiento, cantidad, descripcion, referencia, usuario_id)
-            SELECT fd.producto_id, 'salida_confirmada', fd.cantidad, 
+            SELECT fd.producto_id, 'salida', fd.cantidad, 
                    CONCAT('Confirmación pago factura ', f.numero_factura), 
                    f.numero_factura, ?
             FROM factura_detalles fd
@@ -112,7 +112,7 @@ function anularFactura($pdo, $facturaId, $usuarioId) {
     
     try {
         // Actualizar estado de la factura
-        $stmt = $pdo->prepare("UPDATE facturas SET estado = 'anulada', updated_at = NOW() WHERE id = ?");
+        $stmt = $pdo->prepare("UPDATE facturas SET estado = 'anulada' WHERE id = ?");
         $stmt->execute([$facturaId]);
         
         // Devolver stock al inventario

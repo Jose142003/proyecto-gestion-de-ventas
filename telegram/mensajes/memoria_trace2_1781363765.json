@@ -1,0 +1,87 @@
+[
+    {
+        "rol": "user",
+        "texto": "Hola, buenas tardes",
+        "tiempo": 1781363765
+    },
+    {
+        "rol": "bot",
+        "texto": "Hola TestUser, encantado de atenderte. \u00bfBuscas alg\u00fan producto en especial? Te ayudo con precios y disponibilidad.",
+        "tiempo": 1781363765
+    },
+    {
+        "rol": "user",
+        "texto": "Necesito un contactor, tienes?",
+        "tiempo": 1781363765
+    },
+    {
+        "rol": "bot",
+        "texto": "[Productos enviados con botones]",
+        "tiempo": 1781363766
+    },
+    {
+        "rol": "user",
+        "texto": "Y de sensores qu\u00e9 tienes?",
+        "tiempo": 1781363766
+    },
+    {
+        "rol": "bot",
+        "texto": "[Productos enviados con botones]",
+        "tiempo": 1781363768
+    },
+    {
+        "rol": "user",
+        "texto": "Cu\u00e1l es el precio del sensor inductivo?",
+        "tiempo": 1781363768
+    },
+    {
+        "rol": "bot",
+        "texto": "[Productos enviados con botones]",
+        "tiempo": 1781363769
+    },
+    {
+        "rol": "user",
+        "texto": "Tienen en stock?",
+        "tiempo": 1781363769
+    },
+    {
+        "rol": "bot",
+        "texto": "Manejamos una amplia gama de *suministros industriales*.\n\nActualmente tenemos *81 productos* activos, organizados en estas categor\u00edas:\n\n- Accesorios\n- Botoneras\n- Contactores\n- Controladores\n- Controles\n- Fuentes de Poder\n- Herramientas\n- Instrumentos de Medici\u00f3n\n- Protecciones\n- Rel\u00e9s\n- Sensores\n- Temporizadores\n- Variadores\n\n\u00bfTe llama la atenci\u00f3n alguna categor\u00eda en especial? Dime cu\u00e1l y te muestro los productos.\n\nTienda online: http:\/\/localhost\/proyecto\/interfaz_usuario\/pagina_modernizada.html\n\n\u00bfQu\u00e9 producto te interesa?",
+        "tiempo": 1781363769
+    },
+    {
+        "rol": "user",
+        "texto": "Dame el precio de los breakers",
+        "tiempo": 1781363769
+    },
+    {
+        "rol": "bot",
+        "texto": "*Lista de Precios PIC*\n\nNuestros productos est\u00e1n en Bs. (Bol\u00edvares). Los precios var\u00edan seg\u00fan la tasa BCV del d\u00eda y se muestran sin IVA.\n\nTenemos *81 productos* en estas l\u00edneas:\n\n- Accesorios\n- Botoneras\n- Contactores\n- Controladores\n- Controles\n- Fuentes de Poder\n- Herramientas\n- Instrumentos de Medici\u00f3n\n- Protecciones\n- Rel\u00e9s\n- Sensores\n- Temporizadores\n- Variadores\n\nDime qu\u00e9 producto buscas y te doy el precio exacto. \u00bfQu\u00e9 necesitas cotizar?",
+        "tiempo": 1781363769
+    },
+    {
+        "rol": "user",
+        "texto": "Y c\u00f3mo es la forma de pago?",
+        "tiempo": 1781363769
+    },
+    {
+        "rol": "bot",
+        "texto": "*Formas de Pago*\n\nAceptamos:\n\n- Transferencia Bancaria (disponible 24\/7)\n- Pago M\u00f3vil (todos los bancos)\n- Pago de Contado (descuentos especiales)\n- D\u00f3lares y bol\u00edvares (tasa BCV del d\u00eda)\n\nAl solicitar tu cotizaci\u00f3n, te enviamos los datos bancarios y el monto exacto.\n\n\u00bfListo para comprar? Dime qu\u00e9 producto te interesa.",
+        "tiempo": 1781363769
+    },
+    {
+        "rol": "user",
+        "texto": "Hacen env\u00edos?",
+        "tiempo": 1781363769
+    },
+    {
+        "rol": "bot",
+        "texto": "*Env\u00edos y pagos*\n\nHacemos env\u00edos a todo Venezuela por MRW, Tealca y Zoom.\n\nFormas de pago:\n- Transferencia bancaria\n- Pago m\u00f3vil\n- Pago de contado (descuentos especiales)\n\nLos precios est\u00e1n en Bs. \u00bfQuieres que te cotice alg\u00fan producto?",
+        "tiempo": 1781363769
+    },
+    {
+        "rol": "user",
+        "texto": "Cu\u00e1l es el horario?",
+        "tiempo": 1781363769
+    }
+]

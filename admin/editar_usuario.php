@@ -471,6 +471,7 @@ try {
             </div>
             
             <form method="POST" action="">
+                <?php echo campoCSRF(); ?>
                 <div class="form-section">
                     <div class="section-title">
                         <i class="fas fa-user-cog"></i>

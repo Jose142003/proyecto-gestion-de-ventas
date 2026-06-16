@@ -14,6 +14,7 @@ try {
     $pdo = conectarDB();
 
     $input = json_decode(file_get_contents('php://input'), true);
+    if (!is_array($input)) $input = [];
     $mensaje = $input['mensaje'] ?? $_POST['mensaje'] ?? '';
 
     if (empty($mensaje)) {
@@ -38,9 +39,8 @@ try {
 
     $resultado = telegramEnviar($token, $chatId, $mensaje);
 
-    auditoriaRegistrar('enviar_telegram', 'telegram', "Mensaje enviado por Telegram a chat $chatId");
-
     if ($resultado['success']) {
+        auditoriaRegistrar('enviar_telegram', 'telegram', "Mensaje enviado por Telegram a chat $chatId");
         echo json_encode(['success' => true, 'message' => 'Mensaje enviado correctamente']);
     } else {
         echo json_encode([
