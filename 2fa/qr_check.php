@@ -50,7 +50,7 @@ try {
                 session_name('CLIENTSESSID');
             }
             session_set_cookie_params([
-                'lifetime' => 0, 'path' => '/', 'domain' => '', 'secure' => false,
+                'lifetime' => 0, 'path' => '/', 'domain' => '', 'secure' => true,
                 'httponly' => true, 'samesite' => 'Lax'
             ]);
             session_start();
@@ -84,10 +84,11 @@ try {
         }
 
         // Cookie persistente
+        $secret_key = defined('APP_SECRET') ? APP_SECRET : 'change-this-to-a-random-secret-in-production';
         $token_data = $userData['id'] . '|' . $userData['nombre'] . '|' . $userData['user_table'];
-        $token_sig = hash_hmac('sha256', $token_data, BASE_URL);
+        $token_sig = hash_hmac('sha256', $token_data, $secret_key);
         $token_value = base64_encode($token_data . '|' . $token_sig);
-        setcookie('persist_token', $token_value, time() + 86400 * 30, '/', '', false, true);
+        setcookie('persist_token', $token_value, time() + 86400 * 30, '/', '', true, true);
 
         // Actualizar último login
         $col = ($userData['user_table'] === 'admin_users') ? 'admin_users' : 'users';

@@ -1,9 +1,9 @@
-# Permitir ejecución de scripts PHP pero proteger archivos de backup (.sql)
+# Proteger archivos SQL backup
 <FilesMatch "\.sql$">
-    Deny from all
+    Require all denied
 </FilesMatch>
 
 # Permitir PHP (necesario para crear_backup.php y backup_automatico.php)
 <FilesMatch "\.php$">
-    Allow from all
+    Require all granted
 </FilesMatch>

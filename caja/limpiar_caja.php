@@ -2,15 +2,13 @@
 session_start();
 header('Content-Type: application/json');
 
-if (!isset($_SESSION['user_id'])) {
-    echo json_encode(['success' => false, 'message' => 'No autorizado']);
-    exit;
-}
-
 require_once dirname(__DIR__) . '/conexion/conexion.php';
+
+requerirAdmin();
 
 try {
     $db = conectarDB();
+    verificarCSRF();
     $data = json_decode(file_get_contents('php://input'), true);
     $accion = $data['accion'] ?? 'limpiar';
 

@@ -27,8 +27,6 @@ try {
     $tabla_origen = $_SESSION['tabla_origen'] ?? null;
     $user_rol = $_SESSION['user_rol'] ?? $_SESSION['rol'] ?? 'usuario';
 
-    logError("Usuario ID: $usuario_id, es_admin: " . ($es_admin ? 'true' : 'false'));
-
     // Determinar qué tabla usar
     $tabla = 'users';
     $campo_foto = 'foto_perfil';
@@ -36,7 +34,6 @@ try {
     // Si es admin o viene de admin_users, usar admin_users
     if ($es_admin || $tabla_origen === 'admin_users') {
         $tabla = 'admin_users';
-        logError("Usando tabla admin_users para usuario $usuario_id");
     }
 
     // Verificar que se haya subido un archivo
@@ -119,6 +116,8 @@ try {
         }
     }
 
+    verificarCSRF();
+
     // Generar nombre único seguro (UUID v4-like)
     $extension = strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION));
     $uuid = bin2hex(random_bytes(16));
@@ -134,8 +133,6 @@ try {
         echo json_encode(['success' => false, 'message' => 'Error al guardar el archivo']);
         exit;
     }
-
-    verificarCSRF();
 
     try {
         $db = conectarDB();

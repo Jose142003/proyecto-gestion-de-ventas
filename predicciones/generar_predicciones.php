@@ -82,7 +82,9 @@ try {
                     $tipoAlerta = $producto['stock'] <= 0 ? 'critico' : ($producto['stock'] <= 5 ? 'critico' : 'bajo');
                     $stmtInsertAlerta->execute([$producto['id'], $tipoAlerta, $producto['stock'], $stockSugerido, "Stock $tipoAlerta: '{$producto['name']}' tiene {$producto['stock']} unidades (sugerido: $stockSugerido)"]);
                 }
-            } catch (Throwable $e) {}
+            } catch (Throwable $e) {
+                error_log("Error generando alerta stock: " . $e->getMessage());
+            }
         }
     }
 

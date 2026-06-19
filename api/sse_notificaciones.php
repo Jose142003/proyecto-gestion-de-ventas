@@ -1,14 +1,14 @@
 <?php
 session_start();
 
-if (!isset($_SESSION['user_id'])) {
+require_once __DIR__ . '/../conexion/conexion.php';
+
+if (!isset($_SESSION['user_id']) || !esAdmin()) {
     header('Content-Type: application/json');
     http_response_code(403);
     echo json_encode(['success' => false, 'message' => 'No autorizado']);
     exit;
 }
-
-require_once __DIR__ . '/../conexion/conexion.php';
 
 header('Content-Type: text/event-stream');
 header('Cache-Control: no-cache');

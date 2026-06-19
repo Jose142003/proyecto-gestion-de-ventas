@@ -6,12 +6,8 @@ session_start();
 
 header('Content-Type: application/json');
 
-error_log("=== verificar_rol.php - INICIO ===");
-error_log("SESSION: " . print_r($_SESSION, true));
-
 // Verificar si hay sesión activa
 if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
-    error_log("No hay sesión activa - Usuario invitado");
     echo json_encode([
         'success' => false,
         'message' => 'No autenticado',

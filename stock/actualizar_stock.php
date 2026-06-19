@@ -13,11 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 require_once __DIR__ . '/../conexion/conexion.php';
 
 session_start();
-if (!isset($_SESSION['user_id'])) {
-    http_response_code(401);
-    echo json_encode(['success' => false, 'message' => 'No autorizado']);
-    exit;
-}
+requerirAdmin();
 
 verificarCSRF();
 
@@ -195,8 +191,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]
         ]);
         
-    } catch (Exception $e) {
-        $pdo->rollBack();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
         
         echo json_encode([
             'success' => false,

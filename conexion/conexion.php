@@ -30,7 +30,11 @@ class Database {
         seguridadInit();
 
         header('Content-Type: application/json; charset=utf-8');
-        header('Access-Control-Allow-Origin: http://localhost');
+        $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+        $allowedOrigins = ['http://localhost', 'https://localhost'];
+        if (in_array($origin, $allowedOrigins)) {
+            header('Access-Control-Allow-Origin: ' . $origin);
+        }
         header('Access-Control-Allow-Credentials: true');
         header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
         header('Access-Control-Allow-Headers: Content-Type, Authorization');
@@ -84,7 +88,11 @@ if (!function_exists('iniciarSesion')) {
         $referer = $_SERVER['HTTP_REFERER'] ?? '';
 
         if (strpos($referer, '/panel_admin/') !== false || strpos($referer, '/admin/') !== false) {
-            @session_start();
+            session_start();
+            if (empty($_SESSION['_session_initiated'])) {
+                session_regenerate_id(true);
+                $_SESSION['_session_initiated'] = true;
+            }
             seguridadVerificarTimeoutSesion();
             seguridadRegenerarSesion();
             return;
@@ -92,16 +100,24 @@ if (!function_exists('iniciarSesion')) {
 
         if (isset($_COOKIE['CLIENTSESSID'])) {
             session_name('CLIENTSESSID');
-            @session_start();
+            session_start();
+            if (empty($_SESSION['_session_initiated'])) {
+                session_regenerate_id(true);
+                $_SESSION['_session_initiated'] = true;
+            }
             if (isset($_SESSION['user_id'])) {
                 seguridadVerificarTimeoutSesion();
                 seguridadRegenerarSesion();
                 return;
             }
-            @session_write_close();
+            session_write_close();
         }
 
-        @session_start();
+        session_start();
+        if (empty($_SESSION['_session_initiated'])) {
+            session_regenerate_id(true);
+            $_SESSION['_session_initiated'] = true;
+        }
         seguridadVerificarTimeoutSesion();
         seguridadRegenerarSesion();
     }

@@ -42,8 +42,8 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                             $_SESSION['user_tipo'] = 'admin';
                             $_SESSION['_ultimo_acceso'] = time();
                             $_SESSION['_regenerado_en'] = time();
-                            $_SESSION['2fa_verified'] = true;
-                            $_SESSION['2fa_verified_at'] = time();
+                            $_SESSION['2fa_verified'] = false;
+                            $_SESSION['2fa_verified_at'] = null;
                         }
                     } catch (PDOException $e) {
                         error_log("panel_admin.php: Error restaurando persist_token: " . $e->getMessage());
@@ -54,7 +54,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     }
 }
 
-error_log("panel_admin.php - Admin ID: " . ($_SESSION['user_id'] ?? 'none') . ", Rol: " . ($_SESSION['user_rol'] ?? 'none'));
+// Debug logging removed for security
 
 // Generar CSRF token para la sesion
 if (function_exists('generarTokenCSRF')) {
@@ -65,7 +65,6 @@ if (function_exists('generarTokenCSRF')) {
 
 // 1. Verificar autenticación
 if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
-    error_log("panel_admin.php: Check 1 FALLÓ - loggedin=" . (isset($_SESSION['loggedin']) ? ($_SESSION['loggedin'] ? 'true' : 'false') : 'NOT SET'));
     header('Location: /proyecto/interfaz_usuario/login.html');
     exit;
 }
@@ -73,22 +72,17 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
 // 2. Verificar tabla_origen - Debe ser 'admin_users'
 $tabla_origen = $_SESSION['tabla_origen'] ?? null;
 if ($tabla_origen !== 'admin_users') {
-    error_log("panel_admin.php: Acceso denegado - tabla_origen incorrecta: " . $tabla_origen);
-    
-    // Si es cliente, destruir sesión y redirigir a login
     if ($tabla_origen === 'users') {
         session_destroy();
         header('Location: /proyecto/interfaz_usuario/login.html?error=cliente_accediendo_admin');
         exit;
     }
-    
     header('Location: /proyecto/interfaz_usuario/login.html?error=invalid_access');
     exit;
 }
 
 // 3. Verificar bandera es_admin
 if (!isset($_SESSION['es_admin']) || $_SESSION['es_admin'] !== true) {
-    error_log("panel_admin.php: Acceso denegado - es_admin = false");
     header('Location: /proyecto/interfaz_usuario/login.html?error=not_admin');
     exit;
 }
@@ -97,7 +91,6 @@ if (!isset($_SESSION['es_admin']) || $_SESSION['es_admin'] !== true) {
 $user_rol = $_SESSION['user_rol'] ?? '';
 $roles_admin = ['admin', 'superadmin', 'vendedor', 'administrador'];
 if (!in_array(strtolower($user_rol), $roles_admin)) {
-    error_log("panel_admin.php: Acceso denegado - rol incorrecto: " . $user_rol);
     header('Location: /proyecto/interfaz_usuario/login.html?error=invalid_role');
     exit;
 }
@@ -114,8 +107,7 @@ try {
     $stmt->execute([$user_id]);
     $admin_user = $stmt->fetch(PDO::FETCH_ASSOC);
     
-    if (!$admin_user || $admin_user['activo'] == 0) {
-        error_log("panel_admin.php: Admin no encontrado o inactivo en BD");
+    if (!$admin_user || (int)$admin_user['activo'] === 0) {
         session_destroy();
         header('Location: /proyecto/interfaz_usuario/login.html?error=invalid_admin');
         exit;

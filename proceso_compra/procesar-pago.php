@@ -50,17 +50,21 @@ if (empty($items)) {
     exit;
 }
 
-// Calcular total
-$total = 0;
-foreach ($items as $item) {
-    $total += floatval($item['price']) * intval($item['quantity']);
-}
-
-// Generar número de pedido
-$numero_pedido = 'PED-' . date('Ymd') . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
-
 try {
     $pdo = conectarDB();
+
+    // Calcular total desde la BD
+    $total = 0;
+    foreach ($items as $item) {
+        $stmtP = $pdo->prepare("SELECT price FROM products WHERE id = ?");
+        $stmtP->execute([intval($item['id'])]);
+        $prodP = $stmtP->fetch();
+        $dbPrice = $prodP ? floatval($prodP['price']) : 0;
+        $total += $dbPrice * intval($item['quantity']);
+    }
+
+    // Generar número de pedido
+    $numero_pedido = 'PED-' . date('Ymd') . '-' . str_pad(random_int(1, 9999), 4, '0', STR_PAD_LEFT);
     $pdo->beginTransaction();
 
     // Verificar si existe columna referencia_pago (usando fetch, no rowCount que es poco confiable en PDO)
@@ -99,13 +103,17 @@ try {
     $detalle_stmt = $pdo->prepare($detalle_query);
     
     foreach ($items as $item) {
-        $subtotal_item = floatval($item['price']) * intval($item['quantity']);
+        $stmtP2 = $pdo->prepare("SELECT price FROM products WHERE id = ?");
+        $stmtP2->execute([intval($item['id'])]);
+        $prodP2 = $stmtP2->fetch();
+        $dbPrice2 = $prodP2 ? floatval($prodP2['price']) : 0;
+        $subtotal_item = $dbPrice2 * intval($item['quantity']);
         $detalle_stmt->execute([
             $pedido_id, 
             $item['id'], 
             $item['quantity'], 
-            $item['price'], 
-            $item['price'], 
+            $dbPrice2, 
+            $dbPrice2, 
             $subtotal_item, 
             $item['name']
         ]);

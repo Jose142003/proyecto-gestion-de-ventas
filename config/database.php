@@ -19,7 +19,7 @@ if (file_exists($envFile)) {
 
 defined('DB_HOST') or define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
 defined('DB_NAME') or define('DB_NAME', getenv('DB_NAME') ?: 'carrito_db');
-defined('DB_USER') or define('DB_USER', getenv('DB_USER') ?: 'root');
+defined('DB_USER') or define('DB_USER', getenv('DB_USER') ?: '');
 defined('DB_PASS') or define('DB_PASS', getenv('DB_PASS') ?: '');
 defined('DB_CHARSET') or define('DB_CHARSET', 'utf8mb4');
 

@@ -15,7 +15,7 @@ if (!isset($_SESSION['user_id'])) {
     }
     
 $user_id = $_SESSION['user_id']; // Aquí capturamos el ID 6 automáticamente
-$numero_pedido = "PED-" . date('Y') . "-" . str_pad(rand(1, 99999), 5, '0', STR_PAD_LEFT);
+$numero_pedido = "PED-" . date('Y') . "-" . str_pad(random_int(1, 99999), 5, '0', STR_PAD_LEFT);
 
 try {
     $pdo->beginTransaction();

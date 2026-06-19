@@ -32,7 +32,7 @@ $pdo->beginTransaction();
 
 try {
     // Generar número de orden único
-    $numero_orden = 'ORD-' . date('Ymd') . '-' . rand(1000, 9999);
+    $numero_orden = 'ORD-' . date('Ymd') . '-' . random_int(1000, 9999);
     
     // 1. Insertar la cabecera de la compra
     $sql = "INSERT INTO compras (numero_orden, proveedor_id, fecha_orden, subtotal, iva, total, observaciones, usuario_creacion_id, estado) 

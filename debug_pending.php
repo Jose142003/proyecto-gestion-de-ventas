@@ -1,7 +1,12 @@
 <?php
-$token = '8836060788:AAGLJ-wy5DfysdD0kWnzVTnaJqp85yHJOxY';
+require_once __DIR__ . '/telegram/config.php';
+$token = defined('TELEGRAM_BOT_TOKEN') ? TELEGRAM_BOT_TOKEN : '';
 
-// Check getUpdates with offset=0 to see all pending
+if (empty($token)) {
+    echo "TELEGRAM_BOT_TOKEN no configurado\n";
+    exit;
+}
+
 $url = "https://api.telegram.org/bot$token/getUpdates?offset=0&timeout=5";
 $data = json_decode(file_get_contents($url), true);
 echo "OK: " . ($data['ok'] ? 'true' : 'false') . "\n";

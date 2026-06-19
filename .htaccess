@@ -37,6 +37,7 @@ Options -Indexes
     Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
     Header always append Permissions-Policy "unload=(self)"
     Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    Header always set Content-Security-Policy "default-src 'self' http://localhost https:; style-src 'self' 'unsafe-inline' https:; script-src 'self' 'unsafe-inline' https:; font-src 'self' https:; img-src 'self' data: https:; connect-src 'self' http://localhost https:; frame-src 'self' https://www.google.com;"
 </IfModule>
 
 # Forzar UTF-8

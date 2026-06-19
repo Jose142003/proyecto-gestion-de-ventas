@@ -156,7 +156,7 @@ function generarFactura($pdo, $pedidoId, $usuarioId) {
     echo json_encode([
         'success' => true, 
         'message' => 'Factura generada exitosamente',
-        'factura_id' => rand(1000, 9999)
+        'factura_id' => random_int(1000, 9999)
     ]);
 }
 ?>

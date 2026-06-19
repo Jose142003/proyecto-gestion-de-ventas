@@ -17,7 +17,7 @@ seguridadVerificarRateLimit();
 // Configurar sesión para persistencia
 ini_set('session.cookie_httponly', 1);
 ini_set('session.use_only_cookies', 1);
-ini_set('session.cookie_secure', 0);
+ini_set('session.cookie_secure', 1);
 ini_set('session.cookie_samesite', 'Lax');
 
 try {
@@ -295,7 +295,7 @@ try {
         'lifetime' => 0,
         'path' => '/',
         'domain' => '',
-        'secure' => false,
+        'secure' => true,
         'httponly' => true,
         'samesite' => 'Lax'
     ]);
@@ -330,10 +330,11 @@ try {
     }
     
     // Cookie persistente como respaldo por si la sesión se pierde
+    $secret_key = defined('APP_SECRET') ? APP_SECRET : 'change-this-to-a-random-secret-in-production';
     $token_data = $user['id'] . '|' . $user['nombre'] . '|' . $tabla_origen;
-    $token_sig = hash_hmac('sha256', $token_data, BASE_URL);
+    $token_sig = hash_hmac('sha256', $token_data, $secret_key);
     $token_value = base64_encode($token_data . '|' . $token_sig);
-    setcookie('persist_token', $token_value, time() + 86400 * 30, '/', '', false, true);
+    setcookie('persist_token', $token_value, time() + 86400 * 30, '/', '', true, true);
     
     // Cerrar sesión para asegurar que los datos se escriban antes de continuar
     session_write_close();

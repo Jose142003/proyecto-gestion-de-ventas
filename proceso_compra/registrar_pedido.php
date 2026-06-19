@@ -30,7 +30,7 @@ try {
     $pdo->beginTransaction();
     
     // Generar número de pedido único
-    $numero_pedido = $input['numero_pedido'] ?? 'PED-' . date('Ymd') . '-' . rand(1000, 9999);
+    $numero_pedido = $input['numero_pedido'] ?? 'PED-' . date('Ymd') . '-' . random_int(1000, 9999);
     
     // Determinar el estado según el método de pago
     $estado = 'pendiente';

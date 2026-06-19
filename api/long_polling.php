@@ -1,14 +1,4 @@
 <?php
-/**
- * Endpoint de Long-Polling como fallback para navegadores que no soportan SSE.
- *
- * Uso: GET /api/long_polling.php?last_id=0
- *
- * - last_id: Último ID de pedido conocido (default 0)
- * - Mantiene la conexión hasta 30s consultando cada 3s
- * - Responde inmediatamente si encuentra pedidos nuevos
- * - Timeout a los 30s sin novedades
- */
 
 session_start();
 
@@ -16,13 +6,13 @@ header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-cache');
 header('X-Accel-Buffering: no');
 
-if (!isset($_SESSION['user_id'])) {
+require_once __DIR__ . '/../conexion/conexion.php';
+
+if (!isset($_SESSION['user_id']) || !esAdmin()) {
     http_response_code(403);
     echo json_encode(['success' => false, 'message' => 'No autorizado']);
     exit;
 }
-
-require_once __DIR__ . '/../conexion/conexion.php';
 
 $lastId = isset($_GET['last_id']) ? (int)$_GET['last_id'] : 0;
 $maxWait = 30;

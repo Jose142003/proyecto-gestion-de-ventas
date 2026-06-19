@@ -60,7 +60,7 @@ try {
     }
 } catch (PDOException $e) {
     error_log("Error obteniendo número de factura: " . $e->getMessage());
-    $numero_factura = "FAC-" . date('Y') . "-" . str_pad(rand(1, 999999), 6, '0', STR_PAD_LEFT);
+    $numero_factura = "FAC-" . date('Y') . "-" . str_pad(random_int(1, 999999), 6, '0', STR_PAD_LEFT);
 }
 ?>
 <!DOCTYPE html>

@@ -42,7 +42,9 @@ try {
         try {
             $stmtLog = $pdo->prepare("INSERT INTO auditoria_logs (usuario_id, usuario_nombre, accion, modulo, descripcion, ip_address) VALUES (?, ?, 'resolver_alerta_stock', 'inventario', ?, ?)");
             $stmtLog->execute([$_SESSION['user_id'], $_SESSION['user_nombre'] ?? '', "Alerta de stock resuelta: #$alerta_id", $_SERVER['REMOTE_ADDR'] ?? '']);
-        } catch (Throwable $e) {}
+        } catch (Throwable $e) {
+            error_log("Error registrando auditoría alerta: " . $e->getMessage());
+        }
         echo json_encode(['success' => true, 'message' => 'Alerta resuelta correctamente']);
     } else {
         echo json_encode(['success' => false, 'message' => 'Alerta no encontrada o ya resuelta']);

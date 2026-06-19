@@ -1,0 +1,11 @@
+# Proteger archivos sensibles
+<FilesMatch "\.(txt|json|log)$">
+    Require all denied
+</FilesMatch>
+
+# Bloquear ejecución de PHP
+<FilesMatch "\.php$">
+    Require all denied
+</FilesMatch>
+
+Options -Indexes

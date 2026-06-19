@@ -4,6 +4,13 @@
  * Incluir desde conexion.php para proteger todo el sistema
  */
 
+// Polyfill para str_contains (PHP 7.x compat)
+if (!function_exists('str_contains')) {
+    function str_contains(string $haystack, string $needle): bool {
+        return '' === $needle || false !== strpos($haystack, $needle);
+    }
+}
+
 // ========== CONFIGURACIÓN ==========
 define('SESSION_TIMEOUT_MINUTES', 30);
 define('MAX_LOGIN_ATTEMPTS', 5);
@@ -160,7 +167,7 @@ function seguridadVerificarRateLimit(): void {
     }
 
     $ahora = time();
-    $clave = md5($ip);
+    $clave = hash('sha256', $ip);
 
     if (!isset($peticiones[$clave])) {
         $peticiones[$clave] = [];
@@ -197,7 +204,9 @@ function seguridadValidarOrigen(): void {
 
     $origen_permitido = defined('BASE_URL') ? rtrim(BASE_URL, '/') : '/proyecto';
 
-    if (!str_contains($referer, $origen_permitido) && !str_contains($referer, 'localhost') && !str_contains($referer, '127.0.0.1')) {
+    $hostRef = parse_url($referer, PHP_URL_HOST) ?? '';
+    $hostPerm = parse_url($origen_permitido, PHP_URL_HOST) ?? '';
+    if ($hostRef !== $hostPerm && $hostRef !== 'localhost' && $hostRef !== '127.0.0.1') {
         error_log("[SEGURIDAD] Referer inválido: $referer");
         http_response_code(403);
         header('Content-Type: application/json');

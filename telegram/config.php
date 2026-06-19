@@ -15,7 +15,7 @@ if (file_exists($envFile)) {
     }
 }
 
-define('TELEGRAM_BOT_TOKEN', getenv('TELEGRAM_BOT_TOKEN') ?: '8836060788:AAGLJ-wy5DfysdD0kWnzVTnaJqp85yHJOxY');
+define('TELEGRAM_BOT_TOKEN', getenv('TELEGRAM_BOT_TOKEN') ?: '');
 define('TELEGRAM_BOT_USERNAME', getenv('TELEGRAM_BOT_USERNAME') ?: 'piccavzlabot');
 define('ADMIN_CHAT_ID', getenv('ADMIN_CHAT_ID') ?: '');
 
