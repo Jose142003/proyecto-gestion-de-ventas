@@ -17,7 +17,8 @@ seguridadVerificarRateLimit();
 // Configurar sesión para persistencia
 ini_set('session.cookie_httponly', 1);
 ini_set('session.use_only_cookies', 1);
-ini_set('session.cookie_secure', 1);
+$is_https = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on';
+ini_set('session.cookie_secure', $is_https ? 1 : 0);
 ini_set('session.cookie_samesite', 'Lax');
 
 try {
@@ -101,13 +102,14 @@ try {
     
     // Si se especificó tipo_usuario, buscar SOLO en esa tabla
     if ($tipo_usuario === 'admin') {
-        // Buscar SOLO en admin_users
+        // Buscar SOLO en admin_users (por correo O usuario)
         $query_admin = "SELECT id, nombre, correo, contrasena as password, rol, activo as is_active 
                         FROM admin_users 
-                        WHERE correo = :correo AND activo = 1";
+                        WHERE (correo = :correo OR usuario = :usuario) AND activo = 1";
         
         $stmt_admin = $pdo->prepare($query_admin);
         $stmt_admin->bindParam(":correo", $correo);
+        $stmt_admin->bindParam(":usuario", $correo);
         $stmt_admin->execute();
         
         if ($stmt_admin->rowCount() > 0) {
@@ -140,8 +142,9 @@ try {
             
             if (!$user['is_active'] || $user['estado'] !== 'activo') {
                     $attempts['count']++;
-                    seguridadRegistrarIntentoFallido('login_cliente_inactivo');
-                    echo json_encode(["success" => false, "message" => "Usuario inactivo"]);
+                    seguridadRegistrarIntentoFallido('login_cliente');
+                    http_response_code(401);
+                    echo json_encode(["success" => false, "message" => "Credenciales incorrectas"]);
                     exit;
                 }
                 
@@ -157,13 +160,14 @@ try {
         }
     else {
         // Sin especificar - buscar en ambas (modo automático)
-        // Buscar en admin_users primero
+        // Buscar en admin_users primero (por correo O usuario)
         $query_admin = "SELECT id, nombre, correo, contrasena as password, rol, activo as is_active 
                         FROM admin_users 
-                        WHERE correo = :correo AND activo = 1";
+                        WHERE (correo = :correo OR usuario = :usuario) AND activo = 1";
         
         $stmt_admin = $pdo->prepare($query_admin);
         $stmt_admin->bindParam(":correo", $correo);
+        $stmt_admin->bindParam(":usuario", $correo);
         $stmt_admin->execute();
         
         if ($stmt_admin->rowCount() > 0) {
@@ -192,11 +196,13 @@ try {
                 $tabla_origen = 'users';
                 
                 if (!$user['is_active'] || $user['estado'] !== 'activo') {
-                    echo json_encode(["success" => false, "message" => "Usuario inactivo"]);
+                    $attempts['count']++;
+                    echo json_encode(["success" => false, "message" => "Credenciales incorrectas"]);
                     exit;
                 }
                 
                 if (!password_verify($password, $user['password'])) {
+                    $attempts['count']++;
                     echo json_encode(["success" => false, "message" => "Credenciales incorrectas"]);
                     exit;
                 }
@@ -295,7 +301,7 @@ try {
         'lifetime' => 0,
         'path' => '/',
         'domain' => '',
-        'secure' => true,
+        'secure' => $is_https,
         'httponly' => true,
         'samesite' => 'Lax'
     ]);
@@ -330,11 +336,11 @@ try {
     }
     
     // Cookie persistente como respaldo por si la sesión se pierde
-    $secret_key = defined('APP_SECRET') ? APP_SECRET : 'change-this-to-a-random-secret-in-production';
     $token_data = $user['id'] . '|' . $user['nombre'] . '|' . $tabla_origen;
+    $secret_key = defined('APP_SECRET') ? APP_SECRET : (getenv('APP_SECRET') ?: 'change-this-to-a-random-secret-in-production');
     $token_sig = hash_hmac('sha256', $token_data, $secret_key);
     $token_value = base64_encode($token_data . '|' . $token_sig);
-    setcookie('persist_token', $token_value, time() + 86400 * 30, '/', '', true, true);
+    setcookie('persist_token', $token_value, time() + 86400 * 30, '/', '', $is_https, true);
     
     // Cerrar sesión para asegurar que los datos se escriban antes de continuar
     session_write_close();

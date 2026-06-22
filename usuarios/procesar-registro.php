@@ -69,9 +69,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
     
     // Validar contraseña
-    if (strlen($password) < 6) {
+    if (strlen($password) < 8) {
         http_response_code(400);
-        echo json_encode(["success" => false, "message" => "La contraseña debe tener al menos 6 caracteres"]);
+        echo json_encode(["success" => false, "message" => "La contraseña debe tener al menos 8 caracteres"]);
         exit;
     }
     

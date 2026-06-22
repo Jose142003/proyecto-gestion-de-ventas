@@ -1,0 +1,105 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  php-tests:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: yes
+          MYSQL_DATABASE: carrito_db
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+        extensions: mbstring, pdo, pdo_mysql, curl, gd
+        tools: composer:v2
+        coverage: none
+
+    - name: Validate composer.json
+      run: composer validate --strict
+
+    - name: Cache Composer packages
+      uses: actions/cache@v3
+      with:
+        path: vendor
+        key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php-
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+
+    - name: Copy .env
+      run: cp .env.example .env
+
+    - name: Run database migrations
+      env:
+        DB_HOST: 127.0.0.1
+        DB_NAME: carrito_db
+        DB_USER: root
+        DB_PASS: ""
+      run: php sql/run_migrations.php
+
+    - name: Run PHP syntax check
+      run: find . -name "*.php" -not -path "./vendor/*" -not -path "./.phpunit.cache/*" -exec php -l {} \; | grep -v "No syntax errors"
+
+    - name: Run tests
+      run: vendor/bin/phpunit --configuration phpunit.xml.dist --no-coverage
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+        tools: composer:v2
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+
+    - name: Check PHP syntax
+      run: find . -name "*.php" -not -path "./vendor/*" -exec php -l {} \; | grep -v "No syntax errors"
+
+    - name: Check for debug files
+      run: |
+        if find . -maxdepth 1 -name "test_*.php" -o -name "debug_*.php" | grep -q .; then
+          echo "ERROR: Debug files found!"
+          exit 1
+        fi
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Check for hardcoded secrets
+      run: |
+        if grep -r "bot[0-9]\{8,10\}:" --include="*.php" --exclude-dir=vendor .; then
+          echo "ERROR: Hardcoded Telegram token found!"
+          exit 1
+        fi
+        if grep -r "SMTP_PASS=" .env 2>/dev/null; then
+          echo "WARNING: .env file contains SMTP credentials"
+        fi
+
+    - name: Check .env is in gitignore
+      run: grep -q "^\.env$" .gitignore || (echo "ERROR: .env not in .gitignore" && exit 1)

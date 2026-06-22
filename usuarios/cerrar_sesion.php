@@ -20,7 +20,8 @@ setcookie(session_name(), '', time() - 42000, $cookie_path, $cookie_domain, $coo
 @session_destroy();
 
 // Limpiar persist_token
-setcookie('persist_token', '', time() - 42000, '/', '', false, true);
+$is_https = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on';
+setcookie('persist_token', '', time() - 42000, '/', '', $is_https, true);
 
 header('Location: /proyecto/interfaz_usuario/login.html');
 exit;
