@@ -31,7 +31,8 @@ function seguridadEnviarHeaders(): void {
 
     if (defined('BASE_URL')) {
         $baseUrl = rtrim(BASE_URL, '/');
-        header("Content-Security-Policy: default-src 'self' $baseUrl https:; style-src 'self' 'unsafe-inline' https:; script-src 'self' 'unsafe-inline' https:; font-src 'self' https:; img-src 'self' data: https:; connect-src 'self' https:;");
+        $nonce = function_exists('cspNonce') ? cspNonce() : base64_encode(random_bytes(16));
+          header("Content-Security-Policy: default-src 'self' $baseUrl https:; style-src 'self' 'unsafe-inline' https:; script-src 'self' 'nonce-$nonce' 'strict-dynamic' https:; font-src 'self' https:; img-src 'self' data: https:; connect-src 'self' https:; frame-src 'self' https://www.google.com;");
     }
 }
 
@@ -68,7 +69,8 @@ function seguridadVerificarTimeoutSesion(): void {
             error_log("[SEGURIDAD] Sesión expirada por inactividad - Usuario: $user_id, Tipo: $tipo, IP: $ip");
 
             if ($es_admin) {
-                header('Location: /proyecto/interfaz_usuario/login.html?error=session_timeout');
+                $loginUrl = defined('BASE_URL') ? rtrim(BASE_URL, '/') . '/interfaz_usuario/login.html?error=session_timeout' : '/interfaz_usuario/login.html?error=session_timeout';
+                header('Location: ' . $loginUrl);
                 exit;
             }
 
@@ -160,9 +162,15 @@ function seguridadVerificarRateLimit(): void {
 
     $peticiones = [];
     if (file_exists($archivo)) {
-        $contenido = @file_get_contents($archivo);
-        if ($contenido !== false) {
-            $peticiones = json_decode($contenido, true) ?: [];
+        $fp = @fopen($archivo, 'r');
+        if ($fp) {
+            flock($fp, LOCK_SH);
+            $contenido = stream_get_contents($fp);
+            flock($fp, LOCK_UN);
+            fclose($fp);
+            if ($contenido !== false) {
+                $peticiones = json_decode($contenido, true) ?: [];
+            }
         }
     }
 
@@ -189,7 +197,13 @@ function seguridadVerificarRateLimit(): void {
     }
 
     $peticiones[$clave][] = $ahora;
-    @file_put_contents($archivo, json_encode($peticiones), LOCK_EX);
+    $fp = @fopen($archivo, 'w');
+    if ($fp) {
+        flock($fp, LOCK_EX);
+        fwrite($fp, json_encode($peticiones));
+        flock($fp, LOCK_UN);
+        fclose($fp);
+    }
 }
 
 // ========== 6. VALIDACIÓN DE ORIGEN (REFERER) ==========

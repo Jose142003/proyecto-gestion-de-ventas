@@ -157,7 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     exit;
                 }
 
-                $isValid = verificarTOTP($pdo, $user['id'], $tableName, $user2fa['2fa_secret'], $code);
+                $isValid = verificarTOTP($user2fa['2fa_secret'], $code);
                 if (!$isValid) {
                     http_response_code(400);
                     echo json_encode(['success' => false, 'message' => 'Código de Google Authenticator inválido']);
@@ -227,7 +227,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
 
-            $isValid = verificarTOTP($pdo, $userId, $secretCol, $user2fa['2fa_secret'], $code);
+            $isValid = verificarTOTP($user2fa['2fa_secret'], $code);
 
             if (!$isValid) {
                 http_response_code(400);
@@ -338,35 +338,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(['success' => false, 'message' => 'Error del servidor']);
     }
     exit;
-}
-
-require_once __DIR__ . '/totp.php';
-
-function verificarTOTP(PDO $pdo, int $userId, string $table, string $secret, string $code): bool {
-    $code = trim($code);
-    if (strlen($code) !== 6 || !ctype_digit($code)) return false;
-
-    $timeSlice = floor(time() / 30);
-    for ($i = -2; $i <= 2; $i++) {
-        if (hash_equals(generarTOTP($secret, $timeSlice + $i), $code)) return true;
-    }
-
-    $tableName = ($table === 'admin_users') ? 'admin_users' : 'users';
-    $stmtBackup = $pdo->prepare("SELECT 2fa_backup_codes FROM `$tableName` WHERE id = ?");
-    $stmtBackup->execute([$userId]);
-    $user = $stmtBackup->fetch();
-    if ($user && !empty($user['2fa_backup_codes'])) {
-        $codes = json_decode($user['2fa_backup_codes'], true);
-        if (is_array($codes)) {
-            $idx = array_search($code, $codes);
-            if ($idx !== false) {
-                unset($codes[$idx]);
-                $pdo->prepare("UPDATE `$tableName` SET 2fa_backup_codes = ? WHERE id = ?")->execute([json_encode(array_values($codes)), $userId]);
-                return true;
-            }
-        }
-    }
-    return false;
 }
 
 ?>

@@ -1,85 +1,28 @@
-# ============================================================================
-# SEGURIDAD Y OPTIMIZACIÓN
-# ============================================================================
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^manifest\.json$ manifest.php [L,QSA]
+    RewriteRule ^interfaz_usuario/pagina_modernizada\.html$ interfaz_usuario/pagina_modernizada_check.php [L,QSA]
+</IfModule>
 
-# Proteger archivos sensibles
-<FilesMatch "\.(sql|log|env|lock|md|gitignore|yml|yaml|xml|dist)$">
-    Require all denied
-</FilesMatch>
-
-# Permitir manifest.json para PWA
-<FilesMatch "^manifest\.json$">
-    Require all granted
-</FilesMatch>
-
-# Proteger archivos de configuración y código fuente sensible
-<FilesMatch "^(composer\.(json|lock)|package\.json|tsconfig\.json|phpunit\.xml)">
-    Require all denied
-</FilesMatch>
-
-# Proteger directorios sensibles
-RedirectMatch 404 /\.git
-RedirectMatch 404 /\.env
-RedirectMatch 404 /vendor/phpunit
-RedirectMatch 404 /src
-RedirectMatch 404 /node_modules
-RedirectMatch 404 /\.phpunit
-
-# Desactivar listado de directorios
-Options -Indexes
-
-# Encabezados de seguridad
 <IfModule mod_headers.c>
     Header always set X-Content-Type-Options "nosniff"
     Header always set X-Frame-Options "DENY"
-    Header always set X-XSS-Protection "1; mode=block"
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
-    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
-    Header always append Permissions-Policy "unload=(self)"
-    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
-    Header always set Content-Security-Policy "default-src 'self' http://localhost https:; style-src 'self' 'unsafe-inline' https:; script-src 'self' 'unsafe-inline' https:; font-src 'self' https:; img-src 'self' data: https:; connect-src 'self' http://localhost https:; frame-src 'self' https://www.google.com;"
 </IfModule>
 
-# Forzar UTF-8
-AddDefaultCharset UTF-8
-
-# Compresión GZip
-<IfModule mod_deflate.c>
-    AddOutputFilterByType DEFLATE text/html text/plain text/css text/javascript application/javascript application/json
-</IfModule>
-
-# Caché de recursos estáticos
-<IfModule mod_expires.c>
-    ExpiresActive On
-    ExpiresByType image/jpg "access plus 1 year"
-    ExpiresByType image/png "access plus 1 year"
-    ExpiresByType text/css "access plus 1 month"
-    ExpiresByType application/javascript "access plus 1 month"
-</IfModule>
-
-# PHP - Desactivar exposición de versión
-<IfModule mod_php.c>
-    php_flag expose_php Off
-    php_flag display_errors Off
-    php_flag log_errors On
-</IfModule>
-
-# Prevenir hotlinking de imágenes
-<IfModule mod_rewrite.c>
-    RewriteEngine On
-    RewriteCond %{HTTP_REFERER} !^$
-    RewriteCond %{HTTP_REFERER} !^https?://(localhost|127\.0\.0\.1) [NC]
-    RewriteCond %{HTTP_REFERER} !^https?://([a-z0-9-]+\.)*github\.io [NC]
-    RewriteRule \.(jpg|jpeg|png|gif|webp|svg|ico)$ - [NC,F,L]
-</IfModule>
-
-# Permitir PHP en pagina_modernizada.html
-<IfModule mod_rewrite.c>
-    RewriteEngine On
-    RewriteRule ^interfaz_usuario/pagina_modernizada\.html$ /proyecto/interfaz_usuario/pagina_modernizada_check.php [L,QSA]
-</IfModule>
-
-# Negar acceso a archivos que empiezan con punto (_.gitignore, .htaccess, etc.)
 <FilesMatch "^\.">
     Require all denied
 </FilesMatch>
+
+<FilesMatch "\.(sql|md|log)$">
+    Require all denied
+</FilesMatch>
+
+<IfModule mod_autoindex.c>
+    Options -Indexes
+</IfModule>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^(vendor|backups/backups|logs|sql|tests) - [F,L]
+</IfModule>

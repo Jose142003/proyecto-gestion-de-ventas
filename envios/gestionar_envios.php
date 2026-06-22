@@ -3,7 +3,8 @@ session_start();
 require_once __DIR__ . '/../conexion/conexion.php';
 
 if (!isset($_SESSION['user_id']) || !esAdmin()) {
-    header('Location: /proyecto/interfaz_usuario/login.html');
+    $loginUrl = defined('BASE_URL') ? rtrim(BASE_URL, '/') . '/interfaz_usuario/login.html' : '/interfaz_usuario/login.html';
+    header('Location: ' . $loginUrl);
     exit;
 }
 
@@ -81,9 +82,9 @@ $estados_envio = [
     <title>Gestionar Envíos - PIC</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="manifest" href="/proyecto/manifest.json">
+    <link rel="manifest" href="<?php echo defined('BASE_URL') ? rtrim(BASE_URL, '/') : ''; ?>/manifest.json">
     <meta name="theme-color" content="#050C18">
-    <link rel="icon" type="image/png" href="/proyecto/img/pic.png">
+    <link rel="icon" type="image/png" href="<?php echo defined('BASE_URL') ? rtrim(BASE_URL, '/') : ''; ?>/img/pic.png">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
@@ -251,10 +252,10 @@ $estados_envio = [
         <div class="header">
             <div class="header-left">
                 <h1><i class="fas fa-truck"></i> Gestionar Envíos</h1>
-                <p><?php echo $total; ?> envíos registrados</p>
+                <p><?php echo htmlspecialchars($total ?? '', ENT_QUOTES, 'UTF-8'); ?> envíos registrados</p>
             </div>
             <div class="header-actions">
-                <a href="/proyecto/panel_admin/panel_admin.php" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Panel</a>
+                <a href="<?php echo defined('BASE_URL') ? rtrim(BASE_URL, '/') : ''; ?>/panel_admin/panel_admin.php" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Panel</a>
             </div>
         </div>
 
@@ -270,8 +271,8 @@ $estados_envio = [
                             <select name="estado" class="form-select">
                                 <option value="todos">Todos</option>
                                 <?php foreach ($estados_envio as $key => $est): ?>
-                                <option value="<?php echo $key; ?>" <?php echo $estado_filtro === $key ? 'selected' : ''; ?>>
-                                    <?php echo $est['label']; ?>
+                                <option value="<?php echo htmlspecialchars($key ?? '', ENT_QUOTES, 'UTF-8'); ?>" <?php echo $estado_filtro === $key ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($est['label'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
                                 </option>
                                 <?php endforeach; ?>
                             </select>
@@ -331,7 +332,7 @@ $estados_envio = [
                             <tr>
                                 <td><strong>#<?php echo $e['id']; ?></strong></td>
                                 <td>
-                                    <a href="/proyecto/proceso_compra/ver_pedido.php?id=<?php echo $e['pedido_id']; ?>" style="color: var(--accent); text-decoration: none; font-weight: 500;">
+                                    <a href="<?php echo defined('BASE_URL') ? rtrim(BASE_URL, '/') : ''; ?>/proceso_compra/ver_pedido.php?id=<?php echo $e['pedido_id']; ?>" style="color: var(--accent); text-decoration: none; font-weight: 500;">
                                         #<?php echo htmlspecialchars($e['pedido_numero']); ?>
                                     </a>
                                 </td>

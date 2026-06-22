@@ -355,9 +355,9 @@ if (!$proveedor) {
 
         <div class="form-body">
             <?php if ($mensaje): ?>
-                <div class="alert alert-<?php echo $tipo_mensaje; ?>">
-                    <i class="fas <?php echo $tipo_mensaje === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'; ?>"></i>
-                    <?php echo $mensaje; ?>
+                <div class="alert alert-<?php echo htmlspecialchars($tipo_mensaje ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                    <i class="fas <?php echo htmlspecialchars($tipo_mensaje === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle', ENT_QUOTES, 'UTF-8'); ?>"></i>
+                    <?php echo htmlspecialchars($mensaje ?? '', ENT_QUOTES, 'UTF-8'); ?>
                 </div>
             <?php endif; ?>
 

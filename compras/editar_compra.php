@@ -490,7 +490,7 @@ $metodosPago = [
     <div id="alertMessage" class="alert"></div>
 
     <form id="formEditarCompra">
-        <input type="hidden" name="compra_id" value="<?php echo $compraId; ?>">
+        <input type="hidden" name="compra_id" value="<?php echo htmlspecialchars($compraId ?? '', ENT_QUOTES, 'UTF-8'); ?>">
         
         <div class="form-card">
             <div class="form-grid">
@@ -529,9 +529,9 @@ $metodosPago = [
                     <label><i class="fas fa-tag"></i> Estado *</label>
                     <select name="estado" id="estado" required>
                         <?php foreach ($estados as $key => $label): ?>
-                            <option value="<?php echo $key; ?>" 
+                            <option value="<?php echo htmlspecialchars($key ?? '', ENT_QUOTES, 'UTF-8'); ?>" 
                                 <?php echo ($compra['estado'] == $key) ? 'selected' : ''; ?>>
-                                <?php echo $label; ?>
+                                <?php echo htmlspecialchars($label ?? '', ENT_QUOTES, 'UTF-8'); ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
@@ -541,9 +541,9 @@ $metodosPago = [
                     <label><i class="fas fa-credit-card"></i> Método de Pago *</label>
                     <select name="metodo_pago" id="metodo_pago" required>
                         <?php foreach ($metodosPago as $key => $label): ?>
-                            <option value="<?php echo $key; ?>" 
+                            <option value="<?php echo htmlspecialchars($key ?? '', ENT_QUOTES, 'UTF-8'); ?>" 
                                 <?php echo ($compra['metodo_pago'] == $key) ? 'selected' : ''; ?>>
-                                <?php echo $label; ?>
+                                <?php echo htmlspecialchars($label ?? '', ENT_QUOTES, 'UTF-8'); ?>
                             </option>
                         <?php endforeach; ?>
                     </select>

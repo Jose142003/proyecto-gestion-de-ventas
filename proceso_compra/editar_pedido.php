@@ -144,7 +144,7 @@ $metodos_pago = [
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Editar Pedido #<?php echo $pedido_id; ?></title>
+    <title>Editar Pedido #<?php echo htmlspecialchars($pedido_id ?? '', ENT_QUOTES, 'UTF-8'); ?></title>
       <!-- PWA Meta Tags -->
     <link rel="manifest" href="/proyecto/manifest.json">
     <meta name="theme-color" content="#050C18">
@@ -511,21 +511,21 @@ $metodos_pago = [
 <body>
     <div class="container">
         <div class="header">
-            <h1>Editar Pedido #<?php echo $pedido_id; ?></h1>
+            <h1>Editar Pedido #<?php echo htmlspecialchars($pedido_id ?? '', ENT_QUOTES, 'UTF-8'); ?></h1>
             <a href="javascript:history.back()" class="btn-back">
                 ← Volver
             </a>
         </div>
 
         <?php if ($mensaje): ?>
-            <div class="alert alert-<?php echo $mensaje_tipo; ?>">
-                <?php echo htmlspecialchars($mensaje); ?>
+            <div class="alert alert-<?php echo htmlspecialchars($mensaje_tipo ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                <?php echo htmlspecialchars($mensaje ?? '', ENT_QUOTES, 'UTF-8'); ?>
             </div>
         <?php endif; ?>
 
         <form method="POST" id="editPedidoForm">
             <input type="hidden" name="action" value="update_pedido">
-            <input type="hidden" name="pedido_id" value="<?php echo $pedido_id; ?>">
+            <input type="hidden" name="pedido_id" value="<?php echo htmlspecialchars($pedido_id ?? '', ENT_QUOTES, 'UTF-8'); ?>">
             
             <div class="grid-2">
                 <!-- Información del Pedido -->
@@ -536,8 +536,8 @@ $metodos_pago = [
                         <label for="estado">Estado del Pedido</label>
                         <select name="estado" id="estado">
                             <?php foreach ($estados_disponibles as $key => $value): ?>
-                                <option value="<?php echo $key; ?>" <?php echo $pedido['estado'] == $key ? 'selected' : ''; ?>>
-                                    <?php echo $value; ?>
+                                <option value="<?php echo htmlspecialchars($key ?? '', ENT_QUOTES, 'UTF-8'); ?>" <?php echo $pedido['estado'] == $key ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8'); ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
@@ -547,8 +547,8 @@ $metodos_pago = [
                         <label for="metodo_pago">Método de Pago</label>
                         <select name="metodo_pago" id="metodo_pago">
                             <?php foreach ($metodos_pago as $key => $value): ?>
-                                <option value="<?php echo $key; ?>" <?php echo ($pedido['metodo_pago'] ?? 'efectivo') == $key ? 'selected' : ''; ?>>
-                                    <?php echo $value; ?>
+                                <option value="<?php echo htmlspecialchars($key ?? '', ENT_QUOTES, 'UTF-8'); ?>" <?php echo ($pedido['metodo_pago'] ?? 'efectivo') == $key ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8'); ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>

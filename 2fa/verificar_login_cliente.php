@@ -100,8 +100,9 @@ try {
 
     if (session_status() === PHP_SESSION_NONE) {
         session_name('CLIENTSESSID');
+        $is_https = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on';
         session_set_cookie_params([
-            'lifetime' => 0, 'path' => '/', 'domain' => '', 'secure' => false,
+            'lifetime' => 0, 'path' => '/', 'domain' => '', 'secure' => $is_https,
             'httponly' => true, 'samesite' => 'Lax'
         ]);
         session_start();

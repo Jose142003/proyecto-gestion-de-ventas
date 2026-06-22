@@ -488,7 +488,7 @@ if ($error && !$producto) {
         <div class="header-content">
             <div class="header-text">
                 <h1><i class="fas fa-edit"></i> Editar Producto</h1>
-                <p>Modifica los datos del producto #<?php echo $id; ?></p>
+                <p>Modifica los datos del producto #<?php echo htmlspecialchars($id ?? '', ENT_QUOTES, 'UTF-8'); ?></p>
                 <small><i class="fas fa-info-circle"></i> Los campos marcados con * son obligatorios</small>
             </div>
             <div>

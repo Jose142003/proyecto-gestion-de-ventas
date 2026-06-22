@@ -30,12 +30,12 @@ try {
     $mail->Timeout = 30;
     $mail->SMTPOptions = [
         'ssl' => [
-            'verify_peer' => false,
-            'verify_peer_name' => false,
-            'allow_self_signed' => true
+            'verify_peer' => true,
+            'verify_peer_name' => true,
+            'allow_self_signed' => false
         ]
     ];
-    $mail->SMTPDebug = 2;
+    $mail->SMTPDebug = 0;
     $mail->Debugoutput = function($str, $level) { echo htmlspecialchars($str) . "<br>"; };
     
     $mail->setFrom(SMTP_FROM_EMAIL, 'PIC Test');

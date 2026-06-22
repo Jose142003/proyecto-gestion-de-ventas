@@ -449,7 +449,7 @@ try {
                     </div>
                     
                     <div class="stat-card">
-                        <div class="stat-value"><?php echo $ultimo_acceso; ?></div>
+                        <div class="stat-value"><?php echo htmlspecialchars($ultimo_acceso ?? '', ENT_QUOTES, 'UTF-8'); ?></div>
                         <div class="stat-label">Último Acceso</div>
                     </div>
                 </div>

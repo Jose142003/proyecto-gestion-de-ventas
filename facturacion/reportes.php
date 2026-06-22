@@ -690,8 +690,8 @@ $nombre_mes = $meses[$mes] ?? 'Mes';
                         <label class="form-label">Mes</label>
                         <select name="mes" class="form-control">
                             <?php foreach ($meses as $num => $nombre): ?>
-                                <option value="<?php echo $num; ?>" <?php echo $mes == $num ? 'selected' : ''; ?>>
-                                    <?php echo $nombre; ?>
+                                <option value="<?php echo htmlspecialchars($num ?? '', ENT_QUOTES, 'UTF-8'); ?>" <?php echo $mes == $num ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($nombre ?? '', ENT_QUOTES, 'UTF-8'); ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
@@ -701,8 +701,8 @@ $nombre_mes = $meses[$mes] ?? 'Mes';
                         <label class="form-label">Año</label>
                         <select name="anio" class="form-control">
                             <?php for ($i = 2020; $i <= 2030; $i++): ?>
-                                <option value="<?php echo $i; ?>" <?php echo $anio == $i ? 'selected' : ''; ?>>
-                                    <?php echo $i; ?>
+                                <option value="<?php echo htmlspecialchars($i ?? '', ENT_QUOTES, 'UTF-8'); ?>" <?php echo $anio == $i ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($i ?? '', ENT_QUOTES, 'UTF-8'); ?>
                                 </option>
                             <?php endfor; ?>
                         </select>

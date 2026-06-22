@@ -59,6 +59,20 @@ try {
             ':producto_id' => $producto['producto_id']
         ]);
     }
+
+    // Registrar en historial_stock
+    try {
+        $check_historial = $pdo->query("SHOW TABLES LIKE 'historial_stock'");
+        if ($check_historial->rowCount() > 0) {
+            foreach ($productos as $producto) {
+                $sql_historial = "INSERT INTO historial_stock (producto_id, tipo, cantidad, referencia, usuario_id, fecha) VALUES (?, 'entrada', ?, ?, ?, NOW())";
+                $stmt_historial = $pdo->prepare($sql_historial);
+                $stmt_historial->execute([$producto['producto_id'], $producto['cantidad'], "Cancelación pedido #$pedido_id", $_SESSION['user_id'] ?? null]);
+            }
+        }
+    } catch (Exception $e) {
+        error_log("Error al registrar historial_stock: " . $e->getMessage());
+    }
     
     $pdo->commit();
 
@@ -78,7 +92,7 @@ try {
     error_log("Error al cancelar pedido: " . $e->getMessage());
     echo json_encode([
         'success' => false,
-        'message' => 'Error al cancelar pedido: ' . $e->getMessage()
+        'message' => 'Error interno del servidor'
     ]);
 }
 ?>

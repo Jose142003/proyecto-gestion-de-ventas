@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS envios (
     KEY idx_transportista (transportista),
     KEY idx_estado (estado),
     KEY idx_fecha_envio (fecha_envio)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 2. COLUMNAS ADICIONALES EN pedidos
 ALTER TABLE pedidos 
@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS resenas (
     KEY idx_producto (producto_id),
     KEY idx_puntuacion (puntuacion),
     KEY idx_moderado (moderado)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 4. TABLA DE HISTORIAL DE ENVIOS
 CREATE TABLE IF NOT EXISTS envios_historial (
@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS envios_historial (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (envio_id) REFERENCES envios(id) ON DELETE CASCADE,
     KEY idx_envio (envio_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 5. VISTA para rating promedio por producto
 CREATE OR REPLACE VIEW v_producto_rating AS

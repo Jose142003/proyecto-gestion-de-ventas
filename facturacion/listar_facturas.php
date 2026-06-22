@@ -165,7 +165,7 @@ if (!in_array($rol, $roles_permitidos)) {
             <p>No tienes permisos suficientes para acceder a la sección de facturación.</p>
             
             <div class="user-info">
-                <p><strong>Usuario ID:</strong> <?php echo $user_id; ?></p>
+                <p><strong>Usuario ID:</strong> <?php echo htmlspecialchars($user_id ?? '', ENT_QUOTES, 'UTF-8'); ?></p>
                 <p><strong>Rol actual:</strong> <?php echo htmlspecialchars($rol ?: 'No definido'); ?></p>
                 <p><strong>Roles requeridos:</strong> <?php echo implode(', ', $roles_permitidos); ?></p>
                 <p><strong>Tipo de usuario:</strong> <?php echo isset($_SESSION['es_admin']) && $_SESSION['es_admin'] ? 'Administrador' : 'Cliente normal'; ?></p>

@@ -17,13 +17,15 @@ $type = trim($_GET['type'] ?? $_POST['type'] ?? 'cliente');
 if ($type === 'admin') {
     if (session_status() === PHP_SESSION_NONE) {
         session_name(ini_get('session.name'));
-        session_set_cookie_params(['lifetime' => 0, 'path' => '/', 'domain' => '', 'secure' => false, 'httponly' => true, 'samesite' => 'Lax']);
+        $is_https = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on';
+        session_set_cookie_params(['lifetime' => 0, 'path' => '/', 'domain' => '', 'secure' => $is_https, 'httponly' => true, 'samesite' => 'Lax']);
         session_start();
     }
 } else {
     if (session_status() === PHP_SESSION_NONE) {
         session_name('CLIENTSESSID');
-        session_set_cookie_params(['lifetime' => 0, 'path' => '/', 'domain' => '', 'secure' => false, 'httponly' => true, 'samesite' => 'Lax']);
+        $is_https = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on';
+        session_set_cookie_params(['lifetime' => 0, 'path' => '/', 'domain' => '', 'secure' => $is_https, 'httponly' => true, 'samesite' => 'Lax']);
         session_start();
     }
 }

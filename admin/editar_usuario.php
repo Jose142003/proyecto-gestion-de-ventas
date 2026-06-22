@@ -449,9 +449,9 @@ try {
         
         <div class="content">
             <?php if ($mensaje): ?>
-                <div class="message <?php echo $tipo_mensaje; ?>">
-                    <i class="fas fa-<?php echo $tipo_mensaje === 'success' ? 'check-circle' : ($tipo_mensaje === 'error' ? 'exclamation-circle' : 'exclamation-triangle'); ?>"></i>
-                    <?php echo htmlspecialchars($mensaje); ?>
+                <div class="message <?php echo htmlspecialchars($tipo_mensaje ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                    <i class="fas fa-<?php echo htmlspecialchars($tipo_mensaje === 'success' ? 'check-circle' : ($tipo_mensaje === 'error' ? 'exclamation-circle' : 'exclamation-triangle'), ENT_QUOTES, 'UTF-8'); ?>"></i>
+                    <?php echo htmlspecialchars($mensaje ?? '', ENT_QUOTES, 'UTF-8'); ?>
                 </div>
             <?php endif; ?>
             

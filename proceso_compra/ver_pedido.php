@@ -557,7 +557,7 @@ $metodo_info = $metodos_pago[$pedido['metodo_pago'] ?? ''] ?? ['label' => $pedid
                 </div>
                 <div class="cliente-detalle-row">
                     <div class="cliente-detalle-label">Cliente desde:</div>
-                    <div class="cliente-detalle-value"><?php echo $pedido['cliente_registro'] ?? 'No disponible'; ?></div>
+                    <div class="cliente-detalle-value"><?php echo htmlspecialchars($pedido['cliente_registro'] ?? 'No disponible', ENT_QUOTES, 'UTF-8'); ?></div>
                 </div>
             </div>
         </div>

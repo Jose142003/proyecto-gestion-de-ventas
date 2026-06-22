@@ -143,13 +143,6 @@ if (!$pedido_id) {
             ':subtotal' => $detalle['subtotal']
         ]);
         
-        // 7. Actualizar stock de productos
-        $update_stock = "UPDATE products SET stock = stock - :cantidad WHERE id = :producto_id";
-        $stmt_stock = $pdo->prepare($update_stock);
-        $stmt_stock->execute([
-            ':cantidad' => $detalle['cantidad'],
-            ':producto_id' => $detalle['producto_id']
-        ]);
     }
     
     // 8. Actualizar estado del pedido a "facturado" y guardar factura_id

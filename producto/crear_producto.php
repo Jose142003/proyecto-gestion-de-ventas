@@ -662,7 +662,7 @@ try {
     <?php if ($mensaje): ?>
         <div class="alert alert-<?php echo $tipo_mensaje; ?> alert-dismissible fade show" role="alert">
             <i class="fas <?php echo $tipo_mensaje === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'; ?>"></i>
-            <span><?php echo $mensaje; ?></span>
+            <span><?php echo htmlspecialchars($mensaje ?? '', ENT_QUOTES, 'UTF-8'); ?></span>
             <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Cerrar"></button>
         </div>
     <?php endif; ?>

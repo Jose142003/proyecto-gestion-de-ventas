@@ -29,6 +29,7 @@ if (!$user_id || !isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true
 $tabla_origen = $_SESSION['tabla_origen'] ?? null;
 
 require_once __DIR__ . '/../conexion/conexion.php';
+verificarCSRF();
 
 $input = json_decode(file_get_contents('php://input'), true);
 
@@ -63,8 +64,8 @@ try {
         $total += $dbPrice * intval($item['quantity']);
     }
 
-    // Generar número de pedido
-    $numero_pedido = 'PED-' . date('Ymd') . '-' . str_pad(random_int(1, 9999), 4, '0', STR_PAD_LEFT);
+    // Generar número de pedido único usando UUID
+    $numero_pedido = 'PED-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(4)));
     $pdo->beginTransaction();
 
     // Verificar si existe columna referencia_pago (usando fetch, no rowCount que es poco confiable en PDO)
@@ -145,27 +146,8 @@ try {
     }
     
     $anio = date('Y');
-    $fact_num_stmt = $pdo->prepare("SELECT numero_factura FROM facturas WHERE numero_factura LIKE ? ORDER BY id DESC LIMIT 1");
-    $fact_num_stmt->execute(["FAC-$anio-%"]);
-    $last_fact = $fact_num_stmt->fetch(PDO::FETCH_ASSOC);
-    
-    if ($last_fact) {
-        preg_match('/FAC-' . $anio . '-(\d+)/', $last_fact['numero_factura'], $matches);
-        $siguiente = isset($matches[1]) ? intval($matches[1]) + 1 : 1;
-    } else {
-        $siguiente = 1;
-    }
-    $numero_factura = "FAC-$anio-" . str_pad($siguiente, 6, '0', STR_PAD_LEFT);
-    
-    $check_fact = $pdo->prepare("SELECT id FROM facturas WHERE numero_factura = ?");
-    $check_fact->execute([$numero_factura]);
-    if ($check_fact->fetch()) {
-        do {
-            $siguiente++;
-            $numero_factura = "FAC-$anio-" . str_pad($siguiente, 6, '0', STR_PAD_LEFT);
-            $check_fact->execute([$numero_factura]);
-        } while ($check_fact->fetch());
-    }
+    // Usar UUID para evitar race conditions en número de factura
+    $numero_factura = 'FAC-' . $anio . '-' . strtoupper(bin2hex(random_bytes(4)));
     
     $estado_factura = (in_array($payment_method, ['transferencia', 'pago_movil', 'zelle'])) ? 'pagada' : 'pendiente';
     

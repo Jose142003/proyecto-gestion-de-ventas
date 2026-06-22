@@ -28,3 +28,14 @@ function generarOtpAuthUrl(string $secret, string $email, string $issuer): strin
     $encodedIssuer = rawurlencode($issuer);
     return "otpauth://totp/$encodedIssuer:$encodedEmail?secret=$secret&issuer=$encodedIssuer&algorithm=SHA1&digits=6&period=30";
 }
+
+function verificarTOTP(string $secret, string $code, int $window = 2): bool {
+    $code = trim($code);
+    if (strlen($code) !== 6 || !ctype_digit($code)) return false;
+
+    $timeSlice = floor(time() / 30);
+    for ($i = -$window; $i <= $window; $i++) {
+        if (hash_equals(generarTOTP($secret, $timeSlice + $i), $code)) return true;
+    }
+    return false;
+}

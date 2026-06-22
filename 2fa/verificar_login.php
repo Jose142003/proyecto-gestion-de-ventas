@@ -14,6 +14,9 @@ register_shutdown_function(function () {
 
 require_once __DIR__ . '/../conexion/conexion.php';
 require_once __DIR__ . '/totp.php';
+// Rate limiting para 2FA
+seguridadVerificarBloqueoIp();
+seguridadVerificarRateLimit();
 
 $input = json_decode(file_get_contents('php://input'), true);
 $code = trim($input['code'] ?? $_POST['code'] ?? '');
@@ -52,14 +55,14 @@ try {
         exit;
     }
 
-    $pdo->prepare("UPDATE sesiones_2fa SET intentos = intentos + 1 WHERE id = ?")->execute([$sesion['id']]);
-
     if ($sesion['intentos'] >= 5) {
         $pdo->prepare("UPDATE sesiones_2fa SET completado = TRUE WHERE id = ?")->execute([$sesion['id']]);
         http_response_code(400);
         echo json_encode(['success' => false, 'message' => 'Demasiados intentos. Inicie sesión nuevamente.']);
         exit;
     }
+
+    $pdo->prepare("UPDATE sesiones_2fa SET intentos = intentos + 1 WHERE id = ?")->execute([$sesion['id']]);
 
     $isValid = false;
     $secret = $sesion['2fa_secret'];
@@ -69,6 +72,22 @@ try {
     }
 
     if (!$isValid) {
+        // Rate limiting específico para códigos de respaldo
+        if (!isset($_SESSION['_backup_attempts'])) {
+            $_SESSION['_backup_attempts'] = ['count' => 0, 'first_attempt' => time()];
+        }
+        $backup_attempts = &$_SESSION['_backup_attempts'];
+        $backup_window = 15 * 60;
+        if (time() - $backup_attempts['first_attempt'] > $backup_window) {
+            $backup_attempts = ['count' => 0, 'first_attempt' => time()];
+        }
+        if ($backup_attempts['count'] >= 3) {
+            $pdo->prepare("UPDATE sesiones_2fa SET completado = TRUE WHERE id = ?")->execute([$sesion['id']]);
+            http_response_code(429);
+            echo json_encode(['success' => false, 'message' => 'Demasiados intentos con códigos de respaldo. Inicie sesión nuevamente.']);
+            exit;
+        }
+
         $codes = json_decode($sesion['2fa_backup_codes'] ?? '[]', true);
         if (is_array($codes)) {
             $idx = array_search($code, $codes);
@@ -76,7 +95,12 @@ try {
                 unset($codes[$idx]);
                 $pdo->prepare("UPDATE admin_users SET 2fa_backup_codes = ? WHERE id = ?")->execute([json_encode(array_values($codes)), $sesion['admin_user_id']]);
                 $isValid = true;
+                $_SESSION['_backup_attempts'] = ['count' => 0, 'first_attempt' => time()];
             }
+        }
+        
+        if (!$isValid) {
+            $backup_attempts['count']++;
         }
     }
 

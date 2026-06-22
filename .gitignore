@@ -18,3 +18,31 @@ Thumbs.db
 
 # PHPUnit cache
 .phpunit.cache/
+
+# Android project
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.idea
+*.apk
+*.aab
+*.jks
+*.keystore
+
+# Backups
+backups/backups/*.sql
+
+# Debug files
+test_*.php
+check_webhook.php
+debug_*.php
+run_migration.php
+
+# Runtime / cache
+tasas/*.json
+telegram/*.pid
+telegram/*.log
+telegram/*.txt
+telegram/mensajes/
+logs/*.log

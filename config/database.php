@@ -22,6 +22,11 @@ defined('DB_NAME') or define('DB_NAME', getenv('DB_NAME') ?: 'carrito_db');
 defined('DB_USER') or define('DB_USER', getenv('DB_USER') ?: '');
 defined('DB_PASS') or define('DB_PASS', getenv('DB_PASS') ?: '');
 defined('DB_CHARSET') or define('DB_CHARSET', 'utf8mb4');
+defined('DB_SSL') or define('DB_SSL', filter_var(getenv('DB_SSL'), FILTER_VALIDATE_BOOLEAN) ?: false);
+defined('DB_SSL_CA') or define('DB_SSL_CA', getenv('DB_SSL_CA') ?: null);
+defined('DB_SSL_CERT') or define('DB_SSL_CERT', getenv('DB_SSL_CERT') ?: null);
+defined('DB_SSL_KEY') or define('DB_SSL_KEY', getenv('DB_SSL_KEY') ?: null);
+defined('DB_SSL_VERIFY') or define('DB_SSL_VERIFY', filter_var(getenv('DB_SSL_VERIFY') ?: 'true', FILTER_VALIDATE_BOOLEAN));
 
 // Configuración SMTP (desde variables de entorno)
 defined('SMTP_HOST') or define('SMTP_HOST', getenv('SMTP_HOST') ?: 'smtp.gmail.com');
@@ -33,3 +38,7 @@ defined('SMTP_FROM_NAME') or define('SMTP_FROM_NAME', getenv('SMTP_FROM_NAME') ?
 
 // URL base del proyecto (para evitar rutas hardcodeadas)
 defined('BASE_URL') or define('BASE_URL', getenv('APP_URL') ?: '/proyecto');
+
+// Clave secreta para persist_token y JWT
+defined('APP_SECRET') or define('APP_SECRET', getenv('APP_SECRET') ?: 'change-this-to-a-random-secret-in-production');
+defined('CORS_ORIGIN') or define('CORS_ORIGIN', getenv('CORS_ORIGIN') ?: (defined('BASE_URL') ? rtrim(BASE_URL, '/') : 'http://localhost'));

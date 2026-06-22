@@ -9,6 +9,27 @@ verificarCSRF();
 try {
     $pdo = conectarDB();
     $pdo->exec("SET time_zone = '-04:00'");
+
+// Asegurar que la tabla auditoria_logs existe (fuera de transacciones)
+$pdo->exec("
+    CREATE TABLE IF NOT EXISTS auditoria_logs (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        usuario_id INT NULL,
+        usuario_nombre VARCHAR(100) NULL,
+        usuario_rol VARCHAR(50) NULL,
+        accion VARCHAR(100) NOT NULL,
+        modulo VARCHAR(50) NOT NULL,
+        descripcion TEXT NULL,
+        ip_address VARCHAR(45) NULL,
+        tabla_afectada VARCHAR(100) NULL,
+        registro_id INT NULL,
+        fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+        edit_count INT NOT NULL DEFAULT 0,
+        edit_history TEXT NULL,
+        last_edit_by INT NULL,
+        last_edit_at DATETIME NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+");
 } catch (PDOException $e) {
     echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
     exit;
@@ -336,30 +357,7 @@ function anularFactura($pdo, $factura_id, $motivo) {
  */
 function registrarAuditoria($pdo, $factura_id, $accion, $descripcion) {
     try {
-        // Verificar si la tabla auditoria_logs existe
-        $stmt_check = $pdo->query("SHOW TABLES LIKE 'auditoria_logs'");
-        if ($stmt_check->rowCount() == 0) {
-            // Si no existe la tabla, crearla (adaptada a tu SQL existente)
-            $pdo->exec("
-                CREATE TABLE IF NOT EXISTS auditoria_logs (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    usuario_id INT NULL,
-                    usuario_nombre VARCHAR(100) NULL,
-                    usuario_rol VARCHAR(50) NULL,
-                    accion VARCHAR(100) NOT NULL,
-                    modulo VARCHAR(50) NOT NULL,
-                    descripcion TEXT NULL,
-                    ip_address VARCHAR(45) NULL,
-                    tabla_afectada VARCHAR(100) NULL,
-                    registro_id INT NULL,
-                    fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    edit_count INT NOT NULL DEFAULT 0,
-                    edit_history TEXT NULL,
-                    last_edit_by INT NULL,
-                    last_edit_at DATETIME NULL
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-            ");
-        }
+        // La tabla ya fue creada al inicio del proceso
         
         // Obtener datos del usuario desde la sesión
         $usuario_id = $_SESSION['user_id'] ?? null;

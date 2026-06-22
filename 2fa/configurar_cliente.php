@@ -3,7 +3,8 @@ error_reporting(0);
 ini_set('display_errors', 0);
 
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: http://localhost');
+$cors_origin = getenv('CORS_ORIGIN') ?: (defined('BASE_URL') ? rtrim(BASE_URL, '/') : 'http://localhost');
+header("Access-Control-Allow-Origin: $cors_origin");
 header('Access-Control-Allow-Credentials: true');
 
 register_shutdown_function(function () {
@@ -32,7 +33,8 @@ try {
 // Iniciar sesión de cliente
 if (session_status() === PHP_SESSION_NONE) {
     session_name('CLIENTSESSID');
-    session_set_cookie_params(['lifetime' => 0, 'path' => '/', 'domain' => '', 'secure' => false, 'httponly' => true, 'samesite' => 'Lax']);
+    $is_https = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on';
+    session_set_cookie_params(['lifetime' => 0, 'path' => '/', 'domain' => '', 'secure' => $is_https, 'httponly' => true, 'samesite' => 'Lax']);
     session_start();
 }
 
@@ -65,6 +67,22 @@ if (!columnaExiste($pdo, 'users', '2fa_enabled')) {
 }
 
 if ($action === 'generar_secreto') {
+    // Requerir contraseña para habilitar 2FA
+    $password_confirm = $_POST['password'] ?? '';
+    if (empty($password_confirm)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Contraseña requerida para habilitar 2FA']);
+        exit;
+    }
+    $stmt_pass = $pdo->prepare("SELECT password FROM users WHERE id = ?");
+    $stmt_pass->execute([$userId]);
+    $user_pass = $stmt_pass->fetch();
+    if (!$user_pass || !password_verify($password_confirm, $user_pass['password'])) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Contraseña incorrecta']);
+        exit;
+    }
+    
     $secret = '';
     $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
     for ($i = 0; $i < 32; $i++) $secret .= $chars[random_int(0, strlen($chars) - 1)];
@@ -92,7 +110,7 @@ if ($action === 'verificar') {
     $user = $stmt->fetch();
     if (!$user || empty($user['2fa_secret'])) { http_response_code(400); echo json_encode(['success' => false, 'message' => '2FA no configurado']); exit; }
 
-    $isValid = verificarTOTP($pdo, $userId, $user['2fa_secret'], $code);
+    $isValid = verificarTOTP($user['2fa_secret'], $code);
     if ($isValid) {
         $stmt = $pdo->prepare("UPDATE users SET 2fa_enabled = TRUE, 2fa_verified_at = NOW() WHERE id = ?");
         $stmt->execute([$userId]);
@@ -125,28 +143,3 @@ if ($action === 'desactivar') {
 http_response_code(400);
 echo json_encode(['success' => false, 'message' => 'Acción no válida']);
 
-function verificarTOTP($pdo, int $userId, string $secret, string $code): bool {
-    $code = trim($code);
-    if (strlen($code) !== 6 || !ctype_digit($code)) return false;
-
-    $timeSlice = floor(time() / 30);
-    for ($i = -2; $i <= 2; $i++) {
-        if (hash_equals(generarTOTP($secret, $timeSlice + $i), $code)) return true;
-    }
-
-    $stmtBackup = $pdo->prepare("SELECT 2fa_backup_codes FROM users WHERE id = ?");
-    $stmtBackup->execute([$userId]);
-    $user = $stmtBackup->fetch();
-    if ($user && !empty($user['2fa_backup_codes'])) {
-        $codes = json_decode($user['2fa_backup_codes'], true);
-        if (is_array($codes)) {
-            $idx = array_search($code, $codes);
-            if ($idx !== false) {
-                unset($codes[$idx]);
-                $pdo->prepare("UPDATE users SET 2fa_backup_codes = ? WHERE id = ?")->execute([json_encode(array_values($codes)), $userId]);
-                return true;
-            }
-        }
-    }
-    return false;
-}

@@ -168,7 +168,7 @@ try {
     ]);
     
 } catch (PDOException $e) {
-    $pdo->rollBack();
+    if ($pdo->inTransaction()) $pdo->rollBack();
     echo json_encode([
         'success' => false,
         'message' => 'Error interno del servidor'

@@ -8,16 +8,19 @@ class Database {
     public static function getConnection(): PDO {
         if (self::$instance === null) {
             try {
-                self::$instance = new PDO(
-                    "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=" . DB_CHARSET,
-                    DB_USER,
-                    DB_PASS,
-                    [
-                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                        PDO::ATTR_EMULATE_PREPARES => false,
-                    ]
-                );
+                $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=" . DB_CHARSET;
+                $opts = [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                    PDO::ATTR_EMULATE_PREPARES => false,
+                ];
+                if (defined('DB_SSL') && DB_SSL) {
+                    $opts[PDO::MYSQL_ATTR_SSL_CA] = defined('DB_SSL_CA') ? DB_SSL_CA : null;
+                    $opts[PDO::MYSQL_ATTR_SSL_CERT] = defined('DB_SSL_CERT') ? DB_SSL_CERT : null;
+                    $opts[PDO::MYSQL_ATTR_SSL_KEY] = defined('DB_SSL_KEY') ? DB_SSL_KEY : null;
+                    $opts[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = defined('DB_SSL_VERIFY') ? DB_SSL_VERIFY : true;
+                }
+                self::$instance = new PDO($dsn, DB_USER, DB_PASS, $opts);
             } catch (PDOException $e) {
                 error_log("Error de conexión BD: " . $e->getMessage());
                 throw $e;
@@ -30,11 +33,8 @@ class Database {
         seguridadInit();
 
         header('Content-Type: application/json; charset=utf-8');
-        $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-        $allowedOrigins = ['http://localhost', 'https://localhost'];
-        if (in_array($origin, $allowedOrigins)) {
-            header('Access-Control-Allow-Origin: ' . $origin);
-        }
+        $allowed_origin = defined('CORS_ORIGIN') ? rtrim(CORS_ORIGIN, '/') : (defined('BASE_URL') ? rtrim(BASE_URL, '/') : 'http://localhost');
+        header("Access-Control-Allow-Origin: $allowed_origin");
         header('Access-Control-Allow-Credentials: true');
         header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
         header('Access-Control-Allow-Headers: Content-Type, Authorization');
@@ -82,6 +82,11 @@ if (!function_exists('errorResponse')) {
 if (!function_exists('iniciarSesion')) {
     function iniciarSesion(): void {
         if (session_status() !== PHP_SESSION_NONE) return;
+
+        if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS' ||
+            (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false)) {
+            Database::setHeaders();
+        }
 
         seguridadConfigurarCookies();
 
@@ -222,6 +227,17 @@ if (!function_exists('url')) {
     }
 }
 
+// ========== CSP NONCE HELPER ==========
+
+if (!function_exists('cspNonce')) {
+    function cspNonce(): string {
+        if (!isset($GLOBALS['_csp_nonce'])) {
+            $GLOBALS['_csp_nonce'] = base64_encode(random_bytes(16));
+        }
+        return $GLOBALS['_csp_nonce'];
+    }
+}
+
 // ========== LOGGER ==========
 
 if (!function_exists('logSistema')) {
@@ -272,6 +288,10 @@ if (!function_exists('auditoriaRegistrarConDetalle')) {
         }
     }
 }
+
+// ========== ERROR HANDLER CENTRALIZADO ==========
+require_once __DIR__ . '/error_handler.php';
+errorHandlerInit();
 
 // ========== SEGURIDAD CENTRALIZADA ==========
 require_once __DIR__ . '/seguridad.php';

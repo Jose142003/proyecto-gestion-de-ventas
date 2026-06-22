@@ -132,7 +132,7 @@ function getMetodoPagoBadge($metodo) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detalle del Pedido #<?php echo $pedido['id']; ?> - PIC</title>
+    <title>Detalle del Pedido #<?php echo htmlspecialchars($pedido['id'] ?? '', ENT_QUOTES, 'UTF-8'); ?> - PIC</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
       <!-- PWA Meta Tags -->
     <link rel="manifest" href="/proyecto/manifest.json">

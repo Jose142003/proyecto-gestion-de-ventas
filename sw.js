@@ -1,6 +1,7 @@
 ﻿// sw.js - Service Worker para PIC Industrial con Push Notifications
 const CACHE_NAME = 'pic-v3';
-const OFFLINE_URL = '/proyecto/offline.html';
+const BASE_PATH = self.location.href.substring(0, self.location.href.lastIndexOf('/'));
+const OFFLINE_URL = BASE_PATH + '/offline.html';
 
 // ============================================
 // ESTRATEGIAS DE CACHE
@@ -19,7 +20,7 @@ function isStaticAsset(url) {
 }
 
 function isPage(url) {
-  return url.endsWith('.html') || url.endsWith('.php') || url === self.location.origin + '/' || url === self.location.origin + '/proyecto/';
+  return url.endsWith('.html') || url.endsWith('.php') || url === self.location.origin + '/' || url === self.location.origin + BASE_PATH + '/';
 }
 
 function isSameOrigin(url) {
@@ -36,13 +37,13 @@ self.addEventListener('install', function(event) {
       .then(function(cache) {
         return cache.addAll([
           OFFLINE_URL,
-          '/proyecto/interfaz_usuario/pagina_modernizada.html',
-          '/proyecto/interfaz_usuario/login.html',
-          '/proyecto/interfaz_usuario/index.html',
-          '/proyecto/panel_admin/panel_admin.php',
-          '/proyecto/img/pic.png',
-          '/proyecto/img/icon-192.png',
-          '/proyecto/img/icon-512.png',
+          BASE_PATH + '/interfaz_usuario/pagina_modernizada.html',
+          BASE_PATH + '/interfaz_usuario/login.html',
+          BASE_PATH + '/interfaz_usuario/index.html',
+          BASE_PATH + '/panel_admin/panel_admin.php',
+          BASE_PATH + '/img/pic.png',
+          BASE_PATH + '/img/icon-192.png',
+          BASE_PATH + '/img/icon-512.png',
           'https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css',
           'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
           'https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js',
@@ -181,19 +182,19 @@ self.addEventListener('push', function(event) {
     data = {
       title: 'PIC Industrial',
       body: event.data ? event.data.text() : 'Novedades en nuestra tienda',
-      icon: '/proyecto/img/pic.png',
-      badge: '/proyecto/img/pic.png',
-      url: '/proyecto/interfaz_usuario/pagina_modernizada.html'
+      icon: BASE_PATH + '/img/pic.png',
+      badge: BASE_PATH + '/img/pic.png',
+      url: BASE_PATH + '/interfaz_usuario/pagina_modernizada.html'
     };
   }
 
   var options = {
     body: data.body || 'Nuevos productos disponibles',
-    icon: data.icon || '/proyecto/img/pic.png',
-    badge: data.badge || '/proyecto/img/pic.png',
+    icon: data.icon || BASE_PATH + '/img/pic.png',
+    badge: data.badge || BASE_PATH + '/img/pic.png',
     vibrate: [200, 100, 200],
     data: {
-      url: data.url || '/proyecto/interfaz_usuario/pagina_modernizada.html',
+      url: data.url || BASE_PATH + '/interfaz_usuario/pagina_modernizada.html',
       dateOfArrival: Date.now()
     },
     actions: [
@@ -223,7 +224,7 @@ self.addEventListener('notificationclick', function(event) {
     return;
   }
 
-  var urlToOpen = (event.notification.data && event.notification.data.url) || '/proyecto/interfaz_usuario/pagina_modernizada.html';
+  var urlToOpen = (event.notification.data && event.notification.data.url) || BASE_PATH + '/interfaz_usuario/pagina_modernizada.html';
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true })
