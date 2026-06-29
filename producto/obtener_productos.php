@@ -9,6 +9,7 @@ error_reporting(0); ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 
 require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../conexion/conexion.php';
 
 use PIC\Models\Product;
 
@@ -36,13 +37,16 @@ try {
     $solo_visibles = isset($_GET['solo_visibles']) && $_GET['solo_visibles'] === 'true';
     $category = $_GET['category'] ?? null;
     $search = $_GET['search'] ?? null;
+    $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+    $limit = isset($_GET['limit']) ? max(1, min(100, intval($_GET['limit']))) : 20;
+    $offset = ($page - 1) * $limit;
     
     error_log("Filtros - incluir_ocultos: $incluir_ocultos, solo_ocultos: $solo_ocultos, solo_visibles: $solo_visibles");
     
     // ==============================================
     // CONSTRUIR CONSULTA SQL CON SOPORTE PARA OCULTOS
     // ==============================================
-    $sql = "SELECT 
+    $selectFields = "SELECT 
                 id,
                 sku,
                 name,
@@ -59,25 +63,33 @@ try {
                 dimensions,
                 currency,
                 COALESCE(active, 1) as active,
-                created_at
-            FROM products 
-            WHERE 1=1";
+                created_at";
+    
+    $where = "WHERE 1=1";
     
     // Aplicar filtros según los parámetros recibidos
     if ($solo_ocultos) {
-        $sql .= " AND active = 0";
+        $where .= " AND active = 0";
         error_log("Filtrando SOLO productos OCULTOS");
     } elseif ($solo_visibles) {
-        $sql .= " AND active = 1";
+        $where .= " AND active = 1";
         error_log("Filtrando SOLO productos VISIBLES");
     } elseif (!$incluir_ocultos) {
-        $sql .= " AND active = 1";
+        $where .= " AND active = 1";
         error_log("Filtrando productos VISIBLES (por defecto)");
     } else {
         error_log("Mostrando TODOS los productos (incluyendo ocultos)");
     }
     
-    $sql .= " ORDER BY id ASC";
+    $from = " FROM products ";
+    $order = " ORDER BY id ASC";
+    
+    $countSql = "SELECT COUNT(*)" . $from . $where;
+    $totalStmt = $pdo->prepare($countSql);
+    $totalStmt->execute();
+    $totalRegistros = (int)$totalStmt->fetchColumn();
+    
+    $sql = $selectFields . $from . $where . $order . " LIMIT $limit OFFSET $offset";
     
     error_log("Ejecutando consulta SQL: " . $sql);
     
@@ -111,10 +123,16 @@ try {
         error_log("Primer producto: " . json_encode($productos[0]));
     }
     
-    // Preparar respuesta
+    $totalPages = $limit > 0 ? (int)ceil($totalRegistros / $limit) : 1;
+    
+    // Preparar respuesta con paginación
     $response = [
         'success' => true,
         'total' => $totalProductos,
+        'totalRegistros' => $totalRegistros,
+        'page' => $page,
+        'limit' => $limit,
+        'totalPages' => $totalPages,
         'productos' => $productos,
         'filtro_aplicado' => [
             'incluir_ocultos' => $incluir_ocultos,

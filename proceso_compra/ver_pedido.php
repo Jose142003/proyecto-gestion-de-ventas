@@ -1,11 +1,16 @@
-﻿<?php
+<?php
 // ver_pedido.php - Visualización detallada de pedido (con datos del cliente desde users)
 session_start();
 
 require_once __DIR__ . '/../conexion/conexion.php';
+require_once __DIR__ . '/../config/i18n.php';
+require_once __DIR__ . '/../config/i18n_helpers.php';
+$locale = $_GET['lang'] ?? $_COOKIE['lang'] ?? 'es';
+setcookie('lang', $locale, time()+31536000, '/');
+\I18n::load($locale);
 
 if (!isset($_SESSION['user_id'])) {
-    header('Location: /proyecto/interfaz_usuario/login.html');
+    header('Location: ' . url('/interfaz_usuario/login.html'));
     exit;
 }
 
@@ -43,7 +48,7 @@ try {
             $stmt = $pdo->prepare("SELECT id FROM pedidos WHERE id = ? AND usuario_id = ?");
             $stmt->execute([$pedido_id, $user_id]);
             if (!$stmt->fetch()) {
-                header('Location: /proyecto/interfaz_usuario/pagina_modernizada.php');
+                header('Location: ' . url('/interfaz_usuario/pagina_modernizada.php'));
                 exit;
             }
             $stmt = $pdo->prepare("SELECT id, nombre, rol FROM users WHERE id = ?");
@@ -108,7 +113,7 @@ try {
 }
 
 $subtotal = $pedido['subtotal'] ?? array_sum(array_column($detalles, 'subtotal'));
-$iva = $pedido['iva'] ?? $subtotal * 0.16;
+$iva = $pedido['iva'] ?? $subtotal * obtenerIvaPorcentaje($pdo) / 100;
 $total = $pedido['total'] ?? $subtotal + $iva;
 
 $estados = [
@@ -134,7 +139,7 @@ $metodos_pago = [
 $metodo_info = $metodos_pago[$pedido['metodo_pago'] ?? ''] ?? ['label' => $pedido['metodo_pago'] ?? 'No especificado', 'icon' => 'fa-question', 'color' => 'secondary'];
 ?>
 <!DOCTYPE html>
-<html lang="es">
+<html lang="<?php echo htmlspecialchars($locale); ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -142,14 +147,14 @@ $metodo_info = $metodos_pago[$pedido['metodo_pago'] ?? ''] ?? ['label' => $pedid
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
       <!-- PWA Meta Tags -->
-    <link rel="manifest" href="/proyecto/manifest.json">
+    <link rel="manifest" href="<?= url('/manifest.json') ?>">
     <meta name="theme-color" content="#050C18">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="PIC Industrial">
-    <link rel="apple-touch-icon" href="/proyecto/img/pic.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="/proyecto/img/pic.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="/proyecto/img/pic.png">
+    <link rel="apple-touch-icon" href="<?= url('/img/pic.png') ?>">
+    <link rel="icon" type="image/png" sizes="192x192" href="<?= url('/img/pic.png') ?>">
+    <link rel="icon" type="image/png" sizes="512x512" href="<?= url('/img/pic.png') ?>">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
@@ -167,17 +172,34 @@ $metodo_info = $metodos_pago[$pedido['metodo_pago'] ?? ''] ?? ['label' => $pedid
             --light-gray: #f8f9fa;
             --border: #e9ecef;
             --shadow: 0 4px 6px rgba(0,0,0,0.1);
+            --bg-color: #f0f2f5;
+            --text-color: #2d3748;
+            --card-bg: #ffffff;
+        }
+        body.dark-mode {
+            --primary: #0a0e1a;
+            --secondary: #1a1f2e;
+            --accent: #3C91ED;
+            --light: #5aa9e6;
+            --bg-color: #0f1219;
+            --text-color: #e4e6eb;
+            --card-bg: #1e2436;
+            --border: #2c3348;
+            --shadow: 0 4px 6px rgba(0,0,0,0.3);
+            --light-gray: #1a1f2e;
+            --gray: #aaa;
+            --dark: #e4e6eb;
         }
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--bg-color);
             min-height: 100vh;
             padding: 20px;
-            color: #2d3748;
+            color: var(--text-color);
         }
         .container { max-width: 1400px; margin: 0 auto; }
         .header {
-            background: white;
+            background: var(--card-bg);
             border-radius: 16px;
             padding: 20px 30px;
             margin-bottom: 25px;
@@ -228,7 +250,7 @@ $metodo_info = $metodos_pago[$pedido['metodo_pago'] ?? ''] ?? ['label' => $pedid
         .estado-cancelado { background: #ffebee; color: #c62828; }
         .estado-facturado { background: #e8f5e9; color: #2e7d32; }
         .card {
-            background: white;
+            background: var(--card-bg);
             border-radius: 16px;
             overflow: hidden;
             margin-bottom: 25px;
@@ -236,7 +258,7 @@ $metodo_info = $metodos_pago[$pedido['metodo_pago'] ?? ''] ?? ['label' => $pedid
         }
         .card-header {
             padding: 20px 25px;
-            background: white;
+            background: var(--card-bg);
             border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
@@ -349,7 +371,7 @@ $metodo_info = $metodos_pago[$pedido['metodo_pago'] ?? ''] ?? ['label' => $pedid
         }
         .modal.active { display: flex; }
         .modal-content {
-            background: white;
+            background: var(--card-bg);
             border-radius: 16px;
             max-width: 500px;
             width: 90%;
@@ -467,9 +489,10 @@ $metodo_info = $metodos_pago[$pedido['metodo_pago'] ?? ''] ?? ['label' => $pedid
                 <p>Fecha: <?php echo date('d/m/Y H:i', strtotime($pedido['fecha_pedido'] ?? $pedido['created_at'] ?? 'now')); ?></p>
             </div>
             <div class="header-actions">
+                <button class="btn btn-secondary" id="themeToggle" style="min-width:44px;"><i class="fas fa-moon"></i></button>
                 <button class="btn btn-secondary" onclick="window.print()"><i class="fas fa-print"></i> Imprimir</button>
                 <button class="btn btn-primary" onclick="generarPDF()"><i class="fas fa-file-pdf"></i> PDF</button>
-                <a href="/proyecto/panel_admin/panel_admin.php" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Volver</a>
+                <a href="<?= url('/panel_admin/panel_admin.php') ?>" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Volver</a>
             </div>
         </div>
 
@@ -605,7 +628,7 @@ $metodo_info = $metodos_pago[$pedido['metodo_pago'] ?? ''] ?? ['label' => $pedid
             <div class="card-header">
                 <h2><i class="fas fa-truck"></i> Información de Envío</h2>
                 <?php if ($envio_data): ?>
-                <a href="/proyecto/envios/envio_detalle.php?envio_id=<?php echo $envio_data['id']; ?>" class="btn btn-primary btn-sm" style="padding: 5px 10px; font-size: 0.75rem; text-decoration: none;">
+                <a href="<?= url('/envios/envio_detalle.php?envio_id=') ?><?php echo $envio_data['id']; ?>" class="btn btn-primary btn-sm" style="padding: 5px 10px; font-size: 0.75rem; text-decoration: none;">
                     <i class="fas fa-external-link-alt"></i> Ver detalle completo
                 </a>
                 <?php endif; ?>
@@ -922,7 +945,7 @@ $metodo_info = $metodos_pago[$pedido['metodo_pago'] ?? ''] ?? ['label' => $pedid
             mostrarLoading();
             
             try {
-                const response = await fetch('/proyecto/proceso_compra/actualizar_pedido.php', {
+                const response = await fetch('<?= url('/proceso_compra/actualizar_pedido.php') ?>', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id: <?php echo $pedido_id; ?>, notas_internas: notas }),
@@ -950,7 +973,7 @@ $metodo_info = $metodos_pago[$pedido['metodo_pago'] ?? ''] ?? ['label' => $pedid
             mostrarLoading();
             
             try {
-                const response = await fetch('/proyecto/proceso_compra/actualizar_pedido.php', {
+                const response = await fetch('<?= url('/proceso_compra/actualizar_pedido.php') ?>', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id: <?php echo $pedido_id; ?>, estado: estado }),
@@ -975,7 +998,7 @@ $metodo_info = $metodos_pago[$pedido['metodo_pago'] ?? ''] ?? ['label' => $pedid
             mostrarLoading();
             
             try {
-                const response = await fetch('/proyecto/facturacion/facturar_pedido.php', {
+                const response = await fetch('<?= url('/facturacion/facturar_pedido.php') ?>', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ pedido_id: <?php echo $pedido_id; ?> }),
@@ -997,14 +1020,14 @@ $metodo_info = $metodos_pago[$pedido['metodo_pago'] ?? ''] ?? ['label' => $pedid
         }
         
         function generarPDF() {
-            window.open(`/proyecto/producto/generar_pdf_pedido.php?id=<?php echo $pedido_id; ?>`, '_blank');
+            window.open(`<?= url('/producto/generar_pdf_pedido.php') ?>?id=<?php echo $pedido_id; ?>`, '_blank');
         }
         
         async function enviarNotificacion() {
             mostrarLoading();
             
             try {
-                const response = await fetch('/proyecto/usuarios/enviar_notificacion_pedido.php', {
+                const response = await fetch('<?= url('/usuarios/enviar_notificacion_pedido.php') ?>', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ pedido_id: <?php echo $pedido_id; ?> }),
@@ -1032,5 +1055,26 @@ $metodo_info = $metodos_pago[$pedido['metodo_pago'] ?? ''] ?? ['label' => $pedid
             if (e.target === this) cerrarModal();
         });
     </script>
+<script>
+(function() {
+    const toggle = document.getElementById('themeToggle');
+    function applyDark(isDark) {
+        document.body.classList.toggle('dark-mode', isDark);
+        if (toggle) {
+            toggle.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        }
+    }
+    const saved = localStorage.getItem('darkMode');
+    if (saved === 'enabled') applyDark(true);
+    else if (saved === 'disabled') applyDark(false);
+    if (toggle) {
+        toggle.addEventListener('click', function() {
+            const isDark = !document.body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
+            applyDark(isDark);
+        });
+    }
+})();
+</script>
 </body>
 </html>

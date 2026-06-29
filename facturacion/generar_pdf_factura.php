@@ -1,8 +1,9 @@
-﻿<?php
+<?php
 session_start();
+require_once __DIR__ . '/../conexion/conexion.php';
 
 if (!isset($_SESSION['user_id']) && !isset($_SESSION['usuario_id'])) {
-    header('Location: /proyecto/interfaz_usuario/login.html');
+    header('Location: ' . url('/interfaz_usuario/login.html'));
     exit;
 }
 
@@ -43,6 +44,12 @@ try {
     
     if (!$factura) {
         die("<h2>Error: Factura no encontrada</h2>");
+    }
+
+    // Verificar propiedad: si no es admin, debe ser su factura
+    $userId = $_SESSION['user_id'] ?? $_SESSION['usuario_id'] ?? 0;
+    if (!esAdmin() && (!isset($factura['usuario_id']) || $factura['usuario_id'] != $userId)) {
+        die("<h2>Error: No autorizado</h2>");
     }
 
     // Determinar método de pago real
@@ -87,6 +94,18 @@ try {
     $stmt->execute([$factura_id]);
     $detalles = $stmt->fetchAll();
     
+    // Obtener porcentaje de IVA desde la configuración
+    $ivaPorcentaje = 16;
+    try {
+        $stmtIVA = $pdo->query("SELECT iva_porcentaje FROM configuracion_sistema LIMIT 1");
+        $ivaConfig = $stmtIVA->fetch();
+        if ($ivaConfig && isset($ivaConfig['iva_porcentaje'])) {
+            $ivaPorcentaje = (int)$ivaConfig['iva_porcentaje'];
+        }
+    } catch (Exception $e) {
+        // Usar valor por defecto
+    }
+    
 } catch (PDOException $e) {
     die("Error interno del servidor");
 }
@@ -121,14 +140,14 @@ header('Content-Type: text/html; charset=utf-8');
     <meta charset="UTF-8">
     <title>Factura <?php echo htmlspecialchars($factura['numero_factura']); ?></title>
       <!-- PWA Meta Tags -->
-    <link rel="manifest" href="/proyecto/manifest.json">
+    <link rel="manifest" href="<?= url('/manifest.json') ?>">
     <meta name="theme-color" content="#050C18">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="PIC Industrial">
-    <link rel="apple-touch-icon" href="/proyecto/img/pic.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="/proyecto/img/pic.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="/proyecto/img/pic.png">
+    <link rel="apple-touch-icon" href="<?= url('/img/pic.png') ?>">
+    <link rel="icon" type="image/png" sizes="192x192" href="<?= url('/img/pic.png') ?>">
+    <link rel="icon" type="image/png" sizes="512x512" href="<?= url('/img/pic.png') ?>">
     <style>
         * {
             margin: 0;
@@ -469,7 +488,7 @@ header('Content-Type: text/html; charset=utf-8');
                 <span class="total-value">Bs. <?php echo number_format($factura['subtotal'] ?? 0, 2); ?></span>
             </div>
             <div class="total-row">
-                <span class="total-label">IVA (16%):</span>
+                <span class="total-label">IVA (<?php echo $ivaPorcentaje; ?>%):</span>
                 <span class="total-value">Bs. <?php echo number_format($factura['iva'] ?? 0, 2); ?></span>
             </div>
             <div class="total-row total-grande">

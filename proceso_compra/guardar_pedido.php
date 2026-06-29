@@ -1,7 +1,7 @@
 <?php
 // guardar_pedido.php
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: http://localhost');
+header('Access-Control-Allow-Origin: ' . (defined('CORS_ORIGIN') ? CORS_ORIGIN : 'http://localhost'));
 header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
@@ -28,6 +28,7 @@ if (!$input) {
 }
 
 require_once __DIR__ . '/../conexion/conexion.php';
+iniciarSesion();
 
 verificarCSRF();
 
@@ -89,6 +90,7 @@ try {
     $pedido_id = $result['pedido_id'];
     $numero_pedido = $result['numero_pedido'];
     
+    $total_calculado = 0;
     // Agregar cada producto al pedido usando el procedimiento almacenado
     foreach ($productos as $producto) {
         $producto_id = $producto['id'] ?? $producto['producto_id'] ?? null;
@@ -99,7 +101,7 @@ try {
         }
         
         // Verificar que el producto existe
-        $stmt = $pdo->prepare("SELECT id, stock FROM products WHERE id = ?");
+        $stmt = $pdo->prepare("SELECT id, stock, price FROM products WHERE id = ?");
         $stmt->execute([$producto_id]);
         $prod = $stmt->fetch(PDO::FETCH_ASSOC);
         
@@ -115,8 +117,22 @@ try {
         // Agregar producto al pedido
         $stmt = $pdo->prepare("CALL sp_agregar_producto_pedido(?, ?, ?)");
         $stmt->execute([$pedido_id, $producto_id, $cantidad]);
+        
+        // Deduct stock
+        $stmt = $pdo->prepare("UPDATE products SET stock = stock - ? WHERE id = ?");
+        $stmt->execute([$cantidad, $producto_id]);
+        
+        // Accumulate totals from DB prices
+        $total_calculado += floatval($prod['price']) * $cantidad;
     }
     
+    // Recalculate and update order totals from DB prices
+    $iva_porcentaje = 16;
+    $subtotal_calculado = $total_calculado / (1 + $iva_porcentaje / 100);
+    $iva_calculado = $total_calculado - $subtotal_calculado;
+    $stmt = $pdo->prepare("UPDATE pedidos SET subtotal = ?, iva = ?, total = ? WHERE id = ?");
+    $stmt->execute([round($subtotal_calculado, 2), round($iva_calculado, 2), round($total_calculado, 2), $pedido_id]);
+
     // Confirmar transacción
     $pdo->commit();
     

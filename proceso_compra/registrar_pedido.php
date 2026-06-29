@@ -76,9 +76,9 @@ try {
     $stmt->execute([
         ':numero_pedido' => $numero_pedido,
         ':usuario_id' => $usuario_id,
-        ':subtotal' => $input['subtotal'] ?? 0,
-        ':iva' => $input['iva_total'] ?? 0,
-        ':total' => $input['total'] ?? 0,
+        ':subtotal' => 0,
+        ':iva' => 0,
+        ':total' => 0,
         ':metodo_pago' => $input['metodo_pago'] ?? 'no_especificado',
         ':estado' => $estado,
         ':observaciones' => $observaciones
@@ -87,6 +87,7 @@ try {
     $pedido_id = $pdo->lastInsertId();
     
     // CORREGIDO: Guardar productos en pedido_detalles (no pedido_productos)
+    $total_calculado = 0;
     if (isset($input['productos']) && is_array($input['productos'])) {
         $sql_producto = "INSERT INTO pedido_detalles (
             pedido_id, 
@@ -113,32 +114,57 @@ try {
         $stmt_producto = $pdo->prepare($sql_producto);
         
         foreach ($input['productos'] as $producto) {
-            // Obtener SKU y categoría del producto si existe
-            $sku = null;
-            $categoria = 'General';
-            if (!empty($producto['producto_id'])) {
-                $stmt_prod_info = $pdo->prepare("SELECT sku, category FROM products WHERE id = ?");
-                $stmt_prod_info->execute([$producto['producto_id']]);
-                $prod_info = $stmt_prod_info->fetch(PDO::FETCH_ASSOC);
-                if ($prod_info) {
-                    $sku = $prod_info['sku'];
-                    $categoria = $prod_info['category'] ?? 'General';
-                }
+            $producto_id = $producto['producto_id'] ?? null;
+            $cantidad = max(1, intval($producto['cantidad'] ?? 1));
+            
+            if (!$producto_id) {
+                throw new Exception('Producto sin ID');
             }
+            
+            // Fetch product info, price, and stock from DB
+            $stmt_prod_info = $pdo->prepare("SELECT id, name, sku, category, price, stock FROM products WHERE id = ?");
+            $stmt_prod_info->execute([$producto_id]);
+            $prod_info = $stmt_prod_info->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$prod_info) {
+                throw new Exception("Producto ID $producto_id no encontrado");
+            }
+            
+            // Verify stock
+            if ($prod_info['stock'] < $cantidad) {
+                throw new Exception("Stock insuficiente para el producto ID $producto_id");
+            }
+            
+            $sku = $prod_info['sku'];
+            $categoria = $prod_info['category'] ?? 'General';
+            $precio_db = floatval($prod_info['price']);
+            $subtotal_item = $precio_db * $cantidad;
+            $total_calculado += $subtotal_item;
             
             $stmt_producto->execute([
                 ':pedido_id' => $pedido_id,
-                ':producto_id' => $producto['producto_id'] ?? null,
-                ':cantidad' => $producto['cantidad'] ?? 1,
-                ':precio_unitario' => $producto['precio_unitario'] ?? 0,
-                ':precio_original' => $producto['precio_unitario'] ?? 0,
-                ':subtotal' => ($producto['cantidad'] ?? 1) * ($producto['precio_unitario'] ?? 0),
-                ':producto_nombre' => $producto['nombre'] ?? 'Producto',
+                ':producto_id' => $producto_id,
+                ':cantidad' => $cantidad,
+                ':precio_unitario' => $precio_db,
+                ':precio_original' => $precio_db,
+                ':subtotal' => $subtotal_item,
+                ':producto_nombre' => $prod_info['name'],
                 ':producto_sku' => $sku,
                 ':producto_categoria' => $categoria
             ]);
+            
+            // Deduct stock
+            $stmt_stock = $pdo->prepare("UPDATE products SET stock = stock - ? WHERE id = ?");
+            $stmt_stock->execute([$cantidad, $producto_id]);
         }
     }
+    
+    // Update order totals from DB prices
+    $iva_porcentaje = 16;
+    $subtotal_calculado = $total_calculado / (1 + $iva_porcentaje / 100);
+    $iva_calculado = $total_calculado - $subtotal_calculado;
+    $stmt_update = $pdo->prepare("UPDATE pedidos SET subtotal = ?, iva = ?, total = ? WHERE id = ?");
+    $stmt_update->execute([round($subtotal_calculado, 2), round($iva_calculado, 2), round($total_calculado, 2), $pedido_id]);
     
     $pdo->commit();
     

@@ -1,6 +1,12 @@
 <?php
 require_once __DIR__ . '/../conexion/conexion.php';
+require_once __DIR__ . '/../config/i18n.php';
+require_once __DIR__ . '/../config/i18n_helpers.php';
 requerirAdmin();
+
+$locale = $_GET['lang'] ?? $_COOKIE['lang'] ?? 'es';
+setcookie('lang', $locale, time()+31536000, '/');
+\I18n::load($locale);
 
 $pdo = conectarDB();
 
@@ -69,18 +75,44 @@ $acciones = $pdo->query("SELECT DISTINCT accion FROM auditoria_logs ORDER BY acc
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { background: #f8f9fa; padding: 20px; }
+        :root {
+            --bg-color: #f8f9fa;
+            --text-color: #212529;
+            --card-bg: #ffffff;
+            --border: #dee2e6;
+            --pre-bg: #f8f9fa;
+        }
+        body.dark-mode {
+            --bg-color: #0f1219;
+            --text-color: #e4e6eb;
+            --card-bg: #1e2436;
+            --border: #2c3348;
+            --pre-bg: #1a1f2e;
+        }
+        body { background: var(--bg-color); padding: 20px; color: var(--text-color); }
         .table-audit { font-size: 0.85rem; }
         .table-audit td { vertical-align: middle; }
         .badge-modulo { font-size: 0.75rem; }
         .data-preview { max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
-        .data-preview:hover { white-space: normal; background: #f0f0f0; }
+        .data-preview:hover { white-space: normal; background: var(--pre-bg); }
+        .card { background: var(--card-bg); border-color: var(--border); }
+        .modal-content { background: var(--card-bg); color: var(--text-color); }
+        body.dark-mode .table { --bs-table-bg: var(--card-bg); --bs-table-striped-bg: #1a1f2e; --bs-table-hover-bg: #2c3348; color: var(--text-color); }
+        body.dark-mode .table-striped > tbody > tr:nth-of-type(odd) > * { --bs-table-color-type: var(--text-color); }
+        body.dark-mode .text-muted { color: #aaa !important; }
+        body.dark-mode .bg-light { background-color: var(--pre-bg) !important; }
+        body.dark-mode .btn-outline-secondary { color: #aaa; border-color: #2c3348; }
+        body.dark-mode .btn-outline-secondary:hover { background: #2c3348; color: white; }
+        body.dark-mode .page-link { background: var(--card-bg); color: var(--text-color); border-color: var(--border); }
+        body.dark-mode .page-item.active .page-link { background: var(--accent, #3C91ED); border-color: var(--accent, #3C91ED); }
+        body.dark-mode .modal-header { border-bottom-color: var(--border); }
     </style>
 </head>
 <body>
     <div class="container-fluid">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2><i class="fas fa-history"></i> Registro de Auditoría</h2>
+            <button id="themeToggle" class="btn btn-outline-secondary" style="width:38px;"><i class="fas fa-moon"></i></button>
             <a href="/proyecto/panel_admin/panel_admin.php" class="btn btn-outline-secondary"><i class="fas fa-arrow-left"></i> Volver al Panel</a>
         </div>
 
@@ -228,6 +260,27 @@ $acciones = $pdo->query("SELECT DISTINCT accion FROM auditoria_logs ORDER BY acc
             document.getElementById('datosAnteriores').textContent = button.getAttribute('data-antes') || 'No disponible';
             document.getElementById('datosNuevos').textContent = button.getAttribute('data-despues') || 'No disponible';
         });
+    </script>
+    <script>
+    (function() {
+        const toggle = document.getElementById('themeToggle');
+        function applyDark(isDark) {
+            document.body.classList.toggle('dark-mode', isDark);
+            if (toggle) {
+                toggle.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+            }
+        }
+        const saved = localStorage.getItem('darkMode');
+        if (saved === 'enabled') applyDark(true);
+        else if (saved === 'disabled') applyDark(false);
+        if (toggle) {
+            toggle.addEventListener('click', function() {
+                const isDark = !document.body.classList.contains('dark-mode');
+                localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
+                applyDark(isDark);
+            });
+        }
+    })();
     </script>
 </body>
 </html>

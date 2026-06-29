@@ -6,49 +6,81 @@ require_once __DIR__ . '/../conexion/conexion.php';
 try {
     $pdo = conectarDB();
 } catch (PDOException $e) {
+    error_log("Error de conexión en procesar-pedido: " . $e->getMessage());
     die("Error interno del servidor");
-    }
-    
-// 2. Verificar que el usuario Jose (ID 6) o cualquier otro esté logueado
+}
+
 if (!isset($_SESSION['user_id'])) {
     die("Error: Debes iniciar sesión para procesar un pedido.");
-    }
-    
-$user_id = $_SESSION['user_id']; // Aquí capturamos el ID 6 automáticamente
-$numero_pedido = "PED-" . date('Y') . "-" . str_pad(random_int(1, 99999), 5, '0', STR_PAD_LEFT);
+}
+
+$user_id = $_SESSION['user_id'];
+$cart_items = $_SESSION['cart_items'] ?? [];
+$metodo_pago = $_POST['metodo_pago'] ?? 'transferencia';
+
+if (empty($cart_items)) {
+    die("Error: El carrito está vacío.");
+}
 
 try {
     $pdo->beginTransaction();
-    
-    // 3. Insertar el pedido asignándolo al usuario de la sesión
-    $sqlPedido = "INSERT INTO pedidos (usuario_id, numero_pedido, subtotal, iva, total, metodo_pago, estado, created_at) 
-                  VALUES (:user_id, :num, :sub, :iva, :total, 'transferencia', 'pagado', NOW())";
-    
-    $stmt = $pdo->prepare($sqlPedido);
-    $stmt->execute([
-        ':user_id' => $user_id, // ESTA ES LA CLAVE: Se guarda con tu ID (6)
-        ':num'     => $numero_pedido,
-        ':sub'     => 100.00, // Valores de prueba
-        ':iva'     => 16.00,
-        ':total'   => 116.00
-    ]);
-    
-    $pedido_id = $pdo->lastInsertId();
-    
-    // 4. Insertar un detalle de prueba para que la factura no salga vacía
-    $sqlDetalle = "INSERT INTO pedido_detalles (pedido_id, producto_id, cantidad, precio_unitario, subtotal) 
-                   VALUES (:pid, 1, 1, 100.00, 100.00)";
-    $stmtDet = $pdo->prepare($sqlDetalle);
-    $stmtDet->execute([':pid' => $pedido_id]);
+
+    $subtotal = 0;
+    foreach ($cart_items as $item) {
+        $subtotal += floatval($item['price']) * intval($item['quantity']);
+    }
+
+    $ivaPorcentaje = 16;
+    $stmtIva = $pdo->query("SELECT valor FROM configuracion_sistema WHERE clave = 'iva_porcentaje'");
+    if ($stmtIva) {
+        $ivaPorcentaje = (int)($stmtIva->fetchColumn() ?: 16);
+    }
+
+    $iva = $subtotal * ($ivaPorcentaje / 100);
+    $total = $subtotal + $iva;
+
+    $numero_pedido = spCrearPedido($pdo, $user_id, $subtotal, $iva, $total, $metodo_pago);
+
+    if (!$numero_pedido) {
+        $anio = date('Y');
+        $seq = $pdo->query("SELECT COALESCE(MAX(id), 0) FROM pedidos WHERE YEAR(created_at) = $anio")->fetchColumn();
+        $numero_pedido = 'PED-' . $anio . '-' . str_pad($seq + 1, 6, '0', STR_PAD_LEFT);
+
+        $stmt = $pdo->prepare("INSERT INTO pedidos (usuario_id, numero_pedido, subtotal, iva, total, metodo_pago, estado, created_at) VALUES (?, ?, ?, ?, ?, ?, 'pendiente', NOW())");
+        $stmt->execute([$user_id, $numero_pedido, $subtotal, $iva, $total, $metodo_pago]);
+        $pedido_id = $pdo->lastInsertId();
+
+        $stmtDet = $pdo->prepare("INSERT INTO pedido_detalles (pedido_id, producto_id, cantidad, precio_unitario, subtotal) VALUES (?, ?, ?, ?, ?)");
+        foreach ($cart_items as $item) {
+            $precio = floatval($item['price']);
+            $cantidad = intval($item['quantity']);
+            $stmtDet->execute([$pedido_id, intval($item['product_id']), $cantidad, $precio, $precio * $cantidad]);
+        }
+    }
 
     $pdo->commit();
-    
-    // 5. Redirigir a tu factura.php con el nuevo ID
-    header("Location: factura.php?id=" . $pedido_id);
+
+    $_SESSION['cart_items'] = [];
+    $_SESSION['ultimo_pedido'] = $pedido_id ?? null;
+
+    header("Location: factura.php?id=" . ($pedido_id ?? $pdo->lastInsertId()));
     exit();
-    
+
 } catch (Exception $e) {
+    if ($pdo->inTransaction()) {
         $pdo->rollBack();
+    }
+    error_log("Error en procesar-pedido: " . $e->getMessage());
     echo "Error interno del servidor";
+}
+
+function spCrearPedido(PDO $pdo, int $userId, float $subtotal, float $iva, float $total, string $metodoPago): ?string {
+    try {
+        $stmt = $pdo->prepare("CALL sp_crear_pedido(?, ?, ?, ?, ?)");
+        $stmt->execute([$userId, $subtotal, $iva, $total, $metodoPago]);
+        return $stmt->fetchColumn() ?: null;
+    } catch (Exception $e) {
+        return null;
+    }
 }
 ?>

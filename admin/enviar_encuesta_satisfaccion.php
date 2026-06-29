@@ -1,4 +1,6 @@
 <?php
+session_start();
+
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_WARNING & ~E_NOTICE);
 ini_set('display_errors', 0);
 
@@ -18,7 +20,7 @@ function enviarEncuestaSatisfaccion(PDO $pdo, int $pedidoId, string $clienteEmai
         $encuestaId = $pdo->lastInsertId();
 
         $token = hash_hmac('sha256', $encuestaId . '|' . $clienteEmail . '|' . $pedidoId, defined('BASE_URL') ? BASE_URL : 'pic-secret-key');
-        $surveyUrl = rtrim((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '/proyecto/interfaz_usuario/encuesta_satisfaccion.php?token=' . urlencode($token) . '&pedido=' . $encuestaId);
+        $surveyUrl = rtrim((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost')) . url('/interfaz_usuario/encuesta_satisfaccion.php?token=' . urlencode($token) . '&pedido=' . $encuestaId);
 
         $html = "<html><body style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px'>";
         $html .= "<div style='background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:30px;text-align:center;border-radius:12px 12px 0 0'>";

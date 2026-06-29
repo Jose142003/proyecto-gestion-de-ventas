@@ -1,9 +1,12 @@
 <?php
 header('Content-Type: application/json');
-require_once '../conexion/conexion.php';
+require_once __DIR__ . '/../conexion/conexion.php';
 
-// Obtener el user_id de la solicitud
-$user_id = isset($_GET['user_id']) ? intval($_GET['user_id']) : 0;
+session_start();
+requerirSesion();
+
+// Obtener el user_id de la sesión
+$user_id = $_SESSION['user_id'];
 
 if ($user_id <= 0) {
     echo json_encode([

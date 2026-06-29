@@ -40,5 +40,17 @@ defined('SMTP_FROM_NAME') or define('SMTP_FROM_NAME', getenv('SMTP_FROM_NAME') ?
 defined('BASE_URL') or define('BASE_URL', getenv('APP_URL') ?: '/proyecto');
 
 // Clave secreta para persist_token y JWT
-defined('APP_SECRET') or define('APP_SECRET', getenv('APP_SECRET') ?: 'change-this-to-a-random-secret-in-production');
+// NOTA: Esta clave DEBE configurarse en el archivo .env para producción
+if (!getenv('APP_SECRET') && !defined('APP_SECRET')) {
+    // Generar una clave única por instalación si no hay .env
+    $secretFile = __DIR__ . '/../.app_secret';
+    if (file_exists($secretFile)) {
+        $secret = trim(file_get_contents($secretFile));
+    } else {
+        $secret = bin2hex(random_bytes(32));
+        @file_put_contents($secretFile, $secret, LOCK_EX);
+    }
+    define('APP_SECRET', $secret);
+}
+defined('APP_SECRET') or define('APP_SECRET', getenv('APP_SECRET') ?: '');
 defined('CORS_ORIGIN') or define('CORS_ORIGIN', getenv('CORS_ORIGIN') ?: (defined('BASE_URL') ? rtrim(BASE_URL, '/') : 'http://localhost'));

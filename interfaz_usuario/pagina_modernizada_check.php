@@ -1,3 +1,4 @@
 <?php
-header('Location: /proyecto/interfaz_usuario/pagina_modernizada.php');
+$base = defined('BASE_URL') ? rtrim(BASE_URL, '/') : '/proyecto';
+header('Location: ' . $base . '/interfaz_usuario/pagina_modernizada.php');
 exit;

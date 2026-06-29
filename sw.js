@@ -27,6 +27,10 @@ function isSameOrigin(url) {
   return url.startsWith(self.location.origin);
 }
 
+function isAdminPath(url) {
+  return url.includes('/panel_admin/') || url.includes('/admin/') || url.includes('/backups/') || url.includes('/api/');
+}
+
 // ============================================
 // INSTALACION: cachear assets estaticos esenciales
 // ============================================
@@ -37,10 +41,9 @@ self.addEventListener('install', function(event) {
       .then(function(cache) {
         return cache.addAll([
           OFFLINE_URL,
-          BASE_PATH + '/interfaz_usuario/pagina_modernizada.html',
+          BASE_PATH + '/interfaz_usuario/pagina_modernizada.php',
           BASE_PATH + '/interfaz_usuario/login.html',
           BASE_PATH + '/interfaz_usuario/index.html',
-          BASE_PATH + '/panel_admin/panel_admin.php',
           BASE_PATH + '/img/pic.png',
           BASE_PATH + '/img/icon-192.png',
           BASE_PATH + '/img/icon-512.png',
@@ -90,6 +93,11 @@ self.addEventListener('fetch', function(event) {
   // Ignorar requests no HTTP y no GET (no se pueden cachear POST, etc.)
   if (!url.startsWith('http')) return;
   if (request.method !== 'GET') return;
+
+  // Admin panel paths: siempre ir a red, nunca cachear
+  if (isAdminPath(url)) {
+    return;
+  }
 
   // Estrategia: Network First para paginas (navegacion)
   if (request.mode === 'navigate') {
@@ -184,7 +192,7 @@ self.addEventListener('push', function(event) {
       body: event.data ? event.data.text() : 'Novedades en nuestra tienda',
       icon: BASE_PATH + '/img/pic.png',
       badge: BASE_PATH + '/img/pic.png',
-      url: BASE_PATH + '/interfaz_usuario/pagina_modernizada.html'
+      url: BASE_PATH + '/interfaz_usuario/pagina_modernizada.php'
     };
   }
 
@@ -194,7 +202,7 @@ self.addEventListener('push', function(event) {
     badge: data.badge || BASE_PATH + '/img/pic.png',
     vibrate: [200, 100, 200],
     data: {
-      url: data.url || BASE_PATH + '/interfaz_usuario/pagina_modernizada.html',
+      url: data.url || BASE_PATH + '/interfaz_usuario/pagina_modernizada.php',
       dateOfArrival: Date.now()
     },
     actions: [
@@ -224,7 +232,7 @@ self.addEventListener('notificationclick', function(event) {
     return;
   }
 
-  var urlToOpen = (event.notification.data && event.notification.data.url) || BASE_PATH + '/interfaz_usuario/pagina_modernizada.html';
+  var urlToOpen = (event.notification.data && event.notification.data.url) || BASE_PATH + '/interfaz_usuario/pagina_modernizada.php';
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true })

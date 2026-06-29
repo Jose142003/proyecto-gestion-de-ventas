@@ -99,7 +99,7 @@ try {
     
     $resumen = [
         'subtotal' => $subtotal,
-        'iva' => floatval($pedido['iva'] ?? ($subtotal * 0.16)),
+        'iva' => floatval($pedido['iva'] ?? ($subtotal * obtenerIvaPorcentaje($pdo) / 100)),
         'total' => floatval($pedido['total'] ?? ($subtotal * 1.16))
     ];
     

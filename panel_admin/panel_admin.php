@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // panel_admin.php - Verificación de sesión ADMIN
 
 require_once __DIR__ . '/../config/database.php';
@@ -68,7 +68,7 @@ error_log('[PANEL_DEBUG] Cookies: ' . print_r($_COOKIE, true));
 // 1. Verificar autenticación
 if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     error_log('[PANEL_DEBUG] Fallo check 1: loggedin no es true. loggedin=' . (isset($_SESSION['loggedin']) ? ($_SESSION['loggedin'] ? 'true' : 'false') : 'NO SET'));
-    header('Location: /proyecto/interfaz_usuario/login.html');
+    header('Location: ' . url('/interfaz_usuario/login.html'));
     exit;
 }
 
@@ -78,17 +78,17 @@ if ($tabla_origen !== 'admin_users') {
     error_log('[PANEL_DEBUG] Fallo check 2: tabla_origen=' . ($tabla_origen ?? 'null') . ' esperado=admin_users');
     if ($tabla_origen === 'users') {
         session_destroy();
-        header('Location: /proyecto/interfaz_usuario/login.html?error=cliente_accediendo_admin');
+        header('Location: ' . url('/interfaz_usuario/login.html?error=cliente_accediendo_admin'));
         exit;
     }
-    header('Location: /proyecto/interfaz_usuario/login.html?error=invalid_access');
+    header('Location: ' . url('/interfaz_usuario/login.html?error=invalid_access'));
     exit;
 }
 
 // 3. Verificar bandera es_admin
 if (!isset($_SESSION['es_admin']) || $_SESSION['es_admin'] !== true) {
     error_log('[PANEL_DEBUG] Fallo check 3: es_admin=' . (isset($_SESSION['es_admin']) ? ($_SESSION['es_admin'] ? 'true' : 'false') : 'NO SET'));
-    header('Location: /proyecto/interfaz_usuario/login.html?error=not_admin');
+    header('Location: ' . url('/interfaz_usuario/login.html?error=not_admin'));
     exit;
 }
 
@@ -97,7 +97,7 @@ $user_rol = $_SESSION['user_rol'] ?? '';
 $roles_admin = ['admin', 'superadmin', 'vendedor', 'administrador'];
 if (!in_array(strtolower($user_rol), $roles_admin)) {
     error_log('[PANEL_DEBUG] Fallo check 4: user_rol=' . $user_rol);
-    header('Location: /proyecto/interfaz_usuario/login.html?error=invalid_role');
+    header('Location: ' . url('/interfaz_usuario/login.html?error=invalid_role'));
     exit;
 }
 
@@ -115,7 +115,7 @@ try {
     
     if (!$admin_user || (int)$admin_user['activo'] === 0) {
         session_destroy();
-        header('Location: /proyecto/interfaz_usuario/login.html?error=invalid_admin');
+        header('Location: ' . url('/interfaz_usuario/login.html?error=invalid_admin'));
         exit;
     }
     
@@ -126,7 +126,7 @@ try {
     
 } catch (PDOException $e) {
     error_log("Error en panel_admin: " . $e->getMessage());
-    header('Location: /proyecto/interfaz_usuario/login.html?error=db_error');
+    header('Location: ' . url('/interfaz_usuario/login.html?error=db_error'));
     exit;
 }
 
@@ -138,9 +138,9 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel de Administrador - PIC</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="icon" type="image/png" href="/proyecto/img/pic.png">
+    <link rel="icon" type="image/png" href='<?= url('/img/pic.png') ?>'>
     <meta name="csrf-token" content="<?php echo htmlspecialchars($_SESSION['_csrf_token'] ?? ''); ?>">
-    <link rel="shortcut icon" href="/proyecto/img/pic.png">
+    <link rel="shortcut icon" href='<?= url('/img/pic.png') ?>'>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
     <style>
@@ -1918,7 +1918,7 @@ try {
                 <div class="menu-item" data-section="facturacionSection"><i class="fas fa-file-invoice-dollar"></i> Facturacion</div>
                 <div class="menu-item" data-section="cajaSection"><i class="fas fa-cash-register"></i> Caja / Arqueo</div>
                 <div class="menu-section-title">Herramientas</div>
-                <a href="/proyecto/admin/asistente_tecnico.php" class="menu-item" style="display:flex;text-decoration:none;color:inherit"><i class="fas fa-robot"></i> Asistente Técnico</a>
+                <a href='<?= url('/admin/asistente_tecnico.php') ?>' class="menu-item" style="display:flex;text-decoration:none;color:inherit"><i class="fas fa-robot"></i> Asistente Técnico</a>
                 <div class="menu-item" data-section="prediccionesSection"><i class="fas fa-brain"></i> IA Predictiva</div>
                 <div class="menu-item" data-section="biDashboardSection"><i class="fas fa-chart-pie"></i> BI Dashboard</div>
                 <div class="menu-section-title">Reportes</div>
@@ -3237,7 +3237,7 @@ try {
         // ====================================================================
         async function cargarDatosPerfil() {
             try {
-                const response = await fetch('/proyecto/usuarios/obtener_usuario.php', { credentials: 'include' });
+                const response = await fetch('<?= url('/usuarios/obtener_usuario.php') ?>', { credentials: 'include' });
                 if(response.ok) {
                     const data = await response.json();
                     let user = null;
@@ -3297,7 +3297,7 @@ try {
         
         async function cargarEstado2FAenPerfil() {
             try {
-                const response = await fetch('/proyecto/2fa/configurar.php?action=estado', { credentials: 'include' });
+                const response = await fetch('<?= url('/2fa/configurar.php?action=estado') ?>', { credentials: 'include' });
                 const data = await response.json();
                 const label = document.getElementById('perfil2faLabel');
                 const desc = document.getElementById('perfil2faDesc');
@@ -3325,7 +3325,7 @@ try {
         
         async function cargarFotoPerfil() {
             try {
-                const response = await fetch('/proyecto/usuarios/obtener_foto_perfil.php', { credentials: 'include' });
+                const response = await fetch('<?= url('/usuarios/obtener_foto_perfil.php') ?>', { credentials: 'include' });
                 if(response.ok) {
                     const data = await response.json();
                     const avatarImg = document.getElementById('avatarImage');
@@ -3355,7 +3355,7 @@ try {
             
             mostrarLoading('Subiendo foto...');
             try {
-                const response = await fetch('/proyecto/usuarios/subir_foto_perfil.php', {
+                const response = await fetch('<?= url('/usuarios/subir_foto_perfil.php') ?>', {
                     method: 'POST',
                     body: formData,
                     credentials: 'include'
@@ -3407,7 +3407,7 @@ try {
             };
             mostrarLoading('Guardando cambios...');
             try {
-                const response = await fetch('/proyecto/usuarios/actualizar_perfil.php', { 
+                const response = await fetch('<?= url('/usuarios/actualizar_perfil.php') ?>', { 
                     method: 'POST', 
                     headers: { 'Content-Type': 'application/json' }, 
                     body: JSON.stringify(data), 
@@ -3445,7 +3445,7 @@ try {
             mostrarLoading('Cambiando contraseña...');
             
             try {
-                const response = await fetch('/proyecto/usuarios/cambiar_contraseña.php', { 
+                const response = await fetch('<?= url('/usuarios/cambiar_contraseña.php') ?>', { 
                     method: 'POST', 
                     headers: { 'Content-Type': 'application/json' }, 
                     body: JSON.stringify({ current_password: currentPassword, new_password: newPassword, confirm_new_password: confirmPassword }), 
@@ -3478,7 +3478,7 @@ try {
         // ====================================================================
         async function cargarUsuarios() {
             try {
-                const response = await fetch('/proyecto/admin/obtener_todos_los_usuarios.php', { credentials: 'include' });
+                const response = await fetch('<?= url('/admin/obtener_todos_los_usuarios.php') ?>', { credentials: 'include' });
                 if(response.ok) { usersData = await response.json(); if(!Array.isArray(usersData)) usersData = usersData.usuarios || usersData.data || []; }
                 else { throw new Error('Error en la respuesta del servidor'); }
             } catch(e) { console.error('Error cargando usuarios:', e); usersData = []; }
@@ -3510,7 +3510,7 @@ try {
 
         async function cargarDashboard() {
             try {
-                const response = await fetch('/proyecto/admin/obtener_dashboard.php', { credentials: 'include' });
+                const response = await fetch('<?= url('/admin/obtener_dashboard.php') ?>', { credentials: 'include' });
                 if(response.ok) {
                     const data = await response.json();
                     document.getElementById('totalUsers').innerHTML = data.total_usuarios || 0;
@@ -3535,7 +3535,7 @@ try {
 
         async function verificarPagosMoviles() {
             try {
-                const response = await fetch('/proyecto/admin/verificar_pagos_pendientes.php?ultimo_id=' + ultimoPagoMovilId, { credentials: 'include' });
+                const response = await fetch('<?= url('/admin/verificar_pagos_pendientes.php?ultimo_id=') ?>' + ultimoPagoMovilId, { credentials: 'include' });
                 if (response.ok) {
                     const data = await response.json();
                     if (data.success && data.nuevos && data.nuevos.length > 0) {
@@ -3550,7 +3550,7 @@ try {
 
         async function cargarProveedores() {
             try {
-                const response = await fetch('/proyecto/proveedores/obtener_proveedores.php', { credentials: 'include' });
+                const response = await fetch('<?= url('/proveedores/obtener_proveedores.php') ?>', { credentials: 'include' });
                 if(response.ok) { proveedoresData = await response.json(); if(!Array.isArray(proveedoresData)) proveedoresData = proveedoresData.proveedores || proveedoresData.data || []; }
                 else { throw new Error('Error en la respuesta del servidor'); }
             } catch(e) { console.error('Error cargando proveedores:', e); proveedoresData = []; }
@@ -3596,7 +3596,7 @@ try {
             console.log('🔄 Cargando compras...');
             mostrarLoading('Cargando compras...');
             try {
-                const response = await fetch('/proyecto/compras/obtener_compras.php', { 
+                const response = await fetch('<?= url('/compras/obtener_compras.php') ?>', { 
                     credentials: 'include',
                     headers: { 'Cache-Control': 'no-cache' }
                 });
@@ -3717,7 +3717,7 @@ try {
         async function cargarPedidos() {
             mostrarLoading('Cargando pedidos...');
             try {
-                const response = await fetch('/proyecto/proceso_compra/obtener_todos_los_pedidos.php', { credentials: 'include' });
+                const response = await fetch('<?= url('/proceso_compra/obtener_todos_los_pedidos.php') ?>', { credentials: 'include' });
                 if(response.ok) {
                     const data = await response.json();
                     if(data.success) pedidosData = data.pedidos || [];
@@ -3777,7 +3777,7 @@ try {
                 const fd = document.getElementById('cotizacionFechaDesde')?.value || '';
                 const fh = document.getElementById('cotizacionFechaHasta')?.value || '';
                 const params = new URLSearchParams({ busqueda, estado, fecha_desde: fd, fecha_hasta: fh });
-                const res = await fetch('/proyecto/cotizaciones/obtener_cotizaciones.php?' + params.toString(), { credentials: 'include' });
+                const res = await fetch('<?= url('/cotizaciones/obtener_cotizaciones.php?') ?>' + params.toString(), { credentials: 'include' });
                 const data = await res.json();
                 const tbody = document.getElementById('cotizacionesBody');
                 if (!tbody) return;
@@ -3802,7 +3802,7 @@ try {
                             <button class="btn-pdf" onclick="verCotizacion(${c.id})" title="Ver"><i class="fas fa-eye"></i></button>
                             <button class="btn-pdf" onclick="editarCotizacion(${c.id})" title="Editar" style="background:var(--info)"><i class="fas fa-edit"></i></button>
                             <button class="btn-pdf" onclick="seguimientoCotizacion(${c.id})" title="Seguimiento" style="background:var(--purple)"><i class="fas fa-history"></i></button>
-                            <button class="btn-pdf" onclick="window.open('/proyecto/cotizaciones/generar_pdf_cotizacion.php?id=${c.id}')" title="PDF" style="background:var(--danger)"><i class="fas fa-file-pdf"></i></button>
+                            <button class="btn-pdf" onclick="window.open('<?= url('/cotizaciones/generar_pdf_cotizacion.php') ?>?id=${c.id}')" title="PDF" style="background:var(--danger)"><i class="fas fa-file-pdf"></i></button>
                             <button class="btn-pdf" onclick="eliminarCotizacion(${c.id})" title="Eliminar" style="background:#e74c3c"><i class="fas fa-trash"></i></button>
                         </td>
                     </tr>`;
@@ -3816,7 +3816,7 @@ try {
 
             // Cargar productos en el select
             try {
-                const res = await fetch('/proyecto/admin/obtener_inventario.php', { credentials: 'include' });
+                const res = await fetch('<?= url('/admin/obtener_inventario.php') ?>', { credentials: 'include' });
                 const data = await res.json();
                 const sel = document.getElementById('cotProductoSelect');
                 if (Array.isArray(data)) {
@@ -3828,7 +3828,7 @@ try {
 
             if (id) {
                 try {
-                    const res = await fetch('/proyecto/cotizaciones/obtener_cotizacion.php?id=' + id, { credentials: 'include' });
+                    const res = await fetch('<?= url('/cotizaciones/obtener_cotizacion.php?id=') ?>' + id, { credentials: 'include' });
                     const data = await res.json();
                     if (data.success && data.data) {
                         const c = data.data;
@@ -3954,7 +3954,7 @@ try {
             }
 
             try {
-                const url = id ? '/proyecto/cotizaciones/editar_cotizacion.php' : '/proyecto/cotizaciones/crear_cotizacion.php';
+                const url = id ? '<?= url('/cotizaciones/editar_cotizacion.php') ?>' : '<?= url('/cotizaciones/crear_cotizacion.php') ?>';
                 const res = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -3976,7 +3976,7 @@ try {
 
         function eliminarCotizacion(id) {
             if (!confirm('¿Eliminar esta cotización?')) return;
-            fetch('/proyecto/cotizaciones/eliminar_cotizacion.php', {
+            fetch('<?= url('/cotizaciones/eliminar_cotizacion.php') ?>', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id }),
@@ -3989,7 +3989,7 @@ try {
 
         async function verCotizacion(id) {
             try {
-                const res = await fetch('/proyecto/cotizaciones/obtener_cotizacion.php?id=' + id, { credentials: 'include' });
+                const res = await fetch('<?= url('/cotizaciones/obtener_cotizacion.php?id=') ?>' + id, { credentials: 'include' });
                 const data = await res.json();
                 if (!data.success || !data.data) return;
                 const c = data.data;
@@ -4023,7 +4023,7 @@ try {
                         ${c.notas ? `<div style="margin-top:15px;padding:10px;background:var(--card-bg);border-radius:6px"><strong>Notas:</strong><br>${escapeHtml(c.notas)}</div>` : ''}
                         ${c.seguimiento ? `<div style="margin-top:10px;padding:10px;background:var(--card-bg);border-radius:6px"><strong>Seguimiento:</strong><pre style="margin:5px 0 0;font-size:0.8rem;white-space:pre-wrap">${escapeHtml(c.seguimiento)}</pre></div>` : ''}
                         <div style="margin-top:20px;text-align:center">
-                            <button class="btn-primary" onclick="window.open('/proyecto/cotizaciones/generar_pdf_cotizacion.php?id=${c.id}')" style="background:var(--danger)"><i class="fas fa-file-pdf"></i> Descargar PDF</button>
+                            <button class="btn-primary" onclick="window.open('<?= url('/cotizaciones/generar_pdf_cotizacion.php') ?>?id=${c.id}')" style="background:var(--danger)"><i class="fas fa-file-pdf"></i> Descargar PDF</button>
                         </div>
                     </div>`;
 
@@ -4044,7 +4044,7 @@ try {
             document.getElementById('segNuevoEstado').value = 'pendiente';
             document.getElementById('segNota').value = '';
             try {
-                const res = await fetch('/proyecto/cotizaciones/obtener_cotizacion.php?id=' + id, { credentials: 'include' });
+                const res = await fetch('<?= url('/cotizaciones/obtener_cotizacion.php?id=') ?>' + id, { credentials: 'include' });
                 const data = await res.json();
                 if (data.success && data.data) {
                     const c = data.data;
@@ -4063,7 +4063,7 @@ try {
             const nota = document.getElementById('segNota').value.trim();
             if (!id) return;
             try {
-                const res = await fetch('/proyecto/cotizaciones/cambiar_estado.php', {
+                const res = await fetch('<?= url('/cotizaciones/cambiar_estado.php') ?>', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id: parseInt(id), estado, seguimiento: nota }),
@@ -4086,7 +4086,7 @@ try {
         async function cargarInteraccionesCRM() {
             try {
                 const busqueda = document.getElementById('buscarClienteCRM')?.value || '';
-                const urlSimple = '/proyecto/reportes/ventas_por_cliente.php?simple=1' + (busqueda ? '&buscar=' + encodeURIComponent(busqueda) : '');
+                const urlSimple = '<?= url('/reportes/ventas_por_cliente.php?simple=1') ?>' + (busqueda ? '&buscar=' + encodeURIComponent(busqueda) : '');
                 const resClientes = await fetch(urlSimple, { credentials: 'include' });
                 if (!resClientes.ok) { document.getElementById('crmInteraccionesBody').innerHTML = '<tr><td colspan="7" style="text-align:center">Error al cargar clientes</td></tr>'; return; }
                 const dataClientes = await resClientes.json();
@@ -4101,7 +4101,7 @@ try {
                 const lote = clientes.slice(0, 20);
                 for (const cli of lote) {
                     try {
-                        const res = await fetch('/proyecto/clientes/obtener_interacciones.php?cliente_id=' + cli.id, { credentials: 'include' });
+                        const res = await fetch('<?= url('/clientes/obtener_interacciones.php?cliente_id=') ?>' + cli.id, { credentials: 'include' });
                         if (res.ok) {
                             const data = await res.json();
                             if (data.success && data.interacciones) {
@@ -4146,7 +4146,7 @@ try {
             document.getElementById('crmFecha').value = new Date().toISOString().slice(0, 16);
 
             try {
-                const res = await fetch('/proyecto/reportes/ventas_por_cliente.php?simple=1', { credentials: 'include' });
+                const res = await fetch('<?= url('/reportes/ventas_por_cliente.php?simple=1') ?>', { credentials: 'include' });
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 const data = await res.json();
                 const clientes = Array.isArray(data) ? data : (data.clientes || []);
@@ -4173,7 +4173,7 @@ try {
             }
 
             try {
-                const res = await fetch('/proyecto/clientes/agregar_interaccion.php', {
+                const res = await fetch('<?= url('/clientes/agregar_interaccion.php') ?>', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ cliente_id: parseInt(clienteId), tipo, titulo, descripcion, fecha_interaccion: fecha || new Date().toISOString().slice(0, 19).replace('T', ' ') }),
@@ -4191,7 +4191,7 @@ try {
         async function eliminarInteraccionCRM(id) {
             if (!confirm('¿Eliminar esta interacción?')) return;
             try {
-                const res = await fetch('/proyecto/clientes/eliminar_interaccion.php', {
+                const res = await fetch('<?= url('/clientes/eliminar_interaccion.php') ?>', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id }),
@@ -4206,7 +4206,7 @@ try {
         async function cargarFacturas() {
             mostrarLoading('Cargando facturas...');
             try {
-                const response = await fetch('/proyecto/facturacion/obtener_factura.php', { credentials: 'include' });
+                const response = await fetch('<?= url('/facturacion/obtener_factura.php') ?>', { credentials: 'include' });
                 if(response.ok) {
                     const data = await response.json();
                     if(data.success === true && Array.isArray(data.facturas)) facturasData = data.facturas;
@@ -4247,7 +4247,7 @@ try {
 
         async function cargarCaja() {
             try {
-                const response = await fetch('/proyecto/caja/obtener_estado_caja.php', { credentials: 'include' });
+                const response = await fetch('<?= url('/caja/obtener_estado_caja.php') ?>', { credentials: 'include' });
                 if(response.ok) {
                     const data = await response.json();
                     if(data.success) {
@@ -4262,7 +4262,7 @@ try {
             } catch(e) { console.error('Error cargando caja:', e); }
             
             try {
-                const response = await fetch('/proyecto/caja/obtener_movimientos.php', { credentials: 'include' });
+                const response = await fetch('<?= url('/caja/obtener_movimientos.php') ?>', { credentials: 'include' });
                 if(response.ok) {
                     const data = await response.json();
                     const movimientos = Array.isArray(data) ? data : (data.movimientos || []);
@@ -4301,17 +4301,17 @@ try {
 
         async function imprimirCierreCaja() {
             try {
-                const response = await fetch('/proyecto/caja/obtener_estado_caja.php', { credentials: 'include' });
+                const response = await fetch('<?= url('/caja/obtener_estado_caja.php') ?>', { credentials: 'include' });
                 if (response.ok) {
                     const data = await response.json();
                     if (data.success && data.estado === 'abierta') {
                         if (cajaData && cajaData.caja_id) {
-                            window.open('/proyecto/caja/imprimir_cierre_pdf.php?id=' + cajaData.caja_id, '_blank');
+                            window.open('<?= url('/caja/imprimir_cierre_pdf.php?id=') ?>' + cajaData.caja_id, '_blank');
                         } else {
-                            window.open('/proyecto/caja/imprimir_cierre_pdf.php', '_blank');
+                            window.open('<?= url('/caja/imprimir_cierre_pdf.php') ?>', '_blank');
                         }
                     } else {
-                        window.open('/proyecto/caja/imprimir_cierre_pdf.php', '_blank');
+                        window.open('<?= url('/caja/imprimir_cierre_pdf.php') ?>', '_blank');
                     }
                 }
             } catch(e) { console.error('Error imprimiendo cierre:', e); }
@@ -4321,7 +4321,7 @@ try {
             if (!confirm('¿Estás seguro de limpiar todos los movimientos de la caja actual?\n\nEsta acción eliminará todos los movimientos del día y reiniciará los montos.')) return;
             if (!confirm('⚠️ CONFIRMACIÓN: ¿Estás completamente seguro? Esta operación no se puede deshacer.')) return;
             try {
-                const response = await fetch('/proyecto/caja/limpiar_caja.php', { method: 'POST', body: JSON.stringify({ accion: 'limpiar' }), headers: { 'Content-Type': 'application/json' }, credentials: 'include' });
+                const response = await fetch('<?= url('/caja/limpiar_caja.php') ?>', { method: 'POST', body: JSON.stringify({ accion: 'limpiar' }), headers: { 'Content-Type': 'application/json' }, credentials: 'include' });
                 const data = await response.json();
                 if (data.success) {
                     mostrarNotificacion(data.message, 'success');
@@ -4336,7 +4336,7 @@ try {
             mostrarLoading('Cargando ventas por cliente...');
             try {
                 const buscar = document.getElementById('buscarCliente')?.value || '';
-                let url = '/proyecto/reportes/ventas_por_cliente.php';
+                let url = '<?= url('/reportes/ventas_por_cliente.php') ?>';
                 if(buscar) url += `?buscar=${encodeURIComponent(buscar)}`;
                 const response = await fetch(url, { credentials: 'include' });
                 if(response.ok) {
@@ -4397,7 +4397,7 @@ try {
             mostrarLoading('Cargando ventas por vendedor...');
             try {
                 const vendedorId = document.getElementById('filtroVendedor')?.value || '';
-                let url = '/proyecto/reportes/ventas_por_vendedor.php';
+                let url = '<?= url('/reportes/ventas_por_vendedor.php') ?>';
                 if(vendedorId) url += `?vendedor_id=${vendedorId}`;
                 
                 const response = await fetch(url, { credentials: 'include' });
@@ -4535,7 +4535,7 @@ try {
 
         async function cargarProductosVendidos() {
             try {
-                const response = await fetch('/proyecto/reportes/productos_mas_vendidos.php', { credentials: 'include' });
+                const response = await fetch('<?= url('/reportes/productos_mas_vendidos.php') ?>', { credentials: 'include' });
                 if(response.ok) {
                     const data = await response.json();
                     productosVendidosData = Array.isArray(data) ? data : (data.productos || []);
@@ -4569,7 +4569,7 @@ try {
             try {
                 const categoria = document.getElementById('filtroCategoriaStock')?.value || '';
                 const estado = document.getElementById('filtroEstadoStock')?.value || '';
-                let url = '/proyecto/reportes/reporte_stock.php?';
+                let url = '<?= url('/reportes/reporte_stock.php') ?>?';
                 const params = [];
                 if(categoria) params.push(`categoria=${encodeURIComponent(categoria)}`);
                 if(estado === 'critico') params.push('estado=critico');
@@ -4604,7 +4604,7 @@ try {
             if (!selectCategoria) return;
             
             try {
-                const response = await fetch('/proyecto/producto/obtener_categorias.php', { credentials: 'include' });
+                const response = await fetch('<?= url('/producto/obtener_categorias.php') ?>', { credentials: 'include' });
                 if (response.ok) {
                     const data = await response.json();
                     let categorias = [];
@@ -4688,7 +4688,7 @@ try {
                 const fechaHasta = document.getElementById('fechaHastaHistorial')?.value || '';
                 const estado = document.getElementById('estadoHistorial')?.value || '';
                 
-                let url = '/proyecto/proceso_compra/obtener_todos_los_pedidos.php';
+                let url = '<?= url('/proceso_compra/obtener_todos_los_pedidos.php') ?>';
                 const params = [];
                 if (cliente) params.push(`cliente=${encodeURIComponent(cliente)}`);
                 if (fechaDesde) params.push(`desde=${fechaDesde}`);
@@ -4797,7 +4797,7 @@ try {
                 const hasta = document.getElementById('auditoriaFechaHasta')?.value || '';
                 const modulo = document.getElementById('auditoriaModulo')?.value || '';
                 
-                let url = '/proyecto/reportes/obtener_auditoria.php';
+                let url = '<?= url('/reportes/obtener_auditoria.php') ?>';
                 const params = [];
                 if (desde) params.push(`desde=${encodeURIComponent(desde)}`);
                 if (hasta) params.push(`hasta=${encodeURIComponent(hasta)}`);
@@ -4939,7 +4939,7 @@ try {
         async function cargarCEO() {
             mostrarLoading('Cargando Panel Ejecutivo...');
             try {
-                const response = await fetch('/proyecto/reportes/obtener_datos_ceo.php', { credentials: 'include' });
+                const response = await fetch('<?= url('/reportes/obtener_datos_ceo.php') ?>', { credentials: 'include' });
                 const data = await response.json();
                 if(data.success) {
                     document.getElementById('ceoUsuarios').innerHTML = data.total_usuarios || 0;
@@ -5019,7 +5019,7 @@ try {
             mostrarLoading('Cargando configuración...');
             
             try {
-                const response = await fetch('/proyecto/admin/obtener_configuracion.php', { 
+                const response = await fetch('<?= url('/admin/obtener_configuracion.php') ?>', { 
                     credentials: 'include', 
                     headers: { 'Cache-Control': 'no-cache' } 
                 });
@@ -5188,7 +5188,7 @@ try {
             if(Object.keys(valores).length === 0) { mostrarNotificacion('No hay cambios para guardar', 'warning'); return; }
             mostrarLoading('Guardando configuración...');
             try {
-                const response = await fetch('/proyecto/admin/guardar_configuracion.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(valores), credentials: 'include' });
+                const response = await fetch('<?= url('/admin/guardar_configuracion.php') ?>', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(valores), credentials: 'include' });
                 if(!response.ok) throw new Error('Error HTTP: ' + response.status);
                 const data = await response.json();
                 if(data.success) { mostrarNotificacion(data.message || 'Configuración guardada correctamente', 'success'); await cargarConfiguracion(); }
@@ -5200,7 +5200,7 @@ try {
         async function cargarBackups() {
             mostrarLoading('Cargando backups...');
             try {
-                const response = await fetch('/proyecto/backups/obtener_backups.php', { credentials: 'include' });
+                const response = await fetch('<?= url('/backups/obtener_backups.php') ?>', { credentials: 'include' });
                 if(response.ok) {
                     const data = await response.json();
                     if(Array.isArray(data)) backupsData = data;
@@ -5238,7 +5238,7 @@ try {
         async function cargarProductos() {
             mostrarLoading('Cargando productos...');
             try {
-                let url = '/proyecto/producto/obtener_productos.php?';
+                let url = '<?= url('/producto/obtener_productos.php') ?>?';
                 if (filtroProductosActual === 'ocultos') url += 'solo_ocultos=true';
                 else if (filtroProductosActual === 'visibles') url += 'solo_visibles=true';
                 else url += 'incluir_ocultos=true';
@@ -5298,7 +5298,7 @@ try {
             if(!confirm(`¿${accion === 'ocultar' ? 'Ocultar' : 'Mostrar'} este producto? Los productos ocultos no se mostrarán en la tienda.`)) return;
             mostrarLoading(`${accion === 'ocultar' ? 'Ocultando' : 'Mostrando'} producto...`);
             try {
-                const response = await fetch('/proyecto/admin/eliminar_producto.php', {
+                const response = await fetch('<?= url('/admin/eliminar_producto.php') ?>', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id: id, ocultar: !estaOculto }), credentials: 'include'
                 });
@@ -5333,7 +5333,7 @@ try {
         async function cargarReporteGeneral() {
             mostrarLoading('Generando reporte ejecutivo...');
             try {
-                const response = await fetch('/proyecto/reportes/reporte_general_ejecutivo.php', { credentials: 'include' });
+                const response = await fetch('<?= url('/reportes/reporte_general_ejecutivo.php') ?>', { credentials: 'include' });
                 if(response.ok) {
                     const data = await response.json();
                     if(data.success) {
@@ -5422,7 +5422,7 @@ try {
                 if(estado) params.append('estado', estado);
                 if(buscar) params.append('buscar', buscar);
                 
-                const response = await fetch(`/proyecto/reportes/reporte_especifico.php?${params.toString()}`, { credentials: 'include' });
+                const response = await fetch(`<?= url('/reportes/reporte_especifico.php') ?>?${params.toString()}`, { credentials: 'include' });
                 if(response.ok) {
                     const data = await response.json();
                     if(data.success) {
@@ -5532,30 +5532,30 @@ try {
         // ====================================================================
         // FUNCIONES DE ACCIÓN Y UTILIDADES
         // ====================================================================
-        function verProducto(id) { window.location.href = `/proyecto/producto/detalles_producto.php?id=${id}`; }
-        function editarProducto(id) { window.location.href = `/proyecto/producto/editar_producto.php?id=${id}`; }
-        function eliminarProducto(id) { if(confirm('¿Eliminar este producto?')) fetch('/proyecto/admin/eliminar_producto.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }), credentials: 'include' }).then(() => { mostrarNotificacion('Producto eliminado', 'success'); cargarProductos(); }).catch(() => mostrarNotificacion('Error al eliminar', 'error')); }
-        function verUsuario(id) { window.location.href = `/proyecto/admin/detalles_usuarios.php?id=${id}`; }
-        function editarUsuario(id) { window.location.href = `/proyecto/admin/editar_usuario.php?id=${id}`; }
-        function eliminarUsuario(id) { if(confirm('¿Eliminar este usuario?')) fetch('/proyecto/admin/eliminar_usuario.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }), credentials: 'include' }).then(() => { mostrarNotificacion('Usuario eliminado', 'success'); cargarUsuarios(); }).catch(() => mostrarNotificacion('Error al eliminar', 'error')); }
-        function editarProveedor(id) { window.location.href = `/proyecto/proveedores/editar_proveedor.php?id=${id}`; }
-        function eliminarProveedor(id) { if(confirm('¿Eliminar este proveedor?')) fetch('/proyecto/proveedores/eliminar_proveedor.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }), credentials: 'include' }).then(() => { mostrarNotificacion('Proveedor eliminado', 'success'); cargarProveedores(); }).catch(() => mostrarNotificacion('Error al eliminar', 'error')); }
-        function verCompra(id) { window.location.href = `/proyecto/compras/ver_compra.php?id=${id}`; }
-        function exportarCompraPDF(id) { window.open(`/proyecto/compras/generar_pdf_compra.php?id=${id}`, '_blank'); }
-        function verFactura(id) { window.open(`/proyecto/facturacion/ver_factura.php?id=${id}`, '_blank'); }
-        function exportarFacturaPDF(id) { window.open(`/proyecto/facturacion/generar_pdf_factura.php?id=${id}`, '_blank'); }
-        function verDetalleCliente(id) { window.location.href = `/proyecto/clientes/detalle_cliente.php?id=${id}`; }
-        function editarPedido(pedidoId) { window.location.href = `/proyecto/proceso_compra/editar_pedido.php?id=${pedidoId}`; }
-        function exportarPedidoPDF(pedidoId) { if(pedidoId) window.open(`/proyecto/producto/generar_pdf_pedido.php?id=${pedidoId}`, '_blank'); }
-        function nuevaFactura() { window.location.href = '/proyecto/facturacion/nueva_factura.php'; }
-        function nuevaCompra() { window.location.href = '/proyecto/compras/nueva_compra.php'; }
-        function exportarReporteGeneralPDF() { window.open('/proyecto/reportes/exportar_reporte_general_pdf.php', '_blank'); }
-        function exportarReporteGeneralExcel() { window.open('/proyecto/reportes/exportar_reporte_general_excel.php', '_blank'); }
+        function verProducto(id) { window.location.href = `<?= url('/producto/detalles_producto.php') ?>?id=${id}`; }
+        function editarProducto(id) { window.location.href = `<?= url('/producto/editar_producto.php') ?>?id=${id}`; }
+        function eliminarProducto(id) { if(confirm('¿Eliminar este producto?')) fetch('<?= url('/admin/eliminar_producto.php') ?>', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }), credentials: 'include' }).then(() => { mostrarNotificacion('Producto eliminado', 'success'); cargarProductos(); }).catch(() => mostrarNotificacion('Error al eliminar', 'error')); }
+        function verUsuario(id) { window.location.href = `<?= url('/admin/detalles_usuarios.php') ?>?id=${id}`; }
+        function editarUsuario(id) { window.location.href = `<?= url('/admin/editar_usuario.php') ?>?id=${id}`; }
+        function eliminarUsuario(id) { if(confirm('¿Eliminar este usuario?')) fetch('<?= url('/admin/eliminar_usuario.php') ?>', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }), credentials: 'include' }).then(() => { mostrarNotificacion('Usuario eliminado', 'success'); cargarUsuarios(); }).catch(() => mostrarNotificacion('Error al eliminar', 'error')); }
+        function editarProveedor(id) { window.location.href = `<?= url('/proveedores/editar_proveedor.php') ?>?id=${id}`; }
+        function eliminarProveedor(id) { if(confirm('¿Eliminar este proveedor?')) fetch('<?= url('/proveedores/eliminar_proveedor.php') ?>', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }), credentials: 'include' }).then(() => { mostrarNotificacion('Proveedor eliminado', 'success'); cargarProveedores(); }).catch(() => mostrarNotificacion('Error al eliminar', 'error')); }
+        function verCompra(id) { window.location.href = `<?= url('/compras/ver_compra.php') ?>?id=${id}`; }
+        function exportarCompraPDF(id) { window.open(`<?= url('/compras/generar_pdf_compra.php') ?>?id=${id}`, '_blank'); }
+        function verFactura(id) { window.open(`<?= url('/facturacion/ver_factura.php') ?>?id=${id}`, '_blank'); }
+        function exportarFacturaPDF(id) { window.open(`<?= url('/facturacion/generar_pdf_factura.php') ?>?id=${id}`, '_blank'); }
+        function verDetalleCliente(id) { window.location.href = `<?= url('/clientes/detalle_cliente.php') ?>?id=${id}`; }
+        function editarPedido(pedidoId) { window.location.href = `<?= url('/proceso_compra/editar_pedido.php') ?>?id=${pedidoId}`; }
+        function exportarPedidoPDF(pedidoId) { if(pedidoId) window.open(`<?= url('/producto/generar_pdf_pedido.php') ?>?id=${pedidoId}`, '_blank'); }
+        function nuevaFactura() { window.location.href = '<?= url('/facturacion/nueva_factura.php') ?>'; }
+        function nuevaCompra() { window.location.href = '<?= url('/compras/nueva_compra.php') ?>'; }
+        function exportarReporteGeneralPDF() { window.open('<?= url('/reportes/exportar_reporte_general_pdf.php') ?>', '_blank'); }
+        function exportarReporteGeneralExcel() { window.open('<?= url('/reportes/exportar_reporte_general_excel.php') ?>', '_blank'); }
         
         async function crearBackup() {
             mostrarLoading('Creando copia de seguridad...');
             try {
-                const response = await fetch('/proyecto/backups/crear_backup.php', { method: 'POST', credentials: 'include' });
+                const response = await fetch('<?= url('/backups/crear_backup.php') ?>', { method: 'POST', credentials: 'include' });
                 const data = await response.json();
                 if(data.success) { mostrarNotificacion('Backup creado correctamente', 'success'); cargarBackups(); }
                 else { mostrarNotificacion(data.message || 'Error al crear backup', 'error'); }
@@ -5567,7 +5567,7 @@ try {
             if (!confirm('¿Enviar recomendaciones a todos los clientes con compras previas?')) return;
             mostrarLoading('Enviando recomendaciones...');
             try {
-                const response = await fetch('/proyecto/admin/enviar_recomendaciones.php', {
+                const response = await fetch('<?= url('/admin/enviar_recomendaciones.php') ?>', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
                     body: JSON.stringify({ accion: 'recomendar_masivo' })
@@ -5584,12 +5584,12 @@ try {
             } finally { ocultarLoading(); }
         }
 
-        function descargarBackup(id) { window.open(`/proyecto/backups/descargar_backup.php?id=${id}`, '_blank'); }
+        function descargarBackup(id) { window.open(`<?= url('/backups/descargar_backup.php') ?>?id=${id}`, '_blank'); }
         
         async function eliminarBackup(id) {
             if(!confirm('¿Eliminar esta copia de seguridad?')) return;
             try {
-                const response = await fetch('/proyecto/backups/eliminar_backup.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }), credentials: 'include' });
+                const response = await fetch('<?= url('/backups/eliminar_backup.php') ?>', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }), credentials: 'include' });
                 const data = await response.json();
                 if(data.success) { mostrarNotificacion('Backup eliminado', 'success'); cargarBackups(); }
                 else { mostrarNotificacion(data.message || 'Error al eliminar', 'error'); }
@@ -5601,7 +5601,7 @@ try {
             window.currentProductosList = [];
             mostrarLoading('Cargando detalles del pedido...');
             try {
-                const response = await fetch(`/proyecto/proceso_compra/obtener_detalles_pedido.php?id=${pedidoId}`, { credentials: 'include' });
+                const response = await fetch(`<?= url('/proceso_compra/obtener_detalles_pedido.php') ?>?id=${pedidoId}`, { credentials: 'include' });
                 if(response.ok) {
                     const data = await response.json();
                     if(data.success) {
@@ -5708,7 +5708,7 @@ try {
             params.append('tipo', document.getElementById('espTipoReporte').value); 
             params.append('estado', document.getElementById('espEstado').value); 
             params.append('buscar', document.getElementById('espBuscar').value); 
-            window.open(`/proyecto/reportes/exportar_especifico_pdf.php?${params.toString()}`, '_blank'); 
+            window.open(`<?= url('/reportes/exportar_especifico_pdf.php')?>?${params.toString()}`, '_blank'); 
         }
         
         function exportarReporteEspecificoExcel() { 
@@ -5718,7 +5718,7 @@ try {
             params.append('tipo', document.getElementById('espTipoReporte').value); 
             params.append('estado', document.getElementById('espEstado').value); 
             params.append('buscar', document.getElementById('espBuscar').value); 
-            window.open(`/proyecto/reportes/exportar_especifico_excel.php?${params.toString()}`, '_blank'); 
+            window.open(`<?= url('/reportes/exportar_especifico_excel.php')?>?${params.toString()}`, '_blank'); 
         }
         
         async function facturarPedidosSeleccionados() {
@@ -5727,7 +5727,7 @@ try {
             if(seleccionados.length === 0) { mostrarNotificacion('Selecciona al menos un pedido', 'warning'); return; }
             mostrarLoading('Facturando pedidos...');
             try {
-                const response = await fetch('/proyecto/facturacion/facturar_pedidos.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pedidos: seleccionados }), credentials: 'include' });
+                const response = await fetch('<?= url('/facturacion/facturar_pedidos.php') ?>', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pedidos: seleccionados }), credentials: 'include' });
                 const result = await response.json();
                 if(result.success) { mostrarNotificacion('Pedidos facturados', 'success'); cargarPedidos(); cargarFacturas(); }
                 else { mostrarNotificacion(result.message || 'Error al facturar', 'error'); }
@@ -5737,7 +5737,7 @@ try {
         
         async function abrirCaja(data) {
             try {
-                const response = await fetch('/proyecto/caja/abrir_caja.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data), credentials: 'include' });
+                const response = await fetch('<?= url('/caja/abrir_caja.php') ?>', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data), credentials: 'include' });
                 const result = await response.json();
                 if(result.success) { mostrarNotificacion('Caja abierta', 'success'); cerrarModales(); cargarCaja(); }
                 else { mostrarNotificacion(result.message || 'Error al abrir caja', 'error'); }
@@ -5747,7 +5747,7 @@ try {
         async function cerrarCaja() {
             if(!confirm('¿Cerrar caja? Se generará un arqueo.')) return;
             try {
-                const response = await fetch('/proyecto/caja/cerrar_caja.php', { method: 'POST', credentials: 'include' });
+                const response = await fetch('<?= url('/caja/cerrar_caja.php') ?>', { method: 'POST', credentials: 'include' });
                 const result = await response.json();
                 if(result.success) { mostrarNotificacion('Caja cerrada', 'success'); cargarCaja(); }
                 else { mostrarNotificacion(result.message || 'Error al cerrar caja', 'error'); }
@@ -5756,7 +5756,7 @@ try {
         
         async function registrarMovimiento(data) {
             try {
-                const response = await fetch('/proyecto/caja/registrar_movimiento.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data), credentials: 'include' });
+                const response = await fetch('<?= url('/caja/registrar_movimiento.php') ?>', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data), credentials: 'include' });
                 const result = await response.json();
                 if(result.success) { mostrarNotificacion('Movimiento registrado', 'success'); cerrarModales(); cargarCaja(); }
                 else { mostrarNotificacion(result.message || 'Error al registrar movimiento', 'error'); }
@@ -5765,7 +5765,7 @@ try {
         
         async function crearUsuario(data) {
             try {
-                const response = await fetch('/proyecto/admin/crear_usuario.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data), credentials: 'include' });
+                const response = await fetch('<?= url('/admin/crear_usuario.php') ?>', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data), credentials: 'include' });
                 if(response.ok) { mostrarNotificacion('Usuario creado', 'success'); cerrarModales(); cargarUsuarios(); }
                 else throw new Error();
             } catch(e) { mostrarNotificacion('Error al crear usuario', 'error'); }
@@ -5773,7 +5773,7 @@ try {
         
         async function crearProveedor(data) {
             try {
-                const response = await fetch('/proyecto/proveedores/crear_proveedor.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data), credentials: 'include' });
+                const response = await fetch('<?= url('/proveedores/crear_proveedor.php') ?>', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data), credentials: 'include' });
                 if(response.ok) { mostrarNotificacion('Proveedor creado', 'success'); cerrarModales(); cargarProveedores(); }
                 else throw new Error();
             } catch(e) { mostrarNotificacion('Error al crear proveedor', 'error'); }
@@ -5785,7 +5785,7 @@ try {
             if(!email) { mostrarNotificacion('Ingresa tu correo electrónico', 'warning'); return; }
             mostrarLoading('Enviando código de verificación...');
             try {
-                const response = await fetch('/proyecto/usuarios/solicitar_token.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email }), credentials: 'include' });
+                const response = await fetch('<?= url('/usuarios/solicitar_token.php') ?>', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email }), credentials: 'include' });
                 const data = await response.json();
                 if(data.success) { emailRecuperacion = email; mostrarNotificacion(data.message || 'Código enviado a tu correo', 'success'); cerrarModales(); document.getElementById('verificarPinModal').style.display = 'flex'; document.getElementById('pinToken').value = ''; }
                 else { mostrarNotificacion(data.message || 'Error al solicitar código', 'error'); }
@@ -5800,7 +5800,7 @@ try {
             if(!emailRecuperacion) { mostrarNotificacion('Correo no encontrado. Solicita un nuevo código', 'error'); cerrarModales(); document.getElementById('recuperacionModal').style.display = 'flex'; return; }
             mostrarLoading('Verificando código...');
             try {
-                const response = await fetch('/proyecto/usuarios/verificar_pin.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: emailRecuperacion, pin: pin }), credentials: 'include' });
+                const response = await fetch('<?= url('/usuarios/verificar_pin.php') ?>', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: emailRecuperacion, pin: pin }), credentials: 'include' });
                 const data = await response.json();
                 if(data.success) { 
                     mostrarNotificacion('Código verificado correctamente', 'success'); 
@@ -5830,7 +5830,7 @@ try {
             if(!emailRecuperacion) { mostrarNotificacion('Error: Correo no encontrado', 'error'); cerrarModales(); return; }
             mostrarLoading('Cambiando contraseña...');
             try {
-                const response = await fetch('/proyecto/usuarios/recuperacion_contraseña.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: emailRecuperacion, newPassword: nuevaPassword }), credentials: 'include' });
+                const response = await fetch('<?= url('/usuarios/recuperacion_contraseña.php') ?>', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: emailRecuperacion, newPassword: nuevaPassword }), credentials: 'include' });
                 const data = await response.json();
                 if(data.success) { 
                     mostrarNotificacion('Contraseña cambiada exitosamente', 'success'); 
@@ -5838,7 +5838,7 @@ try {
                     emailRecuperacion = null; 
                     setTimeout(() => { 
                         if(confirm('Contraseña cambiada correctamente. ¿Deseas iniciar sesión?')) 
-                            window.location.href = '/proyecto/interfaz_usuario/login.html'; 
+                            window.location.href = '<?= url('/interfaz_usuario/login.html') ?>'; 
                     }, 1000); 
                 } else { 
                     mostrarNotificacion(data.message || 'Error al cambiar la contraseña', 'error'); 
@@ -5857,9 +5857,9 @@ try {
             if(!confirm('¡ADVERTENCIA! Esta acción es irreversible. ¿Estás seguro de eliminar tu cuenta?')) return;
             mostrarLoading('Eliminando cuenta...');
             try {
-                const response = await fetch('/proyecto/usuarios/eliminar_cuenta.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password }), credentials: 'include' });
+                const response = await fetch('<?= url('/usuarios/eliminar_cuenta.php') ?>', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password }), credentials: 'include' });
                 const data = await response.json();
-                if(data.success) { mostrarNotificacion('Cuenta eliminada. Cerrando sesión...', 'success'); setTimeout(() => { window.location.href = '/proyecto/interfaz_usuario/login.html'; }, 2000); }
+                if(data.success) { mostrarNotificacion('Cuenta eliminada. Cerrando sesión...', 'success'); setTimeout(() => { window.location.href = '<?= url('/interfaz_usuario/login.html') ?>'; }, 2000); }
                 else { mostrarNotificacion(data.message || 'Error al eliminar cuenta', 'error'); }
             } catch(e) { mostrarNotificacion('Error al eliminar cuenta', 'error'); }
             finally { ocultarLoading(); }
@@ -5870,7 +5870,7 @@ try {
         // ====================================================================
         async function cargarPredicciones() {
             try {
-                const response = await fetch('/proyecto/predicciones/obtener_predicciones.php?tipo=general', { credentials: 'include' });
+                const response = await fetch('<?= url('/predicciones/obtener_predicciones.php?tipo=general') ?>', { credentials: 'include' });
                 const data = await response.json();
                 if (!data.success) throw new Error('Error al cargar predicciones');
 
@@ -6014,7 +6014,7 @@ try {
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
             try {
-                const response = await fetch('/proyecto/predicciones/generar_predicciones.php', { method: 'POST', credentials: 'include' });
+                const response = await fetch('<?= url('/predicciones/generar_predicciones.php') ?>', { method: 'POST', credentials: 'include' });
                 const data = await response.json();
                 if (data.success) {
                     mostrarNotificacion(data.message || 'Predicciones generadas', 'success');
@@ -6032,7 +6032,7 @@ try {
 
         async function resolverAlerta(alertaId) {
             try {
-                const response = await fetch('/proyecto/predicciones/resolver_alerta.php', {
+                const response = await fetch('<?= url('/predicciones/resolver_alerta.php') ?>', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ alerta_id: alertaId }),
@@ -6062,7 +6062,7 @@ try {
                 const params = new URLSearchParams();
                 if (fechaDesde) params.append('fecha_desde', fechaDesde);
                 if (fechaHasta) params.append('fecha_hasta', fechaHasta);
-                const url = '/proyecto/bi/obtener_datos_bi.php?' + params.toString();
+                const url = '<?= url('/bi/obtener_datos_bi.php') ?>?' + params.toString();
                 const response = await fetch(url, { credentials: 'include' });
                 if (!response.ok) throw new Error('Error HTTP: ' + response.status);
                 const data = await response.json();
@@ -6238,7 +6238,7 @@ try {
         // ====================================================================
         async function cargarTelegramConfig() {
             try {
-                const response = await fetch('/proyecto/admin/obtener_configuracion.php', { credentials: 'include' });
+                const response = await fetch('<?= url('/admin/obtener_configuracion.php') ?>', { credentials: 'include' });
                 const data = await response.json();
                 if (data.success && data.data) {
                     const config = data.data;
@@ -6266,7 +6266,7 @@ try {
             if (!token) { mostrarNotificacion('❌ Ingresa el Token del Bot', 'error'); return; }
             if (!chatId) { mostrarNotificacion('❌ Ingresa el Chat ID', 'error'); return; }
             try {
-                const response = await fetch('/proyecto/admin/guardar_configuracion.php', {
+                const response = await fetch('<?= url('/admin/guardar_configuracion.php') ?>', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ telegram_token: token, telegram_chat_id: chatId }),
@@ -6288,7 +6288,7 @@ try {
             const mensaje = prompt('Ingresa el mensaje de prueba:', '🧪 Mensaje de prueba desde PIC - Sistema de Gestión Comercial');
             if (!mensaje) return;
             try {
-                const response = await fetch('/proyecto/telegram/enviar.php', {
+                const response = await fetch('<?= url('/telegram/enviar.php') ?>', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ tipo: 'prueba', mensaje }),
@@ -6308,7 +6308,7 @@ try {
         async function probarTelegramStock() {
             try {
                 mostrarNotificacion('🔍 Verificando stock bajo...', 'info');
-                const response = await fetch('/proyecto/telegram/notificar_stock.php', {
+                const response = await fetch('<?= url('/telegram/notificar_stock.php') ?>', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include'
@@ -6331,7 +6331,7 @@ try {
 
         async function cargar2FA() {
             try {
-                const response = await fetch('/proyecto/2fa/configurar.php?action=estado', { credentials: 'include' });
+                const response = await fetch('<?= url('/2fa/configurar.php?action=estado') ?>', { credentials: 'include' });
                 const data = await response.json();
                 if (data.migracion_pendiente) {
                     document.getElementById('2faEstadoBadge').className = 'badge badge-pending';
@@ -6374,7 +6374,7 @@ try {
         async function cargarMarketing() {
             mostrarLoading('Cargando historial de marketing...');
             try {
-                const res = await fetch('/proyecto/admin/enviar_recomendaciones.php?accion=historial');
+                const res = await fetch('<?= url('/admin/enviar_recomendaciones.php?accion=historial') ?>');
                 const data = await res.json();
                 if (data.success) {
                     document.getElementById('marketingTotalEnvios').textContent = data.total || 0;
@@ -6401,7 +6401,7 @@ try {
 
         async function configurar2FA() {
             try {
-                const response = await fetch('/proyecto/2fa/configurar.php?action=generar_secreto', {
+                const response = await fetch('<?= url('/2fa/configurar.php?action=generar_secreto') ?>', {
                     method: 'POST',
                     credentials: 'include'
                 });
@@ -6454,7 +6454,7 @@ try {
                 const formData = new FormData();
                 formData.append('code', code);
 
-                const response = await fetch('/proyecto/2fa/configurar.php?action=verificar', {
+                const response = await fetch('<?= url('/2fa/configurar.php?action=verificar') ?>', {
                     method: 'POST',
                     body: formData,
                     credentials: 'include'
@@ -6479,7 +6479,7 @@ try {
                 const formData = new FormData();
                 formData.append('password', password);
 
-                const response = await fetch('/proyecto/2fa/configurar.php?action=desactivar', {
+                const response = await fetch('<?= url('/2fa/configurar.php?action=desactivar') ?>', {
                     method: 'POST',
                     body: formData,
                     credentials: 'include'
@@ -6790,7 +6790,7 @@ try {
                 console.log(`Procesando acción pendiente: ${item.action}`);
                 try {
                     if (item.action === 'crearProducto' && item.data) {
-                        const response = await fetch('/proyecto/admin/crear_producto.php', {
+                        const response = await fetch('<?= url('/admin/crear_producto.php') ?>', {
                             method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item.data)
                         });
                         if (response.ok) mostrarNotificacion(`Producto "${item.data.nombre}" creado`, 'success');
@@ -6881,7 +6881,7 @@ try {
             const loader = loaders[sectionId];
             if(loader) loader();
         }
-        function cerrarSesion() { if(confirm('¿Cerrar sesión?')) fetch('/proyecto/usuarios/cerrar_sesion.php', { method: 'POST', credentials: 'include' }).finally(() => { window.location.href = '/proyecto/interfaz_usuario/login.html'; }); }
+        function cerrarSesion() { if(confirm('¿Cerrar sesión?')) fetch('<?= url('/usuarios/cerrar_sesion.php') ?>', { method: 'POST', credentials: 'include' }).finally(() => { window.location.href = '<?= url('/interfaz_usuario/login.html') ?>'; }); }
         function toggleMobileMenu() { document.querySelector('.sidebar').classList.toggle('active'); }
         function inicializarFechasReporte() { const hoy = new Date(); const primerDiaMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1); const fechaHastaInput = document.getElementById('espFechaHasta'); const fechaDesdeInput = document.getElementById('espFechaDesde'); if(fechaHastaInput && !fechaHastaInput.value) fechaHastaInput.value = hoy.toISOString().split('T')[0]; if(fechaDesdeInput && !fechaDesdeInput.value) fechaDesdeInput.value = primerDiaMes.toISOString().split('T')[0]; }
 
@@ -6889,11 +6889,11 @@ try {
             initDate();
             mostrarLoading('Iniciando panel...');
             try {
-                const response = await fetch('/proyecto/admin/verificar_sesion.php', { credentials: 'include' });
+                const response = await fetch('<?= url('/admin/verificar_sesion.php') ?>', { credentials: 'include' });
                 if(!response.ok) throw new Error('No autenticado');
             } catch(e) {
                 mostrarNotificacion('Error de autenticacion. Por favor inicie sesion nuevamente.', 'error');
-                window.location.href = '/proyecto/interfaz_usuario/login.html';
+                window.location.href = '<?= url('/interfaz_usuario/login.html') ?>';
                 ocultarLoading();
                 return;
             }
@@ -6907,7 +6907,7 @@ try {
             document.getElementById('btnEliminarCuenta')?.addEventListener('click', eliminarCuenta);
             document.getElementById('logoutBtn')?.addEventListener('click', cerrarSesion);
             document.getElementById('addUserBtn')?.addEventListener('click', () => document.getElementById('addUserModal').style.display = 'flex');
-            document.getElementById('addProductBtn')?.addEventListener('click', () => window.location.href = '/proyecto/producto/crear_producto.php');
+            document.getElementById('addProductBtn')?.addEventListener('click', () => window.location.href = '<?= url('/producto/crear_producto.php') ?>');
             document.getElementById('addUserForm')?.addEventListener('submit', async (e) => { e.preventDefault(); await crearUsuario({ nombre: document.getElementById('addNombre').value, email: document.getElementById('addEmail').value, password: document.getElementById('addPassword').value, telefono: document.getElementById('addTelefono').value, rol: document.getElementById('addRol').value }); });
             document.getElementById('addProveedorBtn')?.addEventListener('click', () => document.getElementById('addProveedorModal').style.display = 'flex');
             document.getElementById('addProveedorForm')?.addEventListener('submit', async (e) => { e.preventDefault(); await crearProveedor({ nombre: document.getElementById('provNombre').value, ruc: document.getElementById('provRuc').value, telefono: document.getElementById('provTelefono').value, email: document.getElementById('provEmail').value, contacto: document.getElementById('provContacto').value, direccion: document.getElementById('provDireccion').value }); });
@@ -6919,7 +6919,7 @@ try {
             document.getElementById('btnFacturarPedido')?.addEventListener('click', facturarPedidosSeleccionados);
             document.getElementById('btnNuevaFactura')?.addEventListener('click', nuevaFactura);
             document.getElementById('btnActualizarFacturas')?.addEventListener('click', cargarFacturas);
-            document.getElementById('btnListarFacturas')?.addEventListener('click', function() { window.location.href = '/proyecto/facturacion/listar_facturas.php'; });
+            document.getElementById('btnListarFacturas')?.addEventListener('click', function() { window.location.href = '<?= url('/facturacion/listar_facturas.php') ?>'; });
             document.getElementById('btnFiltrarCotizaciones')?.addEventListener('click', cargarCotizaciones);
             document.getElementById('btnNuevaCotizacion')?.addEventListener('click', () => abrirModalCotizacion(0));
             document.getElementById('btnLimpiarCaja')?.addEventListener('click', limpiarCaja);
@@ -7009,7 +7009,7 @@ try {
 
         async function verificarReverificacion2FA() {
             try {
-                const res = await fetch('/proyecto/2fa/verificar_2fa_periodico.php?action=check&type=admin', {
+                const res = await fetch('<?= url('/2fa/verificar_2fa_periodico.php?action=check&type=admin') ?>', {
                     credentials: 'include',
                     cache: 'no-store'
                 });
@@ -7042,7 +7042,7 @@ try {
                 formData.append('action', 'verify');
                 formData.append('code', code);
                 formData.append('type', 'admin');
-                const res = await fetch('/proyecto/2fa/verificar_2fa_periodico.php', { method: 'POST', body: formData, credentials: 'include' });
+                const res = await fetch('<?= url('/2fa/verificar_2fa_periodico.php') ?>', { method: 'POST', body: formData, credentials: 'include' });
                 const data = await res.json();
                 if (data.success) {
                     msgDiv.style.cssText = 'display:block;padding:8px 12px;border-radius:8px;font-size:0.85rem;background:#d4edda;color:#155724';

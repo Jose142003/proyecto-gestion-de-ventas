@@ -64,11 +64,13 @@ abstract class DatabaseTestCase extends TestCase
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
             ");
 
+            self::$pdo->exec("DROP TABLE IF EXISTS facturas");
             self::$pdo->exec("
-                CREATE TABLE IF NOT EXISTS facturas (
+                CREATE TABLE facturas (
                     id INT AUTO_INCREMENT PRIMARY KEY,
                     numero_factura VARCHAR(50) NOT NULL,
                     usuario_id INT DEFAULT NULL,
+                    cliente_id INT DEFAULT NULL,
                     total DECIMAL(10,2) DEFAULT 0,
                     estado VARCHAR(20) DEFAULT 'pendiente',
                     metodo_pago VARCHAR(50) DEFAULT '',

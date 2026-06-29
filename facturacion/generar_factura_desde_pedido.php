@@ -180,7 +180,7 @@ if (!$pedido_id) {
         'message' => 'Factura generada exitosamente',
         'numero_factura' => $numero_factura,
         'factura_id' => $factura_id,
-        'redirect_url' => '/proyecto/facturacion/ver_factura.php?factura_id=' . $factura_id
+        'redirect_url' => url('/facturacion/ver_factura.php?factura_id=' . $factura_id
     ]);
     
 } catch (Exception $e) {

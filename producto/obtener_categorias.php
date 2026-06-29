@@ -14,7 +14,7 @@ try {
     $pdo = conectarDB();
     
     // Obtener categorías únicas de la tabla products
-    $stmt = $pdo->query("SELECT DISTINCT category as nombre FROM products WHERE category IS NOT NULL AND category != '' ORDER BY category ASC");
+    $stmt = $pdo->query("SELECT DISTINCT category as nombre FROM products WHERE category IS NOT NULL AND category != '' AND active = 1 ORDER BY category ASC");
     $categorias = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     // Si no hay categorías, devolver array vacío

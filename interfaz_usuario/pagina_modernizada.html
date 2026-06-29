@@ -1,32 +1,5 @@
-﻿<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Redirigiendo - Proyectos Industriales Del Centro</title>
-    <meta http-equiv="refresh" content="0; url=pagina_modernizada.php">
-    <style>
-        body { font-family: sans-serif; text-align: center; padding: 80px 20px; background: #050C18; color: white; }
-        a { color: #3C91ED; }
-    </style>
-</head>
-<body>
-    <p>Redirigiendo a la tienda...</p>
-    <p>Si no eres redirigido, <a href="pagina_modernizada.php">haz clic aquí</a>.</p>
-</body>
-</html>
-<?php
-session_name('CLIENTSESSID');
-session_start();
-if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
-    if (isset($_COOKIE['persist_token'])) {
-        setcookie('persist_token', '', time() - 3600, '/');
-        header('Location: /proyecto/interfaz_usuario/login.html');
-        exit;
-    }
-}
-@session_write_close();
-?><!DOCTYPE html>
+﻿
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="utf-8"/>
@@ -1399,6 +1372,42 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+function escapeUrl(url) {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//') || url.startsWith('data:')) {
+        return url.replace(/"/g, '%22').replace(/'/g, '%27').replace(/>/g, '%3E').replace(/</g, '%3C');
+    }
+    return '';
+}
+
+function safeBtoa(str) {
+    if (!str) return '';
+    try {
+        return btoa(unescape(encodeURIComponent(str)));
+    } catch(e) {
+        try { return btoa(str); } catch(e2) { return ''; }
+    }
+}
+
+var NO_IMAGE_PLACEHOLDER = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300"><rect width="300" height="300" fill="#f0f0f0" rx="12"/><g transform="translate(150,130)"><circle cx="0" cy="-20" r="35" fill="#ddd"/><path d="M-50 50 C-50 10 -30 -10 0 -10 C30 -10 50 10 50 50" fill="none" stroke="#ddd" stroke-width="6" stroke-linecap="round"/></g><rect x="115" y="215" width="70" height="8" rx="4" fill="#e0e0e0"/><rect x="105" y="232" width="90" height="8" rx="4" fill="#e0e0e0"/><rect x="125" y="249" width="50" height="8" rx="4" fill="#e0e0e0"/></svg>');
+
+function proxyImageUrl(url) {
+    if (!url) return NO_IMAGE_PLACEHOLDER;
+    if (url.startsWith('/') || url.startsWith('data:')) return url;
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+        var encoded = safeBtoa(url);
+        if (!encoded) return url;
+        return '/proyecto/producto/imagen_proxy.php?url=' + encodeURIComponent(encoded);
+    }
+    if (url.indexOf('/') === 0 || url.indexOf('.') !== -1) {
+        if (url.indexOf('../') === 0) {
+            return url.replace(/\.\.\//g, '');
+        }
+        return '/' + url.replace(/^\.\//, '');
+    }
+    return NO_IMAGE_PLACEHOLDER;
+}
+
 function generateStarRating(rating) {
     let stars = '';
     for (let i = 1; i <= 5; i++) {
@@ -1412,6 +1421,7 @@ function generateStarRating(rating) {
 function showNotification(message, isError = false) {
     const notification = document.getElementById('cartNotification');
     const msgSpan = document.getElementById('notificationMessage');
+    if (!msgSpan || !notification) return;
     msgSpan.textContent = message;
     notification.style.backgroundColor = isError ? '#dc3545' : '#3C91ED';
     notification.classList.add('show');
@@ -1934,12 +1944,12 @@ async function cargarTasaBCV() {
             tasaBCVActual = parseFloat(data.tasa_bcv);
             tasaElement.textContent = formatearTasa(tasaBCVActual, 4);
             
-            const valorBCVOriginal = (tasaBCVActual * 10).toLocaleString('es-VE', {
+            const valorBCVOriginal = tasaBCVActual.toLocaleString('es-VE', {
                 minimumFractionDigits: 4,
                 maximumFractionDigits: 6
             });
             if (referenciaElement) {
-                referenciaElement.innerHTML = `📌 BCV: USD ${valorBCVOriginal}`;
+                referenciaElement.innerHTML = `📌 BCV: Bs ${valorBCVOriginal}`;
             }
             
             const fechaActual = new Date().toLocaleTimeString();
@@ -1990,7 +2000,7 @@ async function loadProductsFromDB() {
                 id: parseInt(p.id),
                 name: p.name || 'Sin nombre',
                 price: parseFloat(p.price) || 0,
-                image: p.image || 'https://via.placeholder.com/300x300?text=Producto',
+                image: p.image || NO_IMAGE_PLACEHOLDER,
                 description: p.description || '',
                 category: p.category || 'General',
                 rating: parseFloat(p.rating) || 0,
@@ -2081,7 +2091,7 @@ function displayProducts() {
         card.setAttribute('data-id', product.id);
         card.innerHTML = `
             <div class="product-img-container" data-id="${product.id}">
-                <img src="${product.image}" alt="${escapeHtml(product.name)}" data-id="${product.id}" onerror="this.src='https://via.placeholder.com/300x300?text=Sin+Imagen'">
+                <img src="${proxyImageUrl(product.image)}" alt="${escapeHtml(product.name)}" data-id="${product.id}" onerror="if(!this.dataset.fallback){this.dataset.fallback='1';this.src=NO_IMAGE_PLACEHOLDER}">
                 ${inactivo ? '<span style="position:absolute; top:5px; right:5px; background:#dc3545; color:white; padding:2px 6px; border-radius:4px; font-size:11px;">NO DISP</span>' : ''}
                 <div class="product-favorite-btn ${esFavorito ? 'favorito-activo' : ''}" data-id="${product.id}">
                     <i class="${esFavorito ? 'fas' : 'far'} fa-heart"></i>
@@ -2158,8 +2168,8 @@ function attachProductEvents() {
 function openProductModal(product) {
     window.currentModalProduct = product;
     const modalImg = document.getElementById('modal-product-image');
-    modalImg.src = product.image;
-    modalImg.onerror = function() { this.src = 'https://via.placeholder.com/300x300?text=Sin+Imagen'; };
+    modalImg.src = proxyImageUrl(product.image);
+    modalImg.onerror = function() { if(!this.dataset.fallback){this.dataset.fallback='1';this.src=NO_IMAGE_PLACEHOLDER} };
     document.getElementById('modal-product-name').textContent = product.name;
     document.getElementById('modal-product-category').textContent = product.category;
     document.getElementById('modal-product-rating').innerHTML = generateStarRating(product.rating);
@@ -2190,7 +2200,7 @@ function openProductModal(product) {
         if (related.length > 0) {
             relatedList.innerHTML = related.map(r => `
                 <div class="related-product-card" data-id="${r.id}">
-                    <img src="${r.image}" alt="${escapeHtml(r.name)}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x300?text=Sin+Imagen'">
+                    <img src="${proxyImageUrl(r.image)}" alt="${escapeHtml(r.name)}" loading="lazy" onerror="if(!this.dataset.fallback){this.dataset.fallback='1';this.src=NO_IMAGE_PLACEHOLDER}">
                     <div class="name">${escapeHtml(r.name)}</div>
                     <div class="price">$${r.price.toFixed(2)}</div>
                 </div>
@@ -2432,7 +2442,7 @@ async function toggleFavorito(productoId) {
     try {
         const response = await fetch('/proyecto/producto/agregar_favorito.php', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
             body: JSON.stringify({ user_id: CURRENT_USER.id, producto_id: productoId })
         });
         const data = await response.json();
@@ -2496,8 +2506,8 @@ async function mostrarFavoritos() {
                 html += `
                     <div class="product-card" data-id="${f.id}" style="margin-bottom:0;">
                         <div class="product-img-container" style="height:140px; position:relative;" data-id="${f.id}">
-                            <img src="${f.image || 'https://via.placeholder.com/300x300?text=Sin+Imagen'}" alt="${escapeHtml(f.name)}" data-id="${f.id}" style="max-height:120px;" onerror="this.src='https://via.placeholder.com/300x300?text=Sin+Imagen'">
-                            <div class="product-favorite-btn favorito-activo" data-id="${f.producto_id}" style="position:absolute; top:5px; left:5px; cursor:pointer; font-size:1.3rem; z-index:2;">
+                            <img src="${proxyImageUrl(f.image)}" alt="${escapeHtml(f.name)}" data-id="${f.id}" style="max-height:120px;" onerror="if(!this.dataset.fallback){this.dataset.fallback='1';this.src=NO_IMAGE_PLACEHOLDER}">
+                            <div class="product-favorite-btn favorito-activo" data-id="${f.id || f.producto_id}" style="position:absolute; top:5px; left:5px; cursor:pointer; font-size:1.3rem; z-index:2;">
                                 <i class="fas fa-heart"></i>
                             </div>
                         </div>
@@ -2552,7 +2562,7 @@ function updateActiveFilters() {
         container.innerHTML += `<span class="filter-badge">${text} <span class="close" data-filter="${filterKey}">&times;</span></span>`;
     };
     
-    if (currentFilters.searchTerm) addBadge(`Buscar: ${currentFilters.searchTerm}`, 'search');
+    if (currentFilters.searchTerm) addBadge(`Buscar: ${escapeHtml(currentFilters.searchTerm)}`, 'search');
     if (currentFilters.minPrice) addBadge(`Min: $${currentFilters.minPrice}`, 'minPrice');
     if (currentFilters.maxPrice) addBadge(`Max: $${currentFilters.maxPrice}`, 'maxPrice');
     if (currentFilters.minRating > 0) addBadge(`Rating: ${currentFilters.minRating}★`, 'minRating');

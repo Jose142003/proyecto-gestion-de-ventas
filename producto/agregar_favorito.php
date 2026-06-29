@@ -2,6 +2,9 @@
 header('Content-Type: application/json');
 require_once __DIR__ . '/../conexion/conexion.php';
 
+session_start();
+requerirSesion();
+
 $conn = Database::getConnection();
 
 $conn->exec("CREATE TABLE IF NOT EXISTS favoritos (
@@ -18,7 +21,7 @@ $input = json_decode(file_get_contents('php://input'), true);
 if ($input === null && !empty($_POST)) {
     $input = $_POST;
 }
-$usuario_id = isset($input['user_id']) ? intval($input['user_id']) : 0;
+$usuario_id = $_SESSION['user_id'];
 $producto_id = isset($input['producto_id']) ? intval($input['producto_id']) : 0;
 
 if ($usuario_id <= 0) {

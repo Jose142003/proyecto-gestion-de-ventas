@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 // Incluir configuración de base de datos
 require_once '../conexion/conexion.php';
 
-session_start();
+iniciarSesion();
 
 verificarCSRF();
 

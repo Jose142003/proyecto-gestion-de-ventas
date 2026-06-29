@@ -17,6 +17,10 @@
 - **Modo oscuro** — Interfaz adaptable con tema claro/oscuro
 - **PWA** — Progressive Web App con service worker y modo offline parcial
 - **Multi-moneda** — Precios en Bolívares y dólares con tasas actualizadas
+- **Verificación de email** — Token de confirmación al registrarse con reenvío
+- **2FA** — Autenticación de doble factor TOTP con códigos de respaldo
+- **Centralización de configuración** — IVA y datos de empresa desde `configuracion_sistema`
+- **Manejo de errores** — Logging estructurado en todos los catch-blocks críticos
 
 ### 🧠 IA Predictiva (Nuevo)
 - Predicción de ventas por producto usando promedios móviles y regresión lineal
@@ -128,8 +132,24 @@ El sistema utiliza 28+ tablas, incluyendo:
 └── telegram/           # Integración con Telegram Bot
 ```
 
+## Seguridad
+
+- **Prepared Statements** — Sin inyección SQL (PDO con parámetros nombrados o posicionales)
+- **CSRF** — Tokens en todos los formularios y endpoints POST/PUT/DELETE
+- **XSS** — `htmlspecialchars()` en toda salida de datos de usuario
+- **Rate Limiting** — IP-based (60 req/min) + login (5 intentos/15min) + 2FA (3 intentos)
+- **Bloqueo por IP** — 10 intentos fallidos = bloqueo 60 minutos
+- **2FA** — TOTP con Google Authenticator + códigos de respaldo únicos
+- **Contraseñas** — Bcrypt con costo 10
+- **Headers HTTP** — CSP, HSTS, X-Content-Type-Options, X-Frame-Options
+- **Cookies** — HttpOnly + SameSite=Lax + Secure (HTTPS)
+
 ## Tecnologías
 
 - **Backend:** PHP 8+, PDO, MySQL
 - **Frontend:** HTML5, CSS3, JavaScript, Bootstrap 5.2.3, jQuery 3.6+, Font Awesome 6
 - **Entorno:** Laragon / XAMPP / WAMP
+- **Testing:** PHPUnit 12+
+- **Email:** PHPMailer 6.9+
+- **PDF:** Dompdf 3.1+
+- **Excel:** PhpSpreadsheet 3.0+

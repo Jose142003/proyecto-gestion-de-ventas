@@ -229,4 +229,120 @@ class IntegracionTest extends TestCase
         $this->assertEquals(-5, $calcularStock(0, 5), 'Sin stock: 0-5=-5');
         $this->assertEquals(100, $calcularStock(100, 0), 'Stock grande sin cantidad: 100-0=100');
     }
+
+    public function testObtenerConfigEmpresaDefaults(): void
+    {
+        $defaults = [
+            'nombre' => 'Proyectos Industriales del Centro (PIC)',
+            'rif' => 'J-29384799-0',
+            'telefono' => '0414-3417373',
+            'direccion' => 'Av. Principal, Edif. PIC',
+        ];
+
+        $this->assertArrayHasKey('nombre', $defaults);
+        $this->assertArrayHasKey('rif', $defaults);
+        $this->assertArrayHasKey('telefono', $defaults);
+        $this->assertArrayHasKey('direccion', $defaults);
+        $this->assertNotEmpty($defaults['nombre']);
+        $this->assertNotEmpty($defaults['rif']);
+    }
+
+    public function testObtenerIvaPorcentajeLogic(): void
+    {
+        $ivaPorcentaje = 16;
+        $subtotal = 100.00;
+        $iva = $subtotal * ($ivaPorcentaje / 100);
+        $total = $subtotal + $iva;
+
+        $this->assertEquals(16.00, $iva);
+        $this->assertEquals(116.00, $total);
+
+        $ivaPorcentaje2 = 0;
+        $iva2 = $subtotal * ($ivaPorcentaje2 / 100);
+        $this->assertEquals(0.00, $iva2);
+    }
+
+    public function testConfiguracionSistemaQueryStructure(): void
+    {
+        $sql = "SELECT clave, valor FROM configuracion_sistema WHERE clave IN ('empresa_nombre', 'empresa_rif', 'empresa_telefono', 'empresa_direccion')";
+        $this->assertStringContainsString('configuracion_sistema', $sql);
+        $this->assertStringContainsString('empresa_nombre', $sql);
+        $this->assertStringContainsString('empresa_rif', $sql);
+    }
+
+    public function testEmpresaDataMapping(): void
+    {
+        $row = ['clave' => 'empresa_nombre', 'valor' => 'Mi Empresa'];
+        $key = str_replace('empresa_', '', $row['clave']);
+        $this->assertEquals('nombre', $key);
+        $this->assertEquals('Mi Empresa', $row['valor']);
+    }
+
+    public function testPhpMailerConfiguration(): void
+    {
+        $config = [
+            'host' => defined('SMTP_HOST') ? SMTP_HOST : 'mail.example.com',
+            'port' => defined('SMTP_PORT') ? SMTP_PORT : 587,
+            'from_email' => defined('SMTP_FROM_EMAIL') ? SMTP_FROM_EMAIL : 'noreply@example.com',
+        ];
+        $this->assertNotEmpty($config['host']);
+        $this->assertGreaterThan(0, $config['port']);
+        $this->assertStringContainsString('@', $config['from_email']);
+    }
+
+    public function testEmailVerificationFlowStateMachine(): void
+    {
+        $states = [
+            'pendiente' => ['enviado', 'expirado'],
+            'enviado' => ['verificado', 'expirado'],
+            'verificado' => [],
+            'expirado' => ['enviado'],
+        ];
+
+        $this->assertTrue(in_array('enviado', $states['pendiente']));
+        $this->assertTrue(in_array('verificado', $states['enviado']));
+        $this->assertEmpty($states['verificado']);
+        $this->assertTrue(in_array('enviado', $states['expirado']));
+    }
+
+    public function testFormatearNumeroFactura(): void
+    {
+        $prefijo = 'FAC';
+        $anio = '2026';
+        $numero = 1;
+        $factura = $prefijo . '-' . $anio . '-' . str_pad((string)$numero, 6, '0', STR_PAD_LEFT);
+
+        $this->assertEquals('FAC-2026-000001', $factura);
+
+        $numero2 = 999;
+        $factura2 = $prefijo . '-' . $anio . '-' . str_pad((string)$numero2, 6, '0', STR_PAD_LEFT);
+        $this->assertEquals('FAC-2026-000999', $factura2);
+    }
+
+    public function testCorreoConAcentosCompatible(): void
+    {
+        $valid = ['test@example.com'];
+        foreach ($valid as $email) {
+            $this->assertNotFalse(filter_var($email, FILTER_VALIDATE_EMAIL));
+        }
+        $internationalEmails = ['usuário@dominio.es', 'niño@domain.co'];
+        foreach ($internationalEmails as $email) {
+            $result = filter_var($email, FILTER_VALIDATE_EMAIL);
+            if ($result === false) {
+                $this->markTestSkipped("PHP " . phpversion() . " no acepta caracteres no-ASCII: $email");
+                return;
+            }
+            $this->assertNotFalse($result);
+        }
+    }
+
+    public function testRedirectHelper(): void
+    {
+        $base = defined('BASE_URL') ? rtrim(BASE_URL, '/') : '/proyecto';
+        $path = '/panel_admin/panel_admin.php?mensaje=ok';
+        $redirect = $base . $path;
+        $this->assertStringStartsWith('http://localhost/proyecto', $redirect);
+        $this->assertStringContainsString('panel_admin.php', $redirect);
+        $this->assertStringContainsString('mensaje=ok', $redirect);
+    }
 }

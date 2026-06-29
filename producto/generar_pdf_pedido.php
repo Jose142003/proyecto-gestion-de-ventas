@@ -1,8 +1,9 @@
-﻿<?php
+<?php
 session_start();
+require_once __DIR__ . '/../conexion/conexion.php';
 
 if (!isset($_SESSION['user_id']) && !isset($_SESSION['usuario_id'])) {
-    header('Location: /proyecto/interfaz_usuario/login.html');
+    header('Location: ' . url('/interfaz_usuario/login.html'));
     exit;
 }
 
@@ -37,6 +38,12 @@ try {
     
     if (!$factura) {
         die("<h2>Error: Factura no encontrada</h2>");
+    }
+
+    // Verificar propiedad: si no es admin, debe ser su factura
+    $userId = $_SESSION['user_id'] ?? $_SESSION['usuario_id'] ?? 0;
+    if (!esAdmin() && (!isset($factura['usuario_id']) || $factura['usuario_id'] != $userId)) {
+        die("<h2>Error: No autorizado</h2>");
     }
     
     // Obtener detalles de la factura

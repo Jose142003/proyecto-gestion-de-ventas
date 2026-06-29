@@ -7,8 +7,18 @@
 
 require_once __DIR__ . '/../conexion/conexion.php';
 
+$colaNotificacionesPdo = null;
+
+function colaNotificacionesPdo(): PDO {
+    global $colaNotificacionesPdo;
+    if ($colaNotificacionesPdo === null) {
+        $colaNotificacionesPdo = conectarDB();
+    }
+    return $colaNotificacionesPdo;
+}
+
 function colaNotificacionesCrearTabla(): void {
-    $pdo = conectarDB();
+    $pdo = colaNotificacionesPdo();
     $pdo->exec("
         CREATE TABLE IF NOT EXISTS cola_notificaciones (
             id INT AUTO_INCREMENT PRIMARY KEY,
@@ -32,7 +42,7 @@ function colaNotificacionesCrearTabla(): void {
 function colaNotificacionesAgregar(string $tipo, ?int $pedido_id = null, ?int $factura_id = null, ?array $datos_extra = null): int {
     colaNotificacionesCrearTabla();
 
-    $pdo = conectarDB();
+    $pdo = colaNotificacionesPdo();
     $stmt = $pdo->prepare("
         INSERT INTO cola_notificaciones (tipo, pedido_id, factura_id, datos_extra, estado, created_at)
         VALUES (?, ?, ?, ?, 'pendiente', NOW())
@@ -48,7 +58,7 @@ function colaNotificacionesAgregar(string $tipo, ?int $pedido_id = null, ?int $f
 }
 
 function colaNotificacionesObtenerPendientes(int $limite = 5): array {
-    $pdo = conectarDB();
+    $pdo = colaNotificacionesPdo();
     $stmt = $pdo->prepare("
         SELECT * FROM cola_notificaciones
         WHERE estado = 'pendiente'
@@ -60,7 +70,7 @@ function colaNotificacionesObtenerPendientes(int $limite = 5): array {
 }
 
 function colaNotificacionesMarcar(int $id, string $estado, ?string $error = null): void {
-    $pdo = conectarDB();
+    $pdo = colaNotificacionesPdo();
     if ($estado === 'completado' || $estado === 'fallido') {
         $stmt = $pdo->prepare("
             UPDATE cola_notificaciones

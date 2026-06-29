@@ -3,6 +3,7 @@ error_reporting(0);
 ini_set('display_errors', 0);
 
 header('Content-Type: application/json');
+header('Cache-Control: no-store');
 $cors_origin = getenv('CORS_ORIGIN') ?: (defined('BASE_URL') ? rtrim(BASE_URL, '/') : 'http://localhost');
 header("Access-Control-Allow-Origin: $cors_origin");
 header('Access-Control-Allow-Credentials: true');
@@ -116,11 +117,8 @@ if ($action === 'verificar') {
         $stmt->execute([$userId]);
         echo json_encode(['success' => true, 'message' => '2FA activado correctamente']);
     } else {
-        $timeSlice = floor(time() / 30);
-        $expected = [];
-        for ($i = -2; $i <= 2; $i++) $expected[] = generarTOTP($user['2fa_secret'], $timeSlice + $i);
         http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Código inválido', 'server_time' => time(), 'expected_codes' => $expected]);
+        echo json_encode(['success' => false, 'message' => 'Código inválido', 'server_time' => time()]);
     }
     exit;
 }

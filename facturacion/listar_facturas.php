@@ -1,11 +1,16 @@
-﻿<?php
+<?php
 // /proyecto/facturacion/listar_facturas.php
 session_start();
 require_once '../conexion/conexion.php';
+require_once __DIR__ . '/../config/i18n.php';
+require_once __DIR__ . '/../config/i18n_helpers.php';
+$locale = $_GET['lang'] ?? $_COOKIE['lang'] ?? 'es';
+setcookie('lang', $locale, time()+31536000, '/');
+\I18n::load($locale);
 
 // Verificar autenticación
 if (!isset($_SESSION['user_id'])) {
-    header('Location: /proyecto/interfaz_usuario/login.html');
+    header('Location: ' . url('/interfaz_usuario/login.html'));
     exit;
 }
 
@@ -53,7 +58,7 @@ $roles_permitidos = ['superadmin', 'admin', 'facturador'];
 if (!in_array($rol, $roles_permitidos)) {
     ?>
     <!DOCTYPE html>
-    <html lang="es">
+<html lang="<?php echo $locale; ?>">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -172,7 +177,7 @@ if (!in_array($rol, $roles_permitidos)) {
             </div>
             
             <div>
-                <a href="/proyecto/panel_admin/panel_admin.php" class="btn btn-primary">🏠 Ir al Panel Admin</a>
+                <a href='<?= url('/panel_admin/panel_admin.php') ?>' class="btn btn-primary">🏠 Ir al Panel Admin</a>
                 <a href="javascript:history.back()" class="btn btn-secondary">← Volver</a>
             </div>
         </div>
@@ -186,20 +191,20 @@ if (!in_array($rol, $roles_permitidos)) {
 // Continuar con la consulta de facturas...
 ?>
 <!DOCTYPE html>
-<html lang="es">
+<html lang="<?php echo $locale; ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Listar Facturas - PIC</title>
     <!-- PWA Meta Tags -->
-    <link rel="manifest" href="/proyecto/manifest.json">
+    <link rel="manifest" href="<?= url('/manifest.json') ?>">
     <meta name="theme-color" content="#050C18">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="PIC Industrial">
-    <link rel="apple-touch-icon" href="/proyecto/img/pic.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="/proyecto/img/pic.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="/proyecto/img/pic.png">
+    <link rel="apple-touch-icon" href="<?= url('/img/pic.png') ?>">
+    <link rel="icon" type="image/png" sizes="192x192" href="<?= url('/img/pic.png') ?>">
+    <link rel="icon" type="image/png" sizes="512x512" href="<?= url('/img/pic.png') ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -215,6 +220,21 @@ if (!in_array($rol, $roles_permitidos)) {
             --warning: #ffa502;
             --danger: #ff4757;
             --info: #3498db;
+            --border-color: #d1d8e6;
+            --table-hover: rgba(60, 145, 237, 0.05);
+        }
+
+        body.dark-mode {
+            --primary-color: #0a0e1a;
+            --secondary-color: #1a1f2e;
+            --accent-color: #3C91ED;
+            --light-color: #5aa9e6;
+            --bg-color: #0f1219;
+            --text-color: #e4e6eb;
+            --card-bg: #1e2436;
+            --header-bg: linear-gradient(135deg, #0a0e1a, #1a1f2e);
+            --border-color: #2c3348;
+            --table-hover: rgba(60, 145, 237, 0.1);
         }
 
         * {
@@ -328,7 +348,8 @@ if (!in_array($rol, $roles_permitidos)) {
             display: block;
             margin-bottom: 5px;
             font-size: 0.85rem;
-            color: #666;
+            color: var(--text-color);
+            opacity: 0.7;
             font-weight: 600;
         }
 
@@ -336,7 +357,7 @@ if (!in_array($rol, $roles_permitidos)) {
         .filtro-group select {
             width: 100%;
             padding: 10px;
-            border: 2px solid #e0e0e0;
+            border: 2px solid var(--border-color);
             border-radius: 10px;
             transition: all 0.3s;
             font-family: inherit;
@@ -405,7 +426,7 @@ if (!in_array($rol, $roles_permitidos)) {
 
         .data-table td {
             padding: 15px;
-            border-bottom: 1px solid #dee2e6;
+            border-bottom: 1px solid var(--border-color);
             color: var(--text-color);
             font-size: 0.85rem;
         }
@@ -467,14 +488,14 @@ if (!in_array($rol, $roles_permitidos)) {
         .empty-state {
             text-align: center;
             padding: 50px;
-            color: #999;
+            color: var(--text-color);
         }
 
         .empty-state i {
             font-size: 3rem;
             margin-bottom: 10px;
             display: block;
-            color: #ccc;
+            opacity: 0.3;
         }
 
         /* Resumen */
@@ -492,7 +513,8 @@ if (!in_array($rol, $roles_permitidos)) {
         }
 
         .resumen-card small {
-            color: #666;
+            color: var(--text-color);
+            opacity: 0.6;
         }
 
         /* Responsive */
@@ -560,10 +582,11 @@ if (!in_array($rol, $roles_permitidos)) {
                 <h1><i class="fas fa-file-invoice-dollar"></i> Listado de Facturas</h1>
                 <div class="user-role"><i class="fas fa-user-shield"></i> Rol: <?php echo htmlspecialchars($rol); ?></div>
             </div>
-            <div style="display: flex; gap: 10px;">
-                <a href="/proyecto/panel_admin/panel_admin.php" class="btn-volver"><i class="fas fa-arrow-left"></i> Panel Admin</a>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button id="themeToggle" style="background:rgba(255,255,255,0.2); border:none; color:white; width:36px; height:36px; border-radius:50%; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center;"><i class="fas fa-moon"></i></button>
+                <a href='<?= url('/panel_admin/panel_admin.php') ?>' class="btn-volver"><i class="fas fa-arrow-left"></i> Panel Admin</a>
                 <?php if (in_array($rol, ['superadmin', 'admin', 'facturador'])): ?>
-                    <a href="/proyecto/facturacion/nueva_factura.php" class="btn-nueva"><i class="fas fa-plus"></i> Nueva Factura</a>
+                    <a href='<?= url('/facturacion/nueva_factura.php') ?>' class="btn-nueva"><i class="fas fa-plus"></i> Nueva Factura</a>
                 <?php endif; ?>
             </div>
         </div>
@@ -718,7 +741,7 @@ if (!in_array($rol, $roles_permitidos)) {
                                 <td>
                                     <?php echo htmlspecialchars($factura['cliente_nombre'] ?? 'N/A'); ?>
                                     <br>
-                                    <small style="color:#888;"><?php echo htmlspecialchars($factura['cliente_email'] ?? ''); ?></small>
+                                    <small style="opacity:0.6;"><?php echo htmlspecialchars($factura['cliente_email'] ?? ''); ?></small>
                                 </td>
                                 <td><?php echo htmlspecialchars($factura['cliente_documento'] ?? 'N/A'); ?></td>
                                 <td><?php echo formatearFecha($factura['fecha_emision'] ?? null); ?></td>
@@ -781,5 +804,26 @@ if (!in_array($rol, $roles_permitidos)) {
             </div>
         <?php endif; ?>
     </div>
+<script>
+(function() {
+    const toggle = document.getElementById('themeToggle');
+    function applyDark(isDark) {
+        document.body.classList.toggle('dark-mode', isDark);
+        if (toggle) {
+            toggle.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        }
+    }
+    const saved = localStorage.getItem('darkMode');
+    if (saved === 'enabled') applyDark(true);
+    else if (saved === 'disabled') applyDark(false);
+    if (toggle) {
+        toggle.addEventListener('click', function() {
+            const isDark = !document.body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
+            applyDark(isDark);
+        });
+    }
+})();
+</script>
 </body>
 </html>

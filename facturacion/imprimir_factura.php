@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // imprimir_factura.php
 session_start();
 
@@ -91,14 +91,14 @@ $empresa = [
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Factura <?php echo $factura['numero_factura']; ?></title>
       <!-- PWA Meta Tags -->
-    <link rel="manifest" href="/proyecto/manifest.json">
+    <link rel="manifest" href="<?= url('/manifest.json') ?>">
     <meta name="theme-color" content="#050C18">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="PIC Industrial">
-    <link rel="apple-touch-icon" href="/proyecto/img/pic.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="/proyecto/img/pic.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="/proyecto/img/pic.png">
+    <link rel="apple-touch-icon" href="<?= url('/img/pic.png') ?>">
+    <link rel="icon" type="image/png" sizes="192x192" href="<?= url('/img/pic.png') ?>">
+    <link rel="icon" type="image/png" sizes="512x512" href="<?= url('/img/pic.png') ?>">
     <style>
         /* Estilos para impresión */
         @media print {
@@ -709,7 +709,7 @@ $empresa = [
             <span>←</span> Volver Atrás
         </button>
         
-        <a href="/proyecto/panel_admin/panel_admin.html" class="btn">
+        <a href='<?= url('/panel_admin/panel_admin.php') ?>' class="btn">
             <span>🏠</span> Ir al Dashboard
         </a>
         

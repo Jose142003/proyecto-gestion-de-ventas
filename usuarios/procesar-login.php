@@ -243,7 +243,7 @@ try {
                         "require_2fa" => true,
                         "message" => "Verificación de dos factores requerida",
                         "token_2fa" => $tokenVerificacion,
-                        "redirect_url" => BASE_URL . '/2fa/verificar.html?token=' . $tokenVerificacion
+                        "redirect_url" => BASE_URL . '/2fa/verificar.html'
                     ]);
                     exit;
                 }
@@ -277,7 +277,7 @@ try {
                         "require_2fa" => true,
                         "message" => "Verificación de dos factores requerida",
                         "token_2fa" => $tokenVerificacion,
-                        "redirect_url" => BASE_URL . '/2fa/verificar_cliente.html?token=' . $tokenVerificacion
+                        "redirect_url" => BASE_URL . '/2fa/verificar_cliente.html'
                     ]);
                     exit;
                 }

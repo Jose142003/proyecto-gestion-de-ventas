@@ -68,6 +68,48 @@ function enviarTokenEmail($email, $nombre, $pin) {
     }
 }
 
+function enviarEmailVerificacion($email, $nombre, $token) {
+    $mail = new PHPMailer(true);
+    try {
+        $mail->isSMTP();
+        $mail->Host       = SMTP_HOST;
+        $mail->Port       = SMTP_PORT;
+        $mail->SMTPAuth   = true;
+        $mail->Username   = SMTP_USER;
+        $mail->Password   = SMTP_PASS;
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->CharSet    = 'UTF-8';
+        $mail->Timeout    = 30;
+        $mail->SMTPOptions = ['ssl' => ['verify_peer' => true, 'verify_peer_name' => true, 'allow_self_signed' => false]];
+        $mail->SMTPDebug  = 0;
+        $mail->setFrom(SMTP_FROM_EMAIL, 'PIC Sistema Web');
+        $mail->addAddress($email, $nombre);
+        $mail->isHTML(true);
+        $mail->Subject = 'Verifica tu correo - PIC';
+        $base = rtrim(defined('BASE_URL') ? BASE_URL : '/proyecto', '/');
+        $link = $base . '/usuarios/verificar_email.php?token=' . urlencode($token);
+        $mail->Body = "
+            <html><body style='font-family:Arial,sans-serif;'>
+            <div style='max-width:600px;margin:0 auto;border:1px solid #ddd;padding:20px;'>
+                <h2 style='color:#294E90;'>Bienvenido a PIC, {$nombre}</h2>
+                <p>Gracias por registrarte. Para activar tu cuenta, haz clic en el siguiente enlace:</p>
+                <div style='text-align:center;margin:25px 0;'>
+                    <a href='{$link}' style='background:#294E90;color:white;padding:12px 30px;text-decoration:none;border-radius:5px;font-size:16px;'>Verificar mi correo</a>
+                </div>
+                <p>Si el botón no funciona, copia y pega este enlace en tu navegador:</p>
+                <p style='color:#666;font-size:12px;'>{$link}</p>
+                <p>Este enlace expirará en 24 horas.</p>
+                <p style='color:#999;font-size:11px;'>Si no creaste esta cuenta, ignora este mensaje.</p>
+            </div></body></html>
+        ";
+        $mail->send();
+        return true;
+    } catch (Exception $e) {
+        error_log("Error email verification: " . $mail->ErrorInfo);
+        return false;
+    }
+}
+
 function enviarNotificacionCompra($email, $nombre, $factura_id, $total) {
     $asunto = "Confirmación de compra - Proyectos Industriales";
     $mensaje = "Hola $nombre, tu compra #$factura_id por Bs. " . number_format($total, 2) . " ha sido registrada.";

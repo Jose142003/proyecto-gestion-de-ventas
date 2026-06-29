@@ -2,20 +2,17 @@
 session_start();
 header('Content-Type: application/json');
 
-if (!isset($_SESSION['user_id']) && !isset($_SESSION['usuario_id'])) {
-    echo json_encode(['success' => false, 'message' => 'No autorizado']);
-    exit;
-}
+require_once __DIR__ . '/../conexion/conexion.php';
+requerirAdmin();
+verificarCSRF();
 
-$usuario_id = $_SESSION['user_id'] ?? $_SESSION['usuario_id'];
+$usuario_id = $_SESSION['user_id'] ?? $_SESSION['usuario_id'] ?? null;
 $data = json_decode(file_get_contents('php://input'), true);
 
 if (!isset($data['tipo']) || !isset($data['monto']) || !isset($data['descripcion'])) {
     echo json_encode(['success' => false, 'message' => 'Datos incompletos']);
     exit;
 }
-
-require_once '../conexion/conexion.php';
 
 try {
     $db = conectarDB();
@@ -102,7 +99,7 @@ try {
     echo json_encode(['success' => true, 'message' => 'Movimiento registrado correctamente']);
     
 } catch (Exception $e) {
-    if (isset($db)) $db->rollBack();
+    if (isset($db) && $db->inTransaction()) $db->rollBack();
     error_log("Error registrar movimiento: " . $e->getMessage());
     echo json_encode(['success' => false, 'message' => 'Error al registrar movimiento']);
 }

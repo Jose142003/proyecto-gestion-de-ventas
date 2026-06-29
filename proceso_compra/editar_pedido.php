@@ -1,11 +1,8 @@
-﻿<?php
+<?php
 // /proyecto/proceso_compra/editar_pedido.php
 session_start();
 header('Content-Type: text/html; charset=utf-8');
-error_reporting(0); ini_set('display_errors', 0);
-ini_set('display_errors', 0);
-
-require_once '../conexion/conexion.php';
+require_once __DIR__ . '/../conexion/conexion.php';
 
 // Verificar autenticación
 if (!isset($_SESSION['user_id'])) {
@@ -146,14 +143,14 @@ $metodos_pago = [
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>Editar Pedido #<?php echo htmlspecialchars($pedido_id ?? '', ENT_QUOTES, 'UTF-8'); ?></title>
       <!-- PWA Meta Tags -->
-    <link rel="manifest" href="/proyecto/manifest.json">
+    <link rel="manifest" href="<?= url('/manifest.json') ?>">
     <meta name="theme-color" content="#050C18">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="PIC Industrial">
-    <link rel="apple-touch-icon" href="/proyecto/img/pic.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="/proyecto/img/pic.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="/proyecto/img/pic.png">
+    <link rel="apple-touch-icon" href="<?= url('/img/pic.png') ?>">
+    <link rel="icon" type="image/png" sizes="192x192" href="<?= url('/img/pic.png') ?>">
+    <link rel="icon" type="image/png" sizes="512x512" href="<?= url('/img/pic.png') ?>">
     <style>
         * {
             margin: 0;
@@ -506,6 +503,34 @@ $metodos_pago = [
                 break-inside: avoid;
             }
         }
+    
+        :root {
+            --primary-color: #050C18;
+            --secondary-color: #294E90;
+            --accent-color: #3C91ED;
+            --bg-color: #f0f2f5;
+            --card-bg: #fff;
+            --text-color: #333;
+            --text-secondary: #555;
+            --text-muted: #666;
+            --border-color: #ddd;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --error-color: #dc3545;
+        }
+        body.dark-mode {
+            --primary-color: #0a0e1a;
+            --secondary-color: #1a1f2e;
+            --accent-color: #5aa9e6;
+            --bg-color: #0f1219;
+            --card-bg: #1e2436;
+            --text-color: #e4e6eb;
+            --text-secondary: #b0b3b8;
+            --text-muted: #999;
+            --border-color: #2c3348;
+        }
+        body.dark-mode { background: var(--bg-color); color: var(--text-color); }
+
     </style>
 </head>
 <body>
@@ -662,6 +687,15 @@ $metodos_pago = [
         </form>
     </div>
 
+    
+        <script>
+        (function() {
+            var saved = localStorage.getItem('darkMode');
+            if (saved === 'enabled') {
+                document.body.classList.add('dark-mode');
+            }
+        })();
+        </script>
     <script>
         // Prevenir envío doble del formulario
         document.getElementById('editPedidoForm').addEventListener('submit', function(e) {

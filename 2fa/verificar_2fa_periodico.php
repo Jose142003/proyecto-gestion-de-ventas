@@ -6,6 +6,8 @@ header('Content-Type: application/json');
 
 require_once __DIR__ . '/../conexion/conexion.php';
 require_once __DIR__ . '/totp.php';
+seguridadVerificarBloqueoIp();
+seguridadVerificarRateLimit();
 
 define('REVERIFY_INTERVAL', 86400); // 24 hours
 
@@ -46,6 +48,12 @@ if (!isset($_SESSION['2fa_verified']) || !$_SESSION['2fa_verified']) {
 $has2FA = false;
 $secret = null;
 $tableName = ($_SESSION['tabla_origen'] === 'admin_users') ? 'admin_users' : 'users';
+$allowedTables = ['users', 'admin_users'];
+if (!in_array($tableName, $allowedTables, true)) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => 'Tipo de sesión inválido']);
+    exit;
+}
 
 try {
     $pdo = Database::getConnection();

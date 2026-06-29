@@ -4,7 +4,8 @@ session_start();
 if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     if (isset($_COOKIE['persist_token'])) {
         setcookie('persist_token', '', time() - 3600, '/');
-        header('Location: /proyecto/interfaz_usuario/login.html');
+        $baseUrl = defined('BASE_URL') ? rtrim(BASE_URL, '/') : '/proyecto';
+        header('Location: ' . $baseUrl . '/interfaz_usuario/login.html');
         exit;
     }
 }
@@ -388,6 +389,15 @@ setcookie('lang', $locale, time() + 86400 * 30, '/');
             transform: translateY(-6px);
         }
 
+        .product-card.has-variants {
+            border: 1px solid var(--accent-color);
+        }
+        .product-card.has-variants .add-to-cart-btn.stock-disabled {
+            background: var(--accent-color);
+            opacity: 0.8;
+            cursor: pointer;
+        }
+
         .product-img-container {
             height: 180px;
             display: flex;
@@ -539,6 +549,18 @@ setcookie('lang', $locale, time() + 86400 * 30, '/');
             cursor: pointer;
         }
 
+        #variant-selector {
+            margin: 15px 0;
+            padding: 12px;
+            background: rgba(60,145,237,0.05);
+            border-radius: 10px;
+            border: 1px solid rgba(60,145,237,0.15);
+        }
+        .variant-attr-btn.active {
+            background: var(--accent-color) !important;
+            color: #fff !important;
+            border-color: var(--accent-color) !important;
+        }
         .quantity-input {
             width: 60px;
             height: 38px;
@@ -1042,7 +1064,7 @@ setcookie('lang', $locale, time() + 86400 * 30, '/');
     <div class="header">
         <div class="header-content">
             <div>
-                <h1>Proyectos Industriales Del Centro</h1>
+                <h1><?php echo \I18n::trans('company_name'); ?></h1>
                 <p><?php echo \I18n::trans('welcome'); ?> - <?php echo \I18n::trans('products'); ?></p>
             </div>
             
@@ -1172,7 +1194,7 @@ setcookie('lang', $locale, time() + 86400 * 30, '/');
     </div>
 
     <div class="favorites-section" id="favoritesSection" style="display:none;">
-        <h3><i class="fas fa-heart" style="color:#ff4757;"></i> Tus Favoritos</h3>
+        <h3><i class="fas fa-heart" style="color:#ff4757;"></i> <?php echo \I18n::trans('my_favorites'); ?></h3>
         <div class="favorites-mini-grid" id="favoritesMiniGrid"></div>
     </div>
 
@@ -1205,8 +1227,8 @@ setcookie('lang', $locale, time() + 86400 * 30, '/');
 <footer class="footer-industrial">
     <div class="footer-container">
         <div class="footer-section">
-            <h4>Proyectos Industriales del Centro</h4>
-            <p>Brindamos tecnología y suministros de alta calidad para optimizar los procesos de producción industrial en todo el país.</p>
+            <h4><?php echo \I18n::trans('company_name'); ?></h4>
+            <p><?php echo \I18n::trans('footer_description'); ?></p>
             <div class="social-links mt-3">
                 <a href="https://www.facebook.com/piccavzla" target="_blank" rel="noopener"><i class="fab fa-facebook-f"></i></a>
                 <a href="https://www.linkedin.com/company/piccavzla" target="_blank" rel="noopener"><i class="fab fa-linkedin-in"></i></a>
@@ -1234,7 +1256,7 @@ setcookie('lang', $locale, time() + 86400 * 30, '/');
     </div>
 
     <div class="footer-bottom">
-        <p>&copy; 2026 Proyectos Industriales del Centro. Todos los derechos reservados.</p>
+        <p><?php echo \I18n::trans('copyright_text'); ?></p>
     </div>
 </footer>
 
@@ -1256,6 +1278,7 @@ setcookie('lang', $locale, time() + 86400 * 30, '/');
                         <p id="modal-product-category" class="category"></p>
                         <div id="modal-product-rating" class="rating"></div>
                         <h3 id="modal-product-price"></h3>
+                        <div id="variant-selector" style="display:none;" class="mb-3"></div>
                         <p id="modal-product-description"></p>
                         <div class="shipping-info">
                             <p class="shipping-title"><i class="fas fa-truck"></i> <?php echo \I18n::trans('shipping_options'); ?></p>
@@ -1293,9 +1316,9 @@ setcookie('lang', $locale, time() + 86400 * 30, '/');
                     <div class="col-12">
                         <div class="resenas-section" id="resenas-section" style="display:none;">
                             <hr>
-                            <h5><i class="fas fa-star"></i> Reseñas del Producto</h5>
+                            <h5><i class="fas fa-star"></i> <?php echo \I18n::trans('product_reviews'); ?></h5>
                             <div id="resenas-loading" class="text-center py-3">
-                                <small class="text-muted"><i class="fas fa-spinner fa-spin"></i> Cargando reseñas...</small>
+                                <small class="text-muted"><i class="fas fa-spinner fa-spin"></i> <?php echo \I18n::trans('loading_reviews'); ?></small>
                             </div>
                             <div id="resenas-content"></div>
                             <div id="review-form-container"></div>
@@ -1327,7 +1350,7 @@ setcookie('lang', $locale, time() + 86400 * 30, '/');
                         <i class="fas fa-envelope fa-2x"></i><br><small>Email</small>
                     </a>
                     <button class="btn btn-dark btn-lg" id="shareCopyLink" style="border-radius:12px; min-width:80px;">
-                        <i class="fas fa-link fa-2x"></i><br>                        <small>Copiar</small>
+                        <i class="fas fa-link fa-2x"></i><br>                        <small><?php echo \I18n::trans('copy_button'); ?></small>
                     </button>
                 </div>
             </div>
@@ -1343,7 +1366,7 @@ setcookie('lang', $locale, time() + 86400 * 30, '/');
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
             <div class="modal-body" id="cart-items">
-                <p class="text-center">Carrito vacío</p>
+                <p class="text-center"><?php echo \I18n::trans('cart_empty'); ?></p>
             </div>
             <div class="modal-footer">
                 <h4 id="cart-total"><?php echo \I18n::trans('total'); ?>: $0.00</h4>
@@ -1430,11 +1453,11 @@ setcookie('lang', $locale, time() + 86400 * 30, '/');
 
                 <div id="cliente2faSetup" style="display:none">
                     <div id="cliente2faQRContainer" style="text-align:center;padding:10px">
-                        <p style="font-size:0.85rem;color:var(--text-color);margin-bottom:10px">Escanea este código QR con Google Authenticator:</p>
+                        <p style="font-size:0.85rem;color:var(--text-color);margin-bottom:10px"><?php echo \I18n::trans('scan_qr_code_text'); ?></p>
                         <canvas id="cliente2faQRCanvas"></canvas>
                     </div>
                     <div class="form-group" style="margin-top:10px">
-                        <label style="font-size:0.8rem;font-weight:600">O ingresa este código manualmente:</label>
+                        <label style="font-size:0.8rem;font-weight:600"><?php echo \I18n::trans('or_enter_manually_label'); ?></label>
                         <input type="text" class="form-control" id="cliente2faSecretDisplay" readonly style="font-size:0.75rem;text-align:center;background:var(--card-bg);color:var(--accent-color);font-family:monospace">
                     </div>
                     <div style="display:flex;gap:8px;justify-content:center;margin:12px 0">
@@ -1446,19 +1469,19 @@ setcookie('lang', $locale, time() + 86400 * 30, '/');
                         <input type="text" class="form-control" id="cliente2faCode6" maxlength="1" style="width:42px;text-align:center;font-size:1.2rem;font-weight:bold;padding:6px" inputmode="numeric" pattern="[0-9]">
                     </div>
                     <div id="cliente2faBackupContainer" style="display:none;margin-top:10px;padding:10px;background:var(--card-bg);border-radius:8px">
-                        <label style="font-size:0.8rem;font-weight:600">Códigos de respaldo (guárdalos):</label>
+                        <label style="font-size:0.8rem;font-weight:600"><?php echo \I18n::trans('backup_codes_save'); ?></label>
                         <div id="cliente2faBackupCodes" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px"></div>
                     </div>
-                    <button class="btn btn-success btn-block" id="btnClienteVerificar2FA" style="display:none"><i class="fas fa-check-circle"></i> Verificar y Activar</button>
+                    <button class="btn btn-success btn-block" id="btnClienteVerificar2FA" style="display:none"><i class="fas fa-check-circle"></i> <?php echo \I18n::trans('verify_and_activate'); ?></button>
                 </div>
 
                 <div id="cliente2faActive" style="display:none">
                     <div style="text-align:center;padding:10px">
                         <i class="fas fa-check-circle" style="font-size:3rem;color:#28a745"></i>
-                        <p style="font-size:0.9rem;margin-top:8px;font-weight:600">✅ 2FA Activado</p>
-                        <p style="font-size:0.8rem;opacity:0.7">Tu cuenta está protegida con autenticación en dos pasos.</p>
+                        <p style="font-size:0.9rem;margin-top:8px;font-weight:600">✅ <?php echo \I18n::trans('2fa_activated'); ?></p>
+                        <p style="font-size:0.8rem;opacity:0.7"><?php echo \I18n::trans('account_protected'); ?></p>
                     </div>
-                    <button class="btn btn-danger btn-block" id="btnClienteDesactivar2FA"><i class="fas fa-ban"></i> Desactivar 2FA</button>
+                    <button class="btn btn-danger btn-block" id="btnClienteDesactivar2FA"><i class="fas fa-ban"></i> <?php echo \I18n::trans('deactivate_2fa'); ?></button>
                 </div>
             </div>
         </div>
@@ -1469,12 +1492,12 @@ setcookie('lang', $locale, time() + 86400 * 30, '/');
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-shield-alt"></i> Verificación periódica 2FA</h5>
+                <h5 class="modal-title"><i class="fas fa-shield-alt"></i> <?php echo \I18n::trans('periodic_2fa_verification'); ?></h5>
             </div>
             <div class="modal-body text-center">
                 <i class="fab fa-google" style="font-size:3rem;color:#4285F4;margin-bottom:10px"></i>
-                <p style="font-size:0.9rem;color:var(--text-color);margin-bottom:4px">Tu sesión requiere verificación adicional</p>
-                <p style="font-size:0.85rem;opacity:0.7;margin-bottom:16px">Abre <strong>Google Authenticator</strong> e ingresa el código de 6 dígitos</p>
+                <p style="font-size:0.9rem;color:var(--text-color);margin-bottom:4px"><?php echo \I18n::trans('verify_your_session'); ?></p>
+                <p style="font-size:0.85rem;opacity:0.7;margin-bottom:16px"><?php echo \I18n::trans('open_google_auth'); ?></p>
                 <form id="reverify2faForm">
                     <div class="form-group">
                         <input type="text" class="form-control" id="reverify2faCode" inputmode="numeric" autocomplete="one-time-code"
@@ -1482,7 +1505,7 @@ setcookie('lang', $locale, time() + 86400 * 30, '/');
                                style="text-align:center;font-size:1.5rem;letter-spacing:8px;font-weight:600;border-radius:10px;padding:12px;background:var(--card-bg);color:var(--text-color)">
                     </div>
                     <button type="submit" class="btn btn-primary btn-block" id="reverify2faBtn">
-                        <i class="fas fa-check-circle"></i> Verificar código
+                        <i class="fas fa-check-circle"></i> <?php echo \I18n::trans('verify_code'); ?>
                     </button>
                 </form>
                 <div id="reverify2faMessage" style="display:none;margin-top:0.8rem;padding:8px 12px;border-radius:8px;font-size:0.85rem"></div>
@@ -1511,7 +1534,7 @@ setcookie('lang', $locale, time() + 86400 * 30, '/');
                         <i class="fab fa-telegram"></i> Telegram
                     </button>
                     <button class="btn btn-outline-secondary btn-block contact-option" data-channel="email">
-                        <i class="fas fa-envelope"></i> Correo (Formulario)
+                        <i class="fas fa-envelope"></i> <?php echo \I18n::trans('contact_email_form'); ?>
                     </button>
                 </div>
             </div>
@@ -1645,6 +1668,8 @@ const i18n = {
     added_to_favorites: '<?php echo \I18n::trans('added_to_favorites'); ?>',
     removed_from_favorites: '<?php echo \I18n::trans('removed_from_favorites'); ?>',
     product_added: '<?php echo \I18n::trans('product_added'); ?>',
+    cart_updated: '<?php echo \I18n::trans('cart_updated'); ?>',
+    product_removed: '<?php echo \I18n::trans('product_removed'); ?>',
     loading: '<?php echo \I18n::trans('loading'); ?>',
     search: '<?php echo \I18n::trans('search'); ?>',
     cart_empty_msg: '<?php echo \I18n::trans('cart_empty'); ?>',
@@ -1669,6 +1694,65 @@ const i18n = {
     select_rating: '<?php echo \I18n::trans('select_rating'); ?>',
     review_published: '<?php echo \I18n::trans('review_published'); ?>',
     review_error: '<?php echo \I18n::trans('review_error'); ?>',
+    dark_mode: '<?php echo \I18n::trans('dark_mode'); ?>',
+    light_mode: '<?php echo \I18n::trans('light_mode'); ?>',
+    cart_update_error: '<?php echo \I18n::trans('cart_update_error'); ?>',
+    cart_remove_error: '<?php echo \I18n::trans('cart_remove_error'); ?>',
+    favorites_error: '<?php echo \I18n::trans('favorites_error'); ?>',
+    error_sending_message: '<?php echo \I18n::trans('error_sending_message'); ?>',
+    guest: '<?php echo \I18n::trans('guest'); ?>',
+    login: '<?php echo \I18n::trans('login'); ?>',
+    loading_products: '<?php echo \I18n::trans('loading_products'); ?>',
+    account_protected: '<?php echo \I18n::trans('account_protected'); ?>',
+    activate_2fa_security: '<?php echo \I18n::trans('activate_2fa_security'); ?>',
+    '2fa_migration_needed': '<?php echo \I18n::trans('2fa_migration_needed'); ?>',
+    no_description: '<?php echo \I18n::trans('no_description'); ?>',
+    view_product: '<?php echo \I18n::trans('view_product'); ?>',
+    add_short: '<?php echo \I18n::trans('add_short'); ?>',
+    select_options: '<?php echo \I18n::trans('select_options'); ?>',
+    no_favorites_explore: '<?php echo \I18n::trans('no_favorites_explore'); ?>',
+    explore_products: '<?php echo \I18n::trans('explore_products'); ?>',
+    error_loading_favorites: '<?php echo \I18n::trans('error_loading_favorites'); ?>',
+    filter_label: '<?php echo \I18n::trans('filter_label'); ?>',
+    stock_units: '<?php echo \I18n::trans('stock_units'); ?>',
+    loading_reviews: '<?php echo \I18n::trans('loading_reviews'); ?>',
+    no_reviews_yet: '<?php echo \I18n::trans('no_reviews_yet'); ?>',
+    verified_purchase: '<?php echo \I18n::trans('verified_purchase'); ?>',
+    write_review: '<?php echo \I18n::trans('write_review'); ?>',
+    title_optional: '<?php echo \I18n::trans('title_optional'); ?>',
+    comment_optional: '<?php echo \I18n::trans('comment_optional'); ?>',
+    send_review: '<?php echo \I18n::trans('send_review'); ?>',
+    already_reviewed: '<?php echo \I18n::trans('already_reviewed'); ?>',
+    error_loading_reviews: '<?php echo \I18n::trans('error_loading_reviews'); ?>',
+    connection_error_reviews: '<?php echo \I18n::trans('connection_error_reviews'); ?>',
+    email_not_available: '<?php echo \I18n::trans('email_not_available'); ?>',
+    sending: '<?php echo \I18n::trans('sending'); ?>',
+    pin_sent_to_email: '<?php echo \I18n::trans('pin_sent_to_email'); ?>',
+    error_sending_code: '<?php echo \I18n::trans('error_sending_code'); ?>',
+    send_pin_code: '<?php echo \I18n::trans('send_pin_code'); ?>',
+    enter_full_pin: '<?php echo \I18n::trans('enter_full_pin'); ?>',
+    pin_verified_set_password: '<?php echo \I18n::trans('pin_verified_set_password'); ?>',
+    invalid_or_expired_pin: '<?php echo \I18n::trans('invalid_or_expired_pin'); ?>',
+    verify_pin_btn: '<?php echo \I18n::trans('verify_pin_btn'); ?>',
+    password_reset_login: '<?php echo \I18n::trans('password_reset_login'); ?>',
+    error_resetting_password: '<?php echo \I18n::trans('error_resetting_password'); ?>',
+    reset_password_btn: '<?php echo \I18n::trans('reset_password_btn'); ?>',
+    '2fa_activated_success': '<?php echo \I18n::trans('2fa_activated_success'); ?>',
+    verified_ok: '<?php echo \I18n::trans('verified_ok'); ?>',
+    filter_search_value: '<?php echo \I18n::trans('filter_search_value'); ?>',
+    filter_min_price_value: '<?php echo \I18n::trans('filter_min_price_value'); ?>',
+    filter_max_price_value: '<?php echo \I18n::trans('filter_max_price_value'); ?>',
+    filter_rating_value: '<?php echo \I18n::trans('filter_rating_value'); ?>',
+    filter_category_value: '<?php echo \I18n::trans('filter_category_value'); ?>',
+    verify_your_session: '<?php echo \I18n::trans('verify_your_session'); ?>',
+    verify_code: '<?php echo \I18n::trans('verify_code'); ?>',
+    delete_photo_confirm: '<?php echo \I18n::trans('delete_photo_confirm'); ?>',
+    verifying: '<?php echo \I18n::trans('verifying'); ?>',
+    checking_status: '<?php echo \I18n::trans('checking_status'); ?>',
+    my_favorites: '<?php echo \I18n::trans('my_favorites'); ?>',
+    history: '<?php echo \I18n::trans('history'); ?>',
+    product: '<?php echo \I18n::trans('product'); ?>',
+    error: '<?php echo \I18n::trans('error'); ?>',
 };
 
 // ===== VARIABLES GLOBALES =====
@@ -1841,7 +1925,7 @@ async function subirFotoPerfil(file) {
 }
 
 async function eliminarFotoPerfil() {
-    if (!confirm('¿Estás seguro de que deseas eliminar tu foto de perfil?')) return;
+    if (!confirm(i18n.delete_photo_confirm)) return;
     
     showNotification(i18n.deleting_photo);
     
@@ -1956,7 +2040,7 @@ async function obtenerUsuarioActual() {
             
             CURRENT_USER = { 
                 id: null, 
-                nombre: 'Invitado', 
+                nombre: i18n.guest, 
                 correo: '',
                 rol: 'guest',
                 can_purchase: false
@@ -1964,7 +2048,7 @@ async function obtenerUsuarioActual() {
             
             const usuarioNombreSpan = document.getElementById('usuarioNombre');
             if (usuarioNombreSpan) {
-                usuarioNombreSpan.textContent = 'Invitado';
+                usuarioNombreSpan.textContent = i18n.guest;
             }
             
             const profileImage = document.getElementById('profileImage');
@@ -2005,7 +2089,7 @@ async function obtenerUsuarioActual() {
             
             CURRENT_USER = { 
                 id: null, 
-                nombre: 'Invitado', 
+                nombre: i18n.guest, 
                 correo: '',
                 rol: 'guest',
                 can_purchase: false
@@ -2013,7 +2097,7 @@ async function obtenerUsuarioActual() {
             
             const usuarioNombreSpan = document.getElementById('usuarioNombre');
             if (usuarioNombreSpan) {
-                usuarioNombreSpan.textContent = 'Invitado';
+                usuarioNombreSpan.textContent = i18n.guest;
             }
             
             const profileImage = document.getElementById('profileImage');
@@ -2039,7 +2123,7 @@ async function obtenerUsuarioActual() {
         
         CURRENT_USER = { 
             id: null, 
-            nombre: 'Invitado', 
+            nombre: i18n.guest, 
             correo: '',
             rol: 'guest',
             can_purchase: false
@@ -2047,7 +2131,7 @@ async function obtenerUsuarioActual() {
         
         const usuarioNombreSpan = document.getElementById('usuarioNombre');
         if (usuarioNombreSpan) {
-            usuarioNombreSpan.textContent = 'Invitado';
+            usuarioNombreSpan.textContent = i18n.guest;
         }
         
         const dropdownMenu = document.querySelector('.dropdown-menu');
@@ -2055,7 +2139,7 @@ async function obtenerUsuarioActual() {
             const loginItem = document.createElement('a');
             loginItem.className = 'dropdown-item login-guest-item';
             loginItem.href = '/proyecto/interfaz_usuario/login.html';
-            loginItem.innerHTML = '<i class="fas fa-sign-in-alt"></i> Iniciar Sesión';
+            loginItem.innerHTML = '<i class="fas fa-sign-in-alt"></i> ' + i18n.login;
             dropdownMenu.insertBefore(loginItem, dropdownMenu.firstChild);
         }
         
@@ -2069,11 +2153,11 @@ async function obtenerUsuarioActual() {
     } catch (error) {
         console.error('Error verificando cliente:', error);
         
-        CURRENT_USER = { id: null, nombre: 'Invitado', correo: '', rol: 'guest', can_purchase: false };
+        CURRENT_USER = { id: null, nombre: i18n.guest, correo: '', rol: 'guest', can_purchase: false };
         
         const usuarioNombreSpan = document.getElementById('usuarioNombre');
         if (usuarioNombreSpan) {
-            usuarioNombreSpan.textContent = 'Invitado';
+            usuarioNombreSpan.textContent = i18n.guest;
         }
         
         return false;
@@ -2093,11 +2177,11 @@ function iniciarVerificacionSesionPeriodica() {
             if (data.force_logout === true) {
                 showNotification(i18n.session_changed, 'warning');
                 
-                CURRENT_USER = { id: null, nombre: 'Invitado', correo: '', rol: 'guest', can_purchase: false };
+                CURRENT_USER = { id: null, nombre: i18n.guest, correo: '', rol: 'guest', can_purchase: false };
                 
                 const usuarioNombreSpan = document.getElementById('usuarioNombre');
                 if (usuarioNombreSpan) {
-                    usuarioNombreSpan.textContent = 'Invitado';
+                    usuarioNombreSpan.textContent = i18n.guest;
                 }
                 
                 setTimeout(() => {
@@ -2152,7 +2236,7 @@ document.getElementById('reverify2faForm')?.addEventListener('submit', async fun
     const msgDiv = document.getElementById('reverify2faMessage');
     msgDiv.style.display = 'none';
     btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Verificando...';
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> ' + i18n.verifying;
 
     try {
         const formData = new FormData();
@@ -2163,22 +2247,22 @@ document.getElementById('reverify2faForm')?.addEventListener('submit', async fun
         const data = await res.json();
         if (data.success) {
             msgDiv.style.cssText = 'display:block;padding:8px 12px;border-radius:8px;font-size:0.85rem;background:#d4edda;color:#155724';
-            msgDiv.textContent = '✅ Verificado correctamente';
+            msgDiv.textContent = i18n.verified_ok;
             setTimeout(() => {
                 $('#reverify2faModal').modal('hide');
             }, 800);
         } else {
             msgDiv.style.cssText = 'display:block;padding:8px 12px;border-radius:8px;font-size:0.85rem;background:#f8d7da;color:#721c24';
-            msgDiv.textContent = data.message || 'Código inválido';
+            msgDiv.textContent = data.message || i18n.invalid_code;
             document.getElementById('reverify2faCode').value = '';
             document.getElementById('reverify2faCode').focus();
         }
     } catch(e) {
         msgDiv.style.cssText = 'display:block;padding:8px 12px;border-radius:8px;font-size:0.85rem;background:#f8d7da;color:#721c24';
-        msgDiv.textContent = 'Error de conexión';
+        msgDiv.textContent = i18n.connection_error;
     } finally {
         btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-check-circle"></i> Verificar código';
+        btn.innerHTML = '<i class="fas fa-check-circle"></i> ' + i18n.verify_code;
     }
 });
 
@@ -2232,14 +2316,14 @@ async function cargarTasaBCV() {
             tasaBCVActual = 549;
         }
         tasaElement.textContent = formatearTasa(tasaBCVActual, 2);
-        fechaElement.innerHTML = '<small><i class="fas fa-info-circle"></i> Tasa referencial</small>';
+        fechaElement.innerHTML = '<small><i class="fas fa-info-circle"></i> ' + i18n.tasa_bcv + '</small>';
         if (referenciaElement) referenciaElement.innerHTML = '';
         actualizarPreciosConTasa();
     }
     
     try {
         tasaElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-        fechaElement.innerHTML = '<small>Cargando tasa...</small>';
+        fechaElement.innerHTML = '<small>' + i18n.updating_rate + '</small>';
         if (referenciaElement) referenciaElement.innerHTML = '';
         
         const response = await fetch('/proyecto/tasas/bcv_scraper.php?nocache=' + Date.now());
@@ -2300,7 +2384,7 @@ async function loadProductsFromDB() {
     if (!productList) return;
     
     try {
-        productList.innerHTML = '<div class="text-center"><div class="spinner-border text-primary"></div><p>Cargando productos...</p></div>';
+        productList.innerHTML = '<div class="text-center"><div class="spinner-border text-primary"></div><p>' + i18n.loading_products + '</p></div>';
         
         const response = await fetch('/proyecto/producto/obtener_producto.php');
         const data = await response.json();
@@ -2312,10 +2396,11 @@ async function loadProductsFromDB() {
                 price: parseFloat(p.price) || 0,
                 image: p.image || 'https://via.placeholder.com/300x300?text=Producto',
                 description: p.description || '',
-                category: p.category || 'General',
+                category: p.category || '',
                 rating: parseFloat(p.rating) || 0,
                 stock: parseInt(p.stock) || 0,
-                active: p.active !== undefined ? p.active : 1
+                active: p.active !== undefined ? p.active : 1,
+                has_variants: p.has_variants === true
             }));
             
             const categories = [...new Set(allProducts.map(p => p.category))];
@@ -2332,11 +2417,11 @@ async function loadProductsFromDB() {
             
             applyFilters();
         } else {
-            productList.innerHTML = '<div class="text-center"><p>No hay productos disponibles</p></div>';
+            productList.innerHTML = '<div class="text-center"><p>' + i18n.no_products + '</p></div>';
         }
     } catch (error) {
         console.error('Error:', error);
-        productList.innerHTML = '<div class="text-center text-danger"><p>Error al cargar productos</p></div>';
+        productList.innerHTML = '<div class="text-center text-danger"><p>' + i18n.error_loading_products + '</p></div>';
     }
 }
 
@@ -2379,7 +2464,7 @@ function displayProducts() {
     if (!productList) return;
     
     if (filteredProducts.length === 0) {
-        productList.innerHTML = '<div class="text-center"><p>No se encontraron productos</p></div>';
+        productList.innerHTML = '<div class="text-center"><p>' + i18n.no_products_found + '</p></div>';
         const paginationList = document.getElementById('pagination-list');
         if (paginationList) paginationList.innerHTML = '';
         return;
@@ -2395,10 +2480,23 @@ function displayProducts() {
         const precioVES = (product.price * tasaBCVActual).toFixed(2);
         const inactivo = product.active === 0;
         const esFavorito = favoritosSet.has(product.id);
+        const tieneVariantes = product.has_variants === true;
         
         const card = document.createElement('div');
-        card.className = 'product-card';
+        card.className = 'product-card' + (tieneVariantes ? ' has-variants' : '');
         card.setAttribute('data-id', product.id);
+        const priceHtml = tieneVariantes
+            ? `<div class="price">Desde $${product.price.toFixed(2)}<small class="ves-price">(≈ ${precioVES} Bs)</small></div>`
+            : `<div class="price">$${product.price.toFixed(2)}<small class="ves-price">(≈ ${precioVES} Bs)</small></div>`;
+        const btnDisabled = product.stock === 0 || inactivo || tieneVariantes;
+        const btnClass = btnDisabled ? 'stock-disabled' : '';
+        const btnDisabledAttr = btnDisabled ? 'disabled' : '';
+        let btnText;
+        if (inactivo) btnText = i18n.not_available;
+        else if (tieneVariantes) btnText = '<i class="fas fa-list"></i> ' + i18n.select_options;
+        else if (product.stock === 0) btnText = i18n.out_of_stock;
+        else btnText = '<i class="fas fa-shopping-cart"></i> ' + i18n.add_short;
+        
         card.innerHTML = `
             <div class="product-img-container" data-id="${product.id}">
                 <img src="${product.image}" alt="${escapeHtml(product.name)}" data-id="${product.id}" onerror="this.src='https://via.placeholder.com/300x300?text=Sin+Imagen'">
@@ -2410,9 +2508,9 @@ function displayProducts() {
             <div class="category">${escapeHtml(product.category)}</div>
             <h5 data-id="${product.id}">${escapeHtml(product.name)}</h5>
             <div class="rating">${generateStarRating(product.rating)}</div>
-            <div class="price">$${product.price.toFixed(2)}<small class="ves-price">(≈ ${precioVES} Bs)</small></div>
-            <button class="add-to-cart-btn ${(product.stock === 0 || inactivo) ? 'stock-disabled' : ''}" data-id="${product.id}" ${(product.stock === 0 || inactivo) ? 'disabled' : ''}>
-                <i class="fas fa-shopping-cart"></i> ${inactivo ? 'No disponible' : (product.stock === 0 ? 'Agotado' : 'Añadir')}
+            ${priceHtml}
+            <button class="add-to-cart-btn ${btnClass}" data-id="${product.id}" ${btnDisabledAttr}>
+                ${btnText}
             </button>
         `;
         productList.appendChild(card);
@@ -2462,7 +2560,12 @@ function attachProductEvents() {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
             const id = parseInt(btn.getAttribute('data-id'));
-            addToCart(id, 1);
+            const product = allProducts.find(p => p.id === id);
+            if (product && product.has_variants) {
+                openProductModal(product);
+            } else {
+                addToCart(id, 1, 0);
+            }
         });
     });
 
@@ -2477,23 +2580,111 @@ function attachProductEvents() {
 
 function openProductModal(product) {
     window.currentModalProduct = product;
+    window.selectedVariantId = 0;
+    
     const modalImg = document.getElementById('modal-product-image');
     modalImg.src = product.image;
     modalImg.onerror = function() { this.src = 'https://via.placeholder.com/300x300?text=Sin+Imagen'; };
     document.getElementById('modal-product-name').textContent = product.name;
     document.getElementById('modal-product-category').textContent = product.category;
     document.getElementById('modal-product-rating').innerHTML = generateStarRating(product.rating);
-    document.getElementById('modal-product-price').innerHTML = `$${product.price.toFixed(2)}<br><small>≈ ${(product.price * tasaBCVActual).toFixed(2)} Bs</small>`;
-    document.getElementById('modal-product-description').textContent = product.description || 'Sin descripción';
+    
+    const priceEl = document.getElementById('modal-product-price');
+    const descriptionEl = document.getElementById('modal-product-description');
+    descriptionEl.textContent = product.description || i18n.no_description;
     
     const modalBtn = document.getElementById('modal-add-to-cart-btn');
     modalBtn.setAttribute('data-id', product.id);
-    modalBtn.disabled = product.stock === 0 || product.active === 0;
-    modalBtn.textContent = (product.stock === 0 || product.active === 0) ? 'No disponible' : 'Añadir al Carrito';
+    modalBtn.removeAttribute('data-variant-id');
+    
+    const variantSelector = document.getElementById('variant-selector');
+    
+    if (product.has_variants) {
+        priceEl.innerHTML = `Desde $${product.price.toFixed(2)}<br><small>≈ ${(product.price * tasaBCVActual).toFixed(2)} Bs</small>`;
+        modalBtn.disabled = true;
+        modalBtn.textContent = i18n.select_options;
+        variantSelector.style.display = 'block';
+        variantSelector.innerHTML = '<div class="text-center"><small class="text-muted"><i class="fas fa-spinner fa-spin"></i> Cargando opciones...</small></div>';
+        
+        fetch(`/proyecto/variantes/obtener_variantes.php?producto_id=${product.id}`)
+            .then(r => r.json())
+            .then(data => {
+                if (!data.success || !data.variantes || data.variantes.length === 0) {
+                    variantSelector.innerHTML = '<p class="text-muted small">No hay variantes disponibles</p>';
+                    return;
+                }
+                const variantes = data.variantes.filter(v => v.activo === 1);
+                if (variantes.length === 0) {
+                    variantSelector.innerHTML = '<p class="text-muted small">No hay variantes disponibles</p>';
+                    return;
+                }
+                
+                let html = '<label class="form-label" style="font-weight:600;">Selecciona una variante:</label>';
+                
+                const atributos = {};
+                variantes.forEach(v => {
+                    if (v.combinacion && typeof v.combinacion === 'object') {
+                        Object.keys(v.combinacion).forEach(key => {
+                            if (!atributos[key]) atributos[key] = new Set();
+                            atributos[key].add(v.combinacion[key]);
+                        });
+                    }
+                });
+                
+                const attrKeys = Object.keys(atributos);
+                if (attrKeys.length > 0) {
+                    attrKeys.forEach(attrName => {
+                        html += `<div class="mb-2"><label class="small text-muted">${escapeHtml(attrName)}:</label><div class="d-flex flex-wrap gap-1">`;
+                        atributos[attrName].forEach(val => {
+                            html += `<button type="button" class="btn btn-sm btn-outline-primary variant-attr-btn" data-attr="${escapeHtml(attrName)}" data-value="${escapeHtml(val)}">${escapeHtml(val)}</button>`;
+                        });
+                        html += `</div></div>`;
+                    });
+                    html += `<div id="variant-result" class="mt-2 small"></div>`;
+                } else {
+                    html += `<select class="form-select" id="variant-select">`;
+                    variantes.forEach(v => {
+                        const totalPrice = product.price + v.precio_adicional;
+                        html += `<option value="${v.id}">${escapeHtml(v.nombre_variante)} - $${totalPrice.toFixed(2)} ${v.stock > 0 ? '' : '(Sin stock)'}</option>`;
+                    });
+                    html += `</select>`;
+                }
+                
+                variantSelector.innerHTML = html;
+                window.currentVariants = variantes;
+                
+                if (attrKeys.length > 0) {
+                    document.querySelectorAll('.variant-attr-btn').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const attr = this.getAttribute('data-attr');
+                            const value = this.getAttribute('data-value');
+                            document.querySelectorAll(`.variant-attr-btn[data-attr="${attr}"]`).forEach(b => b.classList.remove('active'));
+                            this.classList.add('active');
+                            updateVariantSelection(product);
+                        });
+                    });
+                } else {
+                    document.getElementById('variant-select').addEventListener('change', function() {
+                        selectVariantById(product, parseInt(this.value));
+                    });
+                    selectVariantById(product, parseInt(document.getElementById('variant-select').value));
+                }
+            })
+            .catch(err => {
+                console.error('Error cargando variantes:', err);
+                variantSelector.innerHTML = '<p class="text-danger small">Error al cargar variantes</p>';
+            });
+    } else {
+        priceEl.innerHTML = `$${product.price.toFixed(2)}<br><small>≈ ${(product.price * tasaBCVActual).toFixed(2)} Bs</small>`;
+        modalBtn.disabled = product.stock === 0 || product.active === 0;
+        modalBtn.textContent = (product.stock === 0 || product.active === 0) ? i18n.not_available : i18n.add_to_cart;
+        variantSelector.style.display = 'none';
+        variantSelector.innerHTML = '';
+    }
     
     const favBtn = document.getElementById('modal-fav-btn');
     const esFav = favoritosSet.has(product.id);
-    favBtn.innerHTML = esFav ? '<i class="fas fa-heart"></i> Quitar de Favoritos' : '<i class="far fa-heart"></i> Añadir a Favoritos';
+    favBtn.innerHTML = esFav ? '<i class="fas fa-heart"></i> ' + i18n.remove_from_favorites : '<i class="far fa-heart"></i> ' + i18n.add_to_favorites;
     favBtn.className = `btn ${esFav ? 'btn-danger' : 'btn-outline-danger'} w-100 mt-2`;
     favBtn.onclick = async () => {
         await toggleFavorito(product.id);
@@ -2560,7 +2751,70 @@ function openProductModal(product) {
     $('#productModal').modal('show');
 }
 
-async function addToCart(productId, quantity) {
+function updateVariantSelection(product) {
+    const selectedBtns = document.querySelectorAll('.variant-attr-btn.active');
+    if (selectedBtns.length === 0) return;
+    
+    const selection = {};
+    selectedBtns.forEach(btn => {
+        selection[btn.getAttribute('data-attr')] = btn.getAttribute('data-value');
+    });
+    
+    const attrCount = Object.keys(selection).length;
+    const totalAttrs = new Set(Array.from(document.querySelectorAll('.variant-attr-btn')).map(b => b.getAttribute('data-attr'))).size;
+    
+    if (attrCount < totalAttrs) {
+        document.getElementById('variant-result').innerHTML = '<span class="text-muted">Selecciona todas las opciones</span>';
+        const modalBtn = document.getElementById('modal-add-to-cart-btn');
+        modalBtn.disabled = true;
+        modalBtn.textContent = i18n.select_options;
+        return;
+    }
+    
+    const match = window.currentVariants.find(v => {
+        if (!v.combinacion) return false;
+        const combo = typeof v.combinacion === 'string' ? JSON.parse(v.combinacion) : v.combinacion;
+        return Object.keys(selection).every(k => combo[k] === selection[k]);
+    });
+    
+    if (match) {
+        selectVariantById(product, match.id);
+    } else {
+        document.getElementById('variant-result').innerHTML = '<span class="text-danger">Combinación no disponible</span>';
+        const modalBtn = document.getElementById('modal-add-to-cart-btn');
+        modalBtn.disabled = true;
+        modalBtn.textContent = i18n.select_options;
+    }
+}
+
+function selectVariantById(product, variantId) {
+    const variant = window.currentVariants.find(v => v.id === variantId);
+    if (!variant) return;
+    
+    window.selectedVariantId = variantId;
+    
+    const totalPrice = product.price + variant.precio_adicional;
+    const totalVES = (totalPrice * tasaBCVActual).toFixed(2);
+    document.getElementById('modal-product-price').innerHTML = `$${totalPrice.toFixed(2)}<br><small>≈ ${totalVES} Bs</small>`;
+    
+    const resultEl = document.getElementById('variant-result');
+    if (resultEl) {
+        const combo = typeof variant.combinacion === 'string' ? JSON.parse(variant.combinacion) : variant.combinacion;
+        const comboStr = combo ? Object.values(combo).join(' / ') : '';
+        resultEl.innerHTML = `<strong>${escapeHtml(variant.nombre_variante)}</strong> ${comboStr ? '- ' + escapeHtml(comboStr) : ''}<br><small class="${variant.stock > 0 ? 'text-success' : 'text-danger'}">${variant.stock > 0 ? 'Stock: ' + variant.stock : 'Sin stock'}</small>`;
+    }
+    
+    if (variant.imagen_url) {
+        document.getElementById('modal-product-image').src = variant.imagen_url;
+    }
+    
+    const modalBtn = document.getElementById('modal-add-to-cart-btn');
+    modalBtn.setAttribute('data-variant-id', variantId);
+    modalBtn.disabled = variant.stock === 0;
+    modalBtn.textContent = variant.stock === 0 ? i18n.out_of_stock : i18n.add_to_cart;
+}
+
+async function addToCart(productId, quantity, variantId) {
     if (CURRENT_USER && (CURRENT_USER.rol === 'admin' || CURRENT_USER.rol === 'administrador')) {
         showNotification(i18n.admin_no_purchase, true);
         return;
@@ -2573,22 +2827,25 @@ async function addToCart(productId, quantity) {
     }
     
     try {
+        const bodyData = { user_id: CURRENT_USER.id, product_id: productId, quantity: quantity };
+        if (variantId && variantId > 0) bodyData.variant_id = variantId;
+        
         const response = await fetch('/proyecto/carrito/anadir_carrito.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
-            body: JSON.stringify({ user_id: CURRENT_USER.id, product_id: productId, quantity: quantity })
+            body: JSON.stringify(bodyData)
         });
         const data = await response.json();
         
         if (data.success) {
-            showNotification(data.message);
+            showNotification(data.action === 'updated' ? i18n.cart_updated : i18n.product_added);
             await updateCartUI();
         } else {
-            showNotification(data.message || 'Error', true);
+            showNotification(data.message || i18n.error, true);
         }
     } catch (error) {
         console.error('Error:', error);
-        showNotification('Error de conexión', true);
+        showNotification(i18n.connection_error, true);
     }
 }
 
@@ -2629,27 +2886,31 @@ function renderCartModal() {
     let html = '<div class="cart-items-list">';
     
     cartItems.forEach(item => {
-        const productName = item.name || 'Producto';
-        const price = parseFloat(item.price) || 0;
+        const productName = item.name || i18n.product;
+        const price = item.precio_final !== undefined ? parseFloat(item.precio_final) : (parseFloat(item.price) || 0);
         const quantity = parseInt(item.quantity) || 1;
         const subtotal = price * quantity;
         total += subtotal;
         const productId = item.product_id || item.id;
+        const variantId = item.variant_id || 0;
+        const variantName = item.nombre_variante || '';
+        const dataAttrs = `data-id="${productId}" data-variant-id="${variantId}"`;
         
         html += `
-            <div class="cart-item d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom" data-id="${productId}">
+            <div class="cart-item d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom" ${dataAttrs}>
                 <div class="cart-item-info" style="flex: 2;">
                     <strong>${escapeHtml(productName)}</strong>
+                    ${variantName ? `<div class="small text-primary">${escapeHtml(variantName)}</div>` : ''}
                     <div class="text-muted small">$${price.toFixed(2)} c/u</div>
                 </div>
                 <div class="cart-item-quantity d-flex align-items-center gap-2" style="flex: 1; justify-content: center;">
-                    <button class="btn btn-sm btn-outline-secondary cart-qty-minus" data-id="${productId}" data-current-qty="${quantity}">-</button>
+                    <button class="btn btn-sm btn-outline-secondary cart-qty-minus" ${dataAttrs} data-current-qty="${quantity}">-</button>
                     <span class="mx-2 quantity-display" style="min-width: 30px; text-align: center;">${quantity}</span>
-                    <button class="btn btn-sm btn-outline-secondary cart-qty-plus" data-id="${productId}" data-current-qty="${quantity}">+</button>
+                    <button class="btn btn-sm btn-outline-secondary cart-qty-plus" ${dataAttrs} data-current-qty="${quantity}">+</button>
                 </div>
                 <div class="cart-item-subtotal text-end" style="flex: 1; text-align: right;">
                     <strong>$${subtotal.toFixed(2)}</strong>
-                    <button class="btn btn-sm btn-danger ms-2 cart-remove" data-id="${productId}" style="margin-left: 10px;">
+                    <button class="btn btn-sm btn-danger ms-2 cart-remove" ${dataAttrs} style="margin-left: 10px;">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
@@ -2677,15 +2938,20 @@ function renderCartModal() {
     });
 }
 
+function getBtnVariantId(btn) {
+    return parseInt(btn.getAttribute('data-variant-id') || '0');
+}
+
 async function handleQtyMinus(e) {
     e.stopPropagation();
     const btn = e.currentTarget;
     const id = parseInt(btn.getAttribute('data-id'));
+    const variantId = getBtnVariantId(btn);
     const currentQty = parseInt(btn.getAttribute('data-current-qty'));
     if (currentQty > 1) {
-        await actualizarCantidadCarrito(id, -1);
+        await actualizarCantidadCarrito(id, -1, variantId);
     } else {
-        await removeFromCart(id);
+        await removeFromCart(id, variantId);
     }
 }
 
@@ -2693,25 +2959,29 @@ async function handleQtyPlus(e) {
     e.stopPropagation();
     const btn = e.currentTarget;
     const id = parseInt(btn.getAttribute('data-id'));
-    const currentQty = parseInt(btn.getAttribute('data-current-qty'));
-    await actualizarCantidadCarrito(id, 1);
+    const variantId = getBtnVariantId(btn);
+    await actualizarCantidadCarrito(id, 1, variantId);
 }
 
 async function handleRemove(e) {
     e.stopPropagation();
     const btn = e.currentTarget;
     const id = parseInt(btn.getAttribute('data-id'));
-    await removeFromCart(id);
+    const variantId = getBtnVariantId(btn);
+    await removeFromCart(id, variantId);
 }
 
-async function actualizarCantidadCarrito(productId, quantity) {
+async function actualizarCantidadCarrito(productId, quantity, variantId) {
     if (!CURRENT_USER || !CURRENT_USER.id) return;
     
     try {
+        const bodyData = { user_id: CURRENT_USER.id, product_id: productId, quantity: quantity };
+        if (variantId && variantId > 0) bodyData.variant_id = variantId;
+        
         const response = await fetch('/proyecto/carrito/anadir_carrito.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
-            body: JSON.stringify({ user_id: CURRENT_USER.id, product_id: productId, quantity: quantity })
+            body: JSON.stringify(bodyData)
         });
         const data = await response.json();
         
@@ -2722,30 +2992,33 @@ async function actualizarCantidadCarrito(productId, quantity) {
         }
     } catch (error) {
         console.error('Error:', error);
-        showNotification('Error de conexión', true);
+        showNotification(i18n.connection_error, true);
     }
 }
 
-async function removeFromCart(productId) {
+async function removeFromCart(productId, variantId) {
     if (!CURRENT_USER || !CURRENT_USER.id) return;
     
     try {
+        const bodyData = { user_id: CURRENT_USER.id, product_id: productId };
+        if (variantId && variantId > 0) bodyData.variant_id = variantId;
+        
         const response = await fetch('/proyecto/carrito/remover_carrito.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
-            body: JSON.stringify({ user_id: CURRENT_USER.id, product_id: productId })
+            body: JSON.stringify(bodyData)
         });
         const data = await response.json();
         
         if (data.success) {
-            showNotification(data.message);
+            showNotification(i18n.product_removed);
             await updateCartUI();
         } else {
             showNotification(data.message || i18n.cart_remove_error, true);
         }
     } catch (error) {
         console.error('Error:', error);
-        showNotification('Error de conexión', true);
+        showNotification(i18n.connection_error, true);
     }
 }
 
@@ -2791,7 +3064,7 @@ async function toggleFavorito(productoId, event) {
         }
     } catch (error) {
         console.error('Error en toggleFavorito:', error);
-        showNotification('Error de conexión', true);
+        showNotification(i18n.connection_error, true);
     }
 }
 
@@ -2889,7 +3162,7 @@ async function cargarFavoritos() {
 
 async function mostrarFavoritos() {
     $('#favoritesModal').modal('show');
-    document.getElementById('favoritesContent').innerHTML = '<p class="text-center">Cargando...</p>';
+    document.getElementById('favoritesContent').innerHTML = '<p class="text-center">' + i18n.loading + '</p>';
     try {
         const response = await fetch(`/proyecto/producto/obtener_favoritos.php?user_id=${CURRENT_USER?.id || 0}`);
         const data = await response.json();
@@ -2898,8 +3171,14 @@ async function mostrarFavoritos() {
             data.favoritos.forEach(f => {
                 const precioVES = (parseFloat(f.price) * tasaBCVActual).toFixed(2);
                 const inactivo = f.active === 0;
-                const stockStatus = inactivo ? 'No disponible' : (f.stock === 0 ? 'Agotado' : `Stock: ${f.stock} unid.`);
-                const stockColor = inactivo ? '#dc3545' : (f.stock === 0 ? '#dc3545' : '#28a745');
+                const isOutOfStock = f.stock === 0;
+                let stockStatus = '';
+                if (inactivo || isOutOfStock) {
+                    stockStatus = inactivo ? i18n.not_available : i18n.out_of_stock;
+                } else {
+                    stockStatus = i18n.stock_units.replace('%s', f.stock);
+                }
+                const stockColor = (inactivo || isOutOfStock) ? '#dc3545' : '#28a745';
                 html += `
                     <div class="product-card" data-id="${f.id}" style="margin-bottom:0; cursor:pointer;">
                         <div class="product-img-container" style="height:140px; position:relative;" data-id="${f.id}">
@@ -2914,10 +3193,10 @@ async function mostrarFavoritos() {
                         <div class="price" style="font-size:1rem;">$${parseFloat(f.price).toFixed(2)}<small class="ves-price">(≈ ${precioVES} Bs)</small></div>
                         <div style="display:flex; gap:6px; margin-top:8px;">
                             <button class="btn btn-sm btn-outline-primary ver-producto-btn" data-id="${f.id}" style="flex:1; font-size:0.7rem; padding:4px 8px; border-radius:20px;">
-                                <i class="fas fa-eye"></i> Ver producto
+                                <i class="fas fa-eye"></i> ${i18n.view_product}
                             </button>
-                            <button class="add-to-cart-btn ${(f.stock === 0 || inactivo) ? 'stock-disabled' : ''}" data-id="${f.id}" ${(f.stock === 0 || inactivo) ? 'disabled' : ''} style="flex:1; font-size:0.75rem; padding:4px 12px;">
-                                <i class="fas fa-shopping-cart"></i> ${inactivo ? 'No disponible' : (f.stock === 0 ? 'Agotado' : 'Añadir')}
+                            <button class="add-to-cart-btn ${(isOutOfStock || inactivo) ? 'stock-disabled' : ''}" data-id="${f.id}" ${(isOutOfStock || inactivo) ? 'disabled' : ''} style="flex:1; font-size:0.75rem; padding:4px 12px;">
+                                <i class="fas fa-shopping-cart"></i> ${inactivo ? i18n.not_available : (isOutOfStock ? i18n.out_of_stock : i18n.add_short)}
                             </button>
                         </div>
                     </div>`;
@@ -2935,7 +3214,14 @@ async function mostrarFavoritos() {
             document.querySelectorAll('#favoritesContent .add-to-cart-btn:not([disabled])').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    addToCart(parseInt(btn.getAttribute('data-id')), 1);
+                    const id = parseInt(btn.getAttribute('data-id'));
+                    const product = allProducts.find(p => p.id === id);
+                    if (product && product.has_variants) {
+                        $('#favoritesModal').modal('hide');
+                        setTimeout(() => openProductModal(product), 300);
+                    } else {
+                        addToCart(id, 1, 0);
+                    }
                 });
             });
             document.querySelectorAll('#favoritesContent .product-card').forEach(el => {
@@ -2958,22 +3244,22 @@ async function mostrarFavoritos() {
             document.getElementById('favoritesContent').innerHTML = `
                 <div class="text-center" style="padding:50px 20px;">
                     <i class="far fa-heart" style="font-size:4rem; opacity:0.2; margin-bottom:20px; display:block;"></i>
-                    <p style="font-size:1.1rem; opacity:0.7; margin-bottom:8px;">No tienes productos favoritos</p>
-                    <p style="font-size:0.9rem; opacity:0.5; margin-bottom:20px;">Explora nuestro catálogo y añade productos a tus favoritos!</p>
+                    <p style="font-size:1.1rem; opacity:0.7; margin-bottom:8px;">${i18n.no_favorites}</p>
+                    <p style="font-size:0.9rem; opacity:0.5; margin-bottom:20px;">${i18n.no_favorites_explore}</p>
                     <button class="btn btn-primary" onclick="$('#favoritesModal').modal('hide')">
-                        <i class="fas fa-store"></i> Explorar Productos
+                        <i class="fas fa-store"></i> ${i18n.explore_products}
                     </button>
                 </div>`;
         }
     } catch (error) {
-        document.getElementById('favoritesContent').innerHTML = '<p class="text-center" style="color:#ff4757; padding:40px;">Error al cargar favoritos</p>';
+        document.getElementById('favoritesContent').innerHTML = '<p class="text-center" style="color:#ff4757; padding:40px;">' + i18n.error_loading_favorites + '</p>';
     }
 }
 
 function updateActiveFilters() {
     const container = document.getElementById('active-filters');
     if (!container) return;
-    container.innerHTML = '<small>Filtros:</small>';
+    container.innerHTML = '<small>' + i18n.filter_label + '</small>';
     let has = false;
     
     const addBadge = (text, filterKey) => {
@@ -2981,11 +3267,11 @@ function updateActiveFilters() {
         container.innerHTML += `<span class="filter-badge">${text} <span class="close" data-filter="${filterKey}">&times;</span></span>`;
     };
     
-    if (currentFilters.searchTerm) addBadge(`Buscar: ${currentFilters.searchTerm}`, 'search');
-    if (currentFilters.minPrice) addBadge(`Min: $${currentFilters.minPrice}`, 'minPrice');
-    if (currentFilters.maxPrice) addBadge(`Max: $${currentFilters.maxPrice}`, 'maxPrice');
-    if (currentFilters.minRating > 0) addBadge(`Rating: ${currentFilters.minRating}★`, 'minRating');
-    if (currentFilters.category) addBadge(`Cat: ${currentFilters.category}`, 'category');
+    if (currentFilters.searchTerm) addBadge(i18n.filter_search_value.replace('%s', currentFilters.searchTerm), 'search');
+    if (currentFilters.minPrice) addBadge(i18n.filter_min_price_value.replace('%s', currentFilters.minPrice), 'minPrice');
+    if (currentFilters.maxPrice) addBadge(i18n.filter_max_price_value.replace('%s', currentFilters.maxPrice), 'maxPrice');
+    if (currentFilters.minRating > 0) addBadge(i18n.filter_rating_value.replace('%s', currentFilters.minRating), 'minRating');
+    if (currentFilters.category) addBadge(i18n.filter_category_value.replace('%s', currentFilters.category), 'category');
     
     container.style.display = has ? 'flex' : 'none';
     
@@ -3013,12 +3299,12 @@ document.getElementById('submitPasswordChange')?.addEventListener('click', async
     }
     
     if (newPassword !== confirmPassword) {
-        showNotification('Las contraseñas nuevas no coinciden', true);
+        showNotification(i18n.password_mismatch, true);
         return;
     }
     
     if (newPassword.length < 6) {
-        showNotification('La contraseña debe tener al menos 6 caracteres', true);
+        showNotification(i18n.password_too_short, true);
         return;
     }
     
@@ -3042,11 +3328,11 @@ document.getElementById('submitPasswordChange')?.addEventListener('click', async
             document.getElementById('newPassword').value = '';
             document.getElementById('confirmNewPassword').value = '';
         } else {
-            showNotification(data.message || 'Error al cambiar contraseña', true);
+            showNotification(data.message || i18n.error_changing_password, true);
         }
     } catch (error) {
         console.error('Error:', error);
-        showNotification('Error de conexión', true);
+        showNotification(i18n.connection_error, true);
     }
 });
 
@@ -3062,7 +3348,7 @@ document.getElementById('forgotPasswordLink')?.addEventListener('click', functio
     document.getElementById('passRecoverySection').style.display = 'block';
     document.getElementById('submitPasswordChange').style.display = 'none';
     document.getElementById('recoveryEmail').value = recoveryEmail;
-    document.getElementById('passModalTitle').textContent = 'Recuperar Contraseña';
+    document.getElementById('passModalTitle').textContent = i18n.recover_password;
 });
 
 function showRecoveryMessage(msg, isError = false) {
@@ -3074,9 +3360,9 @@ function showRecoveryMessage(msg, isError = false) {
 }
 
 document.getElementById('sendRecoveryPinBtn')?.addEventListener('click', async function() {
-    if (!recoveryEmail) { showRecoveryMessage('El correo no está disponible', true); return; }
+    if (!recoveryEmail) { showRecoveryMessage(i18n.email_not_available, true); return; }
     this.disabled = true;
-    this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Enviando...';
+    this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> ' + i18n.sending;
     try {
         const res = await fetch('/proyecto/usuarios/solicitar_token.php', {
             method: 'POST',
@@ -3085,25 +3371,25 @@ document.getElementById('sendRecoveryPinBtn')?.addEventListener('click', async f
         });
         const data = await res.json();
         if (data.success) {
-            showRecoveryMessage('Codigo PIN enviado a tu correo. Revisa tu bandeja de entrada.');
+            showRecoveryMessage(i18n.pin_sent_to_email);
             document.getElementById('pinSection').style.display = 'block';
         } else {
-            showRecoveryMessage(data.message || 'Error al enviar el codigo', true);
+            showRecoveryMessage(data.message || i18n.error_sending_code, true);
         }
     } catch (err) {
-        showRecoveryMessage('Error de conexion', true);
+        showRecoveryMessage(i18n.connection_error, true);
     } finally {
         this.disabled = false;
-        this.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar codigo PIN';
+        this.innerHTML = '<i class="fas fa-paper-plane"></i> ' + i18n.send_pin_code;
     }
 });
 
 document.getElementById('verifyRecoveryPinBtn')?.addEventListener('click', async function() {
     const pin = document.getElementById('recoveryPin').value.trim();
-    if (!pin || pin.length < 6) { showRecoveryMessage('Ingresa el PIN completo', true); return; }
+    if (!pin || pin.length < 6) { showRecoveryMessage(i18n.enter_full_pin, true); return; }
     recoveryPin = pin;
     this.disabled = true;
-    this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Verificando...';
+    this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> ' + i18n.verifying;
     try {
         const res = await fetch('/proyecto/usuarios/verificar_pin.php', {
             method: 'POST',
@@ -3112,24 +3398,24 @@ document.getElementById('verifyRecoveryPinBtn')?.addEventListener('click', async
         });
         const data = await res.json();
         if (data.success) {
-            showRecoveryMessage('PIN verificado correctamente. Establece tu nueva contrasena.');
+            showRecoveryMessage(i18n.pin_verified_set_password);
             document.getElementById('newPassSection').style.display = 'block';
         } else {
-            showRecoveryMessage(data.message || 'PIN invalido o expirado', true);
+            showRecoveryMessage(data.message || i18n.invalid_or_expired_pin, true);
         }
     } catch (err) {
-        showRecoveryMessage('Error de conexion', true);
+        showRecoveryMessage(i18n.connection_error, true);
     } finally {
         this.disabled = false;
-        this.innerHTML = 'Verificar PIN';
+        this.innerHTML = i18n.verify_pin_btn;
     }
 });
 
 document.getElementById('setNewPasswordBtn')?.addEventListener('click', async function() {
     const newPass = document.getElementById('recoveryNewPassword').value.trim();
-    if (!newPass || newPass.length < 6) { showRecoveryMessage('La contrasena debe tener al menos 6 caracteres', true); return; }
+    if (!newPass || newPass.length < 6) { showRecoveryMessage(i18n.password_too_short, true); return; }
     this.disabled = true;
-    this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Restableciendo...';
+    this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> ' + i18n.loading;
     try {
         const res = await fetch('/proyecto/usuarios/recuperacion_contraseña.php', {
             method: 'POST',
@@ -3138,17 +3424,17 @@ document.getElementById('setNewPasswordBtn')?.addEventListener('click', async fu
         });
         const data = await res.json();
         if (data.success) {
-            showRecoveryMessage('Contrasena restablecida exitosamente. Inicia sesion con tu nueva contrasena.', false);
+            showRecoveryMessage(i18n.password_reset_login, false);
             document.getElementById('newPassSection').style.display = 'none';
             setTimeout(() => cerrarSesion(), 2500);
         } else {
-            showRecoveryMessage(data.message || 'Error al restablecer la contrasena', true);
+            showRecoveryMessage(data.message || i18n.error_resetting_password, true);
         }
     } catch (err) {
-        showRecoveryMessage('Error de conexion', true);
+        showRecoveryMessage(i18n.connection_error, true);
     } finally {
         this.disabled = false;
-        this.innerHTML = 'Restablecer Contrasena';
+        this.innerHTML = i18n.reset_password_btn;
     }
 });
 
@@ -3156,7 +3442,7 @@ $('#changePasswordModal').on('hidden.bs.modal', function () {
     document.getElementById('passChangeSection').style.display = 'block';
     document.getElementById('passRecoverySection').style.display = 'none';
     document.getElementById('submitPasswordChange').style.display = '';
-    document.getElementById('passModalTitle').textContent = 'Cambiar Contrasena';
+    document.getElementById('passModalTitle').textContent = i18n.change_password;
     const msgEl = document.getElementById('recoveryMsg');
     if (msgEl) msgEl.style.display = 'none';
     document.getElementById('pinSection').style.display = 'none';
@@ -3171,8 +3457,8 @@ document.querySelectorAll('.contact-option').forEach(btn => {
     btn.addEventListener('click', function() {
         const channel = this.getAttribute('data-channel');
         const email = 'Picca.ventas@gmail.com';
-        const subject = encodeURIComponent('Consulta desde tienda web PIC');
-        const body = encodeURIComponent('Hola, me gustaría obtener información sobre sus productos.\n\n');
+        const subject = encodeURIComponent(i18n.contact_us + ' - PIC');
+        const body = encodeURIComponent(i18n.contact_us + ' - ' + i18n.products + '\n\n');
 
         switch (channel) {
             case 'gmail':
@@ -3215,7 +3501,7 @@ document.getElementById('submitContact')?.addEventListener('click', async () => 
             body: JSON.stringify({
                 nombre: nombre,
                 email: email,
-                asunto: 'Consulta desde tienda web',
+                asunto: i18n.contact_us,
                 mensaje: mensaje
             })
         });
@@ -3233,7 +3519,7 @@ document.getElementById('submitContact')?.addEventListener('click', async () => 
         }
     } catch (error) {
         console.error('Error:', error);
-        showNotification('Error de conexión', true);
+        showNotification(i18n.connection_error, true);
     }
 });
 
@@ -3318,7 +3604,7 @@ function setupEventListeners() {
                 return;
             }
             
-            window.location.href = 'pasarela_de_pago.html';
+            window.location.href = 'pasarela_de_pago.php';
         });
     }
     
@@ -3335,10 +3621,12 @@ function setupEventListeners() {
     });
     
     document.getElementById('modal-add-to-cart-btn')?.addEventListener('click', () => {
-        const id = parseInt(document.getElementById('modal-add-to-cart-btn').getAttribute('data-id'));
+        const btn = document.getElementById('modal-add-to-cart-btn');
+        const id = parseInt(btn.getAttribute('data-id'));
+        const variantId = parseInt(btn.getAttribute('data-variant-id') || '0');
         const quantity = parseInt(document.getElementById('product-quantity').value);
         if (id && quantity > 0) {
-            addToCart(id, quantity);
+            addToCart(id, quantity, variantId);
             $('#productModal').modal('hide');
         }
     });
@@ -3355,7 +3643,7 @@ function setupEventListeners() {
         $('#historyModal').modal('show');
         document.getElementById('historyContent').innerHTML = '<p class="text-center">' + i18n.loading + '</p>';
         if (!CURRENT_USER?.id) {
-            document.getElementById('historyContent').innerHTML = '<p class="text-center" style="color:var(--text-color); opacity:0.7; padding:40px;">Inicia sesión para ver tu historial</p>';
+            document.getElementById('historyContent').innerHTML = '<p class="text-center" style="color:var(--text-color); opacity:0.7; padding:40px;">' + i18n.login_to_view_history + '</p>';
             return;
         }
         try {
@@ -3417,9 +3705,9 @@ function setupEventListeners() {
                     html += `<div style="background:var(--card-bg); border:1px solid var(--light-color); border-radius:12px; padding:16px; margin-bottom:16px;">
                         <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
                             <div>
-                                <strong style="font-size:1.1rem; color:var(--text-color);">Pedido #${p.order_number || p.id}</strong><br>
+                                <strong style="font-size:1.1rem; color:var(--text-color);">${i18n.order_id} #${p.order_number || p.id}</strong><br>
                                 <small style="opacity:0.7;">${fecha}</small>
-                                ${p.invoice_number ? `<br><small style="opacity:0.5;">Factura: ${escapeHtml(p.invoice_number)}</small>` : ''}
+                                ${p.invoice_number ? `<br><small style="opacity:0.5;">${i18n.invoice_number} ${escapeHtml(p.invoice_number)}</small>` : ''}
                             </div>
                             <div style="display:flex; gap:8px; flex-wrap:wrap;">
                                 <span style="${estadoBadge}; color:white; padding:4px 10px; border-radius:20px; font-size:0.75rem;">${escapeHtml(displayStatus)}</span>
@@ -3429,18 +3717,18 @@ function setupEventListeners() {
                         ${detallesPagoHtml}
                         ${itemsHtml}
                         <div style="text-align:right; margin-top:12px; padding-top:12px; border-top:2px solid #3C91ED;">
-                            <div style="color:var(--text-color); opacity:0.8;">Subtotal: $${parseFloat(p.subtotal || 0).toFixed(2)}</div>
-                            <div style="color:var(--text-color); opacity:0.8;">IVA (16%): $${parseFloat(p.iva || 0).toFixed(2)}</div>
-                            <div style="font-size:1.2rem; font-weight:bold; color:var(--accent-color); margin-top:5px;">TOTAL: $${parseFloat(p.total || 0).toFixed(2)}</div>
+                            <div style="color:var(--text-color); opacity:0.8;">${i18n.subtotal_label} $${parseFloat(p.subtotal || 0).toFixed(2)}</div>
+                            <div style="color:var(--text-color); opacity:0.8;">${i18n.iva_label} $${parseFloat(p.iva || 0).toFixed(2)}</div>
+                            <div style="font-size:1.2rem; font-weight:bold; color:var(--accent-color); margin-top:5px;">${i18n.total_label.toUpperCase()}: $${parseFloat(p.total || 0).toFixed(2)}</div>
                         </div>
                     </div>`;
                 });
                 document.getElementById('historyContent').innerHTML = html;
             } else {
-                document.getElementById('historyContent').innerHTML = '<p class="text-center" style="color:var(--text-color); opacity:0.7; padding:40px;">No hay pedidos registrados</p>';
+                document.getElementById('historyContent').innerHTML = '<p class="text-center" style="color:var(--text-color); opacity:0.7; padding:40px;">' + i18n.no_orders + '</p>';
             }
         } catch(error) {
-            document.getElementById('historyContent').innerHTML = '<p class="text-center" style="color:#ff4757; padding:40px;">Error al cargar historial</p>';
+            document.getElementById('historyContent').innerHTML = '<p class="text-center" style="color:#ff4757; padding:40px;">' + i18n.error_loading_history + '</p>';
         }
     });
     
@@ -3487,7 +3775,7 @@ function setupEventListeners() {
             if (file) {
                 subirFotoPerfil(file);
             } else {
-                showNotification('Selecciona una foto primero', true);
+                showNotification(i18n.select_photo_first, true);
             }
         });
     }
@@ -3511,26 +3799,26 @@ async function cargarEstado2faCliente() {
         const setup = document.getElementById('cliente2faSetup');
 
         if (data.migracion_pendiente) {
-            label.textContent = 'No disponible';
-            desc.textContent = 'Ejecute la migración SQL para activar 2FA';
+            label.textContent = i18n.not_available;
+            desc.textContent = i18n['2fa_migration_needed'];
             badge.className = 'badge badge-pending';
-            badge.innerHTML = '<i class="fas fa-clock"></i> Pendiente';
+            badge.innerHTML = '<i class="fas fa-clock"></i> ' + i18n.pending_status.replace(':', '');
             disabled.style.display = 'none';
             active.style.display = 'none';
             setup.style.display = 'none';
         } else if (data.enabled) {
-            label.textContent = '✅ 2FA Activado';
-            desc.textContent = 'Tu cuenta está protegida con autenticación en dos pasos.';
+            label.textContent = i18n['2fa_activated'];
+            desc.textContent = i18n.account_protected;
             badge.className = 'badge badge-success';
-            badge.innerHTML = '<i class="fas fa-check-circle"></i> Activado';
+            badge.innerHTML = '<i class="fas fa-check-circle"></i> ' + i18n.active;
             disabled.style.display = 'none';
             active.style.display = 'block';
             setup.style.display = 'none';
         } else {
-            label.textContent = '2FA Desactivado';
-            desc.textContent = 'Activa la autenticación en dos pasos para mayor seguridad.';
+            label.textContent = i18n['2fa_deactivated'];
+            desc.textContent = i18n.activate_2fa_security;
             badge.className = 'badge badge-warning';
-            badge.innerHTML = '<i class="fas fa-clock"></i> Desactivado';
+            badge.innerHTML = '<i class="fas fa-clock"></i> ' + i18n.inactive;
             disabled.style.display = 'block';
             active.style.display = 'none';
             setup.style.display = 'none';
@@ -3584,7 +3872,7 @@ document.getElementById('btnClienteConfigurar2FA')?.addEventListener('click', as
         document.getElementById('cliente2faBackupContainer').style.display = 'block';
         document.getElementById('btnClienteVerificar2FA').style.display = 'block';
     } catch(e) {
-        showNotification('Error al configurar 2FA: ' + e.message, true);
+        showNotification(i18n['2fa_config_error'] + ': ' + e.message, true);
     }
 });
 
@@ -3592,7 +3880,7 @@ document.getElementById('btnClienteVerificar2FA')?.addEventListener('click', asy
     const code = Array.from(['cliente2faCode1','cliente2faCode2','cliente2faCode3','cliente2faCode4','cliente2faCode5','cliente2faCode6'])
         .map(id => document.getElementById(id).value).join('');
     if (code.length !== 6) {
-        showNotification('Ingresa el código de 6 dígitos', true);
+        showNotification(i18n.enter_6_digit_code, true);
         return;
     }
 
@@ -3607,18 +3895,18 @@ document.getElementById('btnClienteVerificar2FA')?.addEventListener('click', asy
         });
         const data = await res.json();
         if (data.success) {
-            showNotification('✅ 2FA activado correctamente');
+            showNotification(i18n['2fa_activated_success']);
             await cargarEstado2faCliente();
         } else {
-            showNotification(data.message || 'Código inválido', true);
+            showNotification(data.message || i18n.invalid_code, true);
         }
     } catch(e) {
-        showNotification('Error al verificar código', true);
+        showNotification(i18n['2fa_verify_error'], true);
     }
 });
 
 document.getElementById('btnClienteDesactivar2FA')?.addEventListener('click', async function() {
-    const password = prompt('Ingresa tu contraseña para desactivar 2FA:');
+    const password = prompt(i18n.enter_password_to_disable_2fa);
     if (!password) return;
 
     try {
@@ -3632,13 +3920,13 @@ document.getElementById('btnClienteDesactivar2FA')?.addEventListener('click', as
         });
         const data = await res.json();
         if (data.success) {
-            showNotification('2FA desactivado');
+            showNotification(i18n['2fa_deactivated']);
             await cargarEstado2faCliente();
         } else {
-            showNotification(data.message || 'Contraseña incorrecta', true);
+            showNotification(data.message || i18n.incorrect_password, true);
         }
     } catch(e) {
-        showNotification('Error al desactivar 2FA', true);
+        showNotification(i18n['2fa_deactivate_error'], true);
     }
 });
 
@@ -3688,11 +3976,11 @@ if ('serviceWorker' in navigator) {
 }
 
 window.addEventListener('online', () => {
-    showNotification('🟢 Conexión restablecida');
+    showNotification(i18n.connection_restored);
 });
 
 window.addEventListener('offline', () => {
-    showNotification('📡 Sin conexión a internet', true);
+    showNotification(i18n.connection_lost, true);
 });
 
 // ============================================================
@@ -3758,7 +4046,7 @@ async function loadResenas(productId) {
         loading.style.display = 'none';
 
         if (!data.success) {
-            content.innerHTML = '<p class="text-danger">Error al cargar reseñas.</p>';
+            content.innerHTML = '<p class="text-danger">' + i18n.error_loading_reviews + '</p>';
             return;
         }
 
@@ -3773,7 +4061,7 @@ async function loadResenas(productId) {
         html += '<div class="rating-average">';
         html += `<div class="big-number">${promedio.toFixed(1)}</div>`;
         html += `<div class="stars">${renderStarsHtml(Math.round(promedio))}</div>`;
-        html += `<div class="total-count">${total} reseña${total !== 1 ? 's' : ''}</div>`;
+        html += `<div class="total-count">${total} ${total === 1 ? i18n.review : i18n.review_plural}</div>`;
         html += '</div>';
         html += '<div class="rating-bars">';
         for (let i = 5; i >= 1; i--) {
@@ -3789,12 +4077,12 @@ async function loadResenas(productId) {
 
         // Review cards
         if (data.resenas.length === 0) {
-            html += '<p class="text-muted small">No hay reseñas aún. ¡Sé el primero en reseñar!</p>';
+            html += '<p class="text-muted small">' + i18n.no_reviews_yet + '</p>';
         } else {
             data.resenas.forEach(r => {
                 html += '<div class="resena-card">';
                 html += '<div class="resena-header">';
-                html += `<span class="resena-user">${escapeHtml(r.usuario_nombre)} ${r.es_compra_verificada ? '<span class="verified-badge"><i class="fas fa-check-circle"></i> Compra verificada</span>' : ''}</span>`;
+                html += `<span class="resena-user">${escapeHtml(r.usuario_nombre)} ${r.es_compra_verificada ? '<span class="verified-badge"><i class="fas fa-check-circle"></i> ' + i18n.verified_purchase + '</span>' : ''}</span>`;
                 html += `<span class="resena-date">${r.created_at ? r.created_at.substring(0, 10) : ''}</span>`;
                 html += '</div>';
                 html += `<div class="resena-stars">${renderStarsHtml(r.puntuacion)}</div>`;
@@ -3813,7 +4101,7 @@ async function loadResenas(productId) {
             if (!hasReviewed) {
                 formContainer.innerHTML = `
                     <div class="review-form-section">
-                        <h6>Escribe tu reseña</h6>
+                        <h6>${i18n.write_review}</h6>
                         <form id="resena-form">
                             <div class="star-selector" id="star-selector">
                                 <i class="far fa-star" data-val="1"></i>
@@ -3822,10 +4110,10 @@ async function loadResenas(productId) {
                                 <i class="far fa-star" data-val="4"></i>
                                 <i class="far fa-star" data-val="5"></i>
                             </div>
-                            <input type="text" id="resena-titulo" class="form-control mb-2" placeholder="Título (opcional)" maxlength="255">
-                            <textarea id="resena-comentario" class="form-control mb-2" rows="3" placeholder="Comentario (opcional)"></textarea>
+                            <input type="text" id="resena-titulo" class="form-control mb-2" placeholder="${i18n.title_optional}" maxlength="255">
+                            <textarea id="resena-comentario" class="form-control mb-2" rows="3" placeholder="${i18n.comment_optional}"></textarea>
                             <input type="hidden" id="resena-puntuacion" value="0">
-                            <button type="button" class="btn btn-primary btn-sm" onclick="submitResena(${productId})">Enviar Reseña</button>
+                            <button type="button" class="btn btn-primary btn-sm" onclick="submitResena(${productId})">${i18n.send_review}</button>
                         </form>
                     </div>
                 `;
@@ -3858,19 +4146,19 @@ async function loadResenas(productId) {
                     });
                 });
             } else {
-                formContainer.innerHTML = '<p class="text-muted small mt-2"><i class="fas fa-check"></i> Ya has reseñado este producto.</p>';
+                formContainer.innerHTML = '<p class="text-muted small mt-2"><i class="fas fa-check"></i> ' + i18n.already_reviewed + '</p>';
             }
         }
     } catch (e) {
         loading.style.display = 'none';
-        content.innerHTML = '<p class="text-danger">Error de conexión al cargar reseñas.</p>';
+        content.innerHTML = '<p class="text-danger">' + i18n.connection_error_reviews + '</p>';
     }
 }
 
 async function submitResena(productId) {
     const puntuacion = parseInt(document.getElementById('resena-puntuacion').value);
     if (puntuacion < 1 || puntuacion > 5) {
-        showNotification('Selecciona una puntuación', true);
+        showNotification(i18n.select_rating, true);
         return;
     }
 
@@ -3891,13 +4179,13 @@ async function submitResena(productId) {
         });
         const data = await res.json();
         if (data.success) {
-            showNotification('Reseña publicada correctamente');
+            showNotification(i18n.review_published);
             loadResenas(productId);
         } else {
-            showNotification(data.message || 'Error al publicar reseña', true);
+            showNotification(data.message || i18n.review_error, true);
         }
     } catch (e) {
-        showNotification('Error de conexión', true);
+        showNotification(i18n.connection_error, true);
     }
 }
 </script>

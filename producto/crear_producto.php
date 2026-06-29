@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // /proyecto/producto/crear_producto.php
 // IMPORTADOR MANUAL - VERSIÓN RESPONSIVE
 
@@ -26,7 +26,7 @@ if (isset($_SESSION['user_id']) && isset($_SESSION['user_rol']) && $_SESSION['us
 }
 
 if (!$isAdmin) {
-    header('Location: /proyecto/login.html');
+    header('Location: ' . url('/login.html'));
     exit;
 }
 
@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($resultado['success']) {
                 $importados[] = $resultado;
                 $producto_nombre = htmlspecialchars($datos['nombre']);
-                $mensaje = "✅ Producto \"{$producto_nombre}\" importado correctamente. SKU: " . $resultado['sku'] . ". <a href='/proyecto/interfaz_usuario/pagina_modernizada.html' target='_blank' style='color:white;text-decoration:underline'>Ver en tienda</a>";
+                $mensaje = "✅ Producto \"{$producto_nombre}\" importado correctamente. SKU: " . $resultado['sku'] . ". <a href='" . url('/interfaz_usuario/pagina_modernizada.html') . "' target='_blank' style='color:white;text-decoration:underline'>Ver en tienda</a>";
                 $tipo_mensaje = "success";
             } else {
                 $mensaje = "❌ Error: " . $resultado['error'];
@@ -131,7 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         if (count($importados) > 0) {
-            $mensaje = "✅ Se importaron " . count($importados) . " productos correctamente. <a href='/proyecto/interfaz_usuario/pagina_modernizada.html' target='_blank' style='color:white;text-decoration:underline'>Ver en tienda</a>";
+            $mensaje = "✅ Se importaron " . count($importados) . " productos correctamente. <a href='" . url('/interfaz_usuario/pagina_modernizada.html') . "' target='_blank' style='color:white;text-decoration:underline'>Ver en tienda</a>";
             $tipo_mensaje = "success";
             if (count($errores) > 0) {
                 $mensaje .= " (❌ " . count($errores) . " errores)";
@@ -651,7 +651,7 @@ try {
                 <small><i class="fas fa-info-circle"></i> Los SKUs se generan automáticamente con formato <strong>PROD-XXXX</strong></small>
             </div>
             <div>
-                <a href="/proyecto/panel_admin/panel_admin.php" class="btn-volver">
+                <a href='<?= url('/panel_admin/panel_admin.php') ?>' class="btn-volver">
                     <i class="fas fa-arrow-left"></i> Volver
                 </a>
             </div>

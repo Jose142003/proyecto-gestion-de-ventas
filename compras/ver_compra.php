@@ -4,6 +4,11 @@ if (!isset($_SESSION['user_id'])) {
     header('Location: ../interfaz_usuario/login.html');
     exit;
 }
+require_once __DIR__ . '/../config/i18n.php';
+require_once __DIR__ . '/../config/i18n_helpers.php';
+$locale = $_GET['lang'] ?? $_COOKIE['lang'] ?? 'es';
+setcookie('lang', $locale, time()+31536000, '/');
+\I18n::load($locale);
 ?>
 <!DOCTYPE html>
 <html>
@@ -22,6 +27,36 @@ if (!isset($_SESSION['user_id'])) {
     <link rel="icon" type="image/png" sizes="192x192" href="/proyecto/img/pic.png">
     <link rel="icon" type="image/png" sizes="512x512" href="/proyecto/img/pic.png">
     <style>
+        :root {
+            --primary: #050C18;
+            --secondary: #294E90;
+            --accent: #3C91ED;
+            --light-accent: #e3f2fd;
+            --bg-color: #f0f2f5;
+            --text-color: #333;
+            --text-secondary: #666;
+            --card-bg: #ffffff;
+            --border: #ddd;
+            --border-light: #e9ecef;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --info: #3C91ED;
+            --shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        body.dark-mode {
+            --primary: #0a0e1a;
+            --secondary: #1a1f2e;
+            --accent: #3C91ED;
+            --light-accent: #1a1f2e;
+            --bg-color: #0f1219;
+            --text-color: #e4e6eb;
+            --text-secondary: #aaa;
+            --card-bg: #1e2436;
+            --border: #2c3348;
+            --border-light: #2c3348;
+            --shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
         * {
             margin: 0;
             padding: 0;
@@ -30,7 +65,8 @@ if (!isset($_SESSION['user_id'])) {
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: #f0f2f5;
+            background: var(--bg-color);
+            color: var(--text-color);
             padding: 16px;
         }
         
@@ -97,11 +133,11 @@ if (!isset($_SESSION['user_id'])) {
         
         /* Filtros */
         .filtros-card {
-            background: white;
+            background: var(--card-bg);
             border-radius: 12px;
             padding: 16px;
             margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            box-shadow: var(--shadow);
         }
         
         .filtros-grid {
@@ -119,15 +155,17 @@ if (!isset($_SESSION['user_id'])) {
         
         .filtro-group label {
             font-weight: 600;
-            color: #333;
+            color: var(--text-color);
             font-size: 0.8rem;
         }
         
         .filtro-group input, .filtro-group select {
             padding: 10px;
-            border: 1px solid #ddd;
+            border: 1px solid var(--border);
             border-radius: 8px;
             font-size: 0.85rem;
+            background: var(--card-bg);
+            color: var(--text-color);
             transition: all 0.3s;
         }
         
@@ -171,10 +209,10 @@ if (!isset($_SESSION['user_id'])) {
         
         /* Tabla */
         .table-container {
-            background: white;
+            background: var(--card-bg);
             border-radius: 12px;
             overflow-x: auto;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            box-shadow: var(--shadow);
             -webkit-overflow-scrolling: touch;
         }
         
@@ -185,19 +223,19 @@ if (!isset($_SESSION['user_id'])) {
         }
         
         th {
-            background: #f8f9fa;
+            background: var(--card-bg);
             padding: 12px;
             text-align: left;
             font-weight: 600;
-            color: #333;
-            border-bottom: 2px solid #e9ecef;
+            color: var(--text-color);
+            border-bottom: 2px solid var(--border-light);
             cursor: pointer;
             user-select: none;
             font-size: 0.8rem;
         }
         
         th:hover {
-            background: #e9ecef;
+            background: var(--border-light);
         }
         
         th i {
@@ -208,13 +246,13 @@ if (!isset($_SESSION['user_id'])) {
         
         td {
             padding: 10px 12px;
-            border-bottom: 1px solid #e9ecef;
-            color: #555;
+            border-bottom: 1px solid var(--border-light);
+            color: var(--text-secondary);
             font-size: 0.8rem;
         }
         
         tr:hover {
-            background: #f8f9fa;
+            background: var(--card-bg);
         }
         
         /* Estados */
@@ -284,7 +322,7 @@ if (!isset($_SESSION['user_id'])) {
         }
         
         .modal-content {
-            background: white;
+            background: var(--card-bg);
             border-radius: 16px;
             width: 100%;
             max-width: 900px;
@@ -343,7 +381,7 @@ if (!isset($_SESSION['user_id'])) {
             gap: 15px;
             margin-bottom: 20px;
             padding-bottom: 20px;
-            border-bottom: 1px solid #e9ecef;
+            border-bottom: 1px solid var(--border-light);
         }
         
         .detalle-item {
@@ -354,14 +392,14 @@ if (!isset($_SESSION['user_id'])) {
         
         .detalle-item label {
             font-weight: 600;
-            color: #666;
+            color: var(--text-secondary);
             font-size: 0.7rem;
             text-transform: uppercase;
         }
         
         .detalle-item span {
             font-size: 0.9rem;
-            color: #333;
+            color: var(--text-color);
             word-break: break-word;
         }
         
@@ -378,7 +416,7 @@ if (!isset($_SESSION['user_id'])) {
         }
         
         .tabla-detalle th {
-            background: #f8f9fa;
+            background: var(--card-bg);
             padding: 8px;
             font-size: 0.75rem;
         }
@@ -402,7 +440,7 @@ if (!isset($_SESSION['user_id'])) {
         
         .total-detalle strong {
             font-size: 1rem;
-            color: #050C18;
+            color: var(--primary);
         }
         
         /* Paginación */
@@ -417,8 +455,8 @@ if (!isset($_SESSION['user_id'])) {
         
         .pagination button {
             padding: 6px 12px;
-            border: 1px solid #ddd;
-            background: white;
+            border: 1px solid var(--border);
+            background: var(--card-bg);
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.3s;
@@ -446,7 +484,7 @@ if (!isset($_SESSION['user_id'])) {
         .loading {
             text-align: center;
             padding: 40px;
-            color: #666;
+            color: var(--text-secondary);
         }
         
         .loading i {
@@ -462,7 +500,7 @@ if (!isset($_SESSION['user_id'])) {
         .sin-datos {
             text-align: center;
             padding: 40px;
-            color: #999;
+            color: var(--text-secondary);
         }
         
         .sin-datos i {
@@ -564,6 +602,7 @@ if (!isset($_SESSION['user_id'])) {
             Órdenes de Compra
         </h1>
         <div class="header-buttons">
+            <button id="themeToggle" style="background:rgba(255,255,255,0.2); border:none; color:white; width:36px; height:36px; border-radius:50%; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center;"><i class="fas fa-moon"></i></button>
             <a href="nueva_compra.php" class="btn-nueva">
                 <i class="fas fa-plus"></i> Nueva Compra
             </a>
@@ -1028,6 +1067,27 @@ if (!isset($_SESSION['user_id'])) {
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#39;');
     }
+</script>
+<script>
+(function() {
+    const toggle = document.getElementById('themeToggle');
+    function applyDark(isDark) {
+        document.body.classList.toggle('dark-mode', isDark);
+        if (toggle) {
+            toggle.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        }
+    }
+    const saved = localStorage.getItem('darkMode');
+    if (saved === 'enabled') applyDark(true);
+    else if (saved === 'disabled') applyDark(false);
+    if (toggle) {
+        toggle.addEventListener('click', function() {
+            const isDark = !document.body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
+            applyDark(isDark);
+        });
+    }
+})();
 </script>
 </body>
 </html>

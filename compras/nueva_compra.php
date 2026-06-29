@@ -5,9 +5,14 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 require_once __DIR__ . '/../conexion/conexion.php';
+require_once __DIR__ . '/../config/i18n.php';
+require_once __DIR__ . '/../config/i18n_helpers.php';
+$locale = $_GET['lang'] ?? $_COOKIE['lang'] ?? 'es';
+setcookie('lang', $locale, time()+31536000, '/');
+\I18n::load($locale);
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="<?php echo htmlspecialchars($locale, ENT_QUOTES, 'UTF-8'); ?>">
 <head>
     <title>Nueva Compra - PIC</title>
     <meta charset="UTF-8">
@@ -24,6 +29,32 @@ require_once __DIR__ . '/../conexion/conexion.php';
     <link rel="icon" type="image/png" sizes="192x192" href="/proyecto/img/pic.png">
     <link rel="icon" type="image/png" sizes="512x512" href="/proyecto/img/pic.png">
     <style>
+        :root {
+            --primary: #050C18;
+            --secondary: #294E90;
+            --accent: #3C91ED;
+            --light: #7EBDE9;
+            --bg-color: #f0f2f5;
+            --text-color: #333;
+            --text-secondary: #666;
+            --card-bg: #ffffff;
+            --border: #dee2e6;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --info: #3C91ED;
+        }
+        body.dark-mode {
+            --primary: #0a0e1a;
+            --secondary: #1a1f2e;
+            --accent: #3C91ED;
+            --light: #5aa9e6;
+            --bg-color: #0f1219;
+            --text-color: #e4e6eb;
+            --text-secondary: #aaa;
+            --card-bg: #1e2436;
+            --border: #2c3348;
+        }
         * {
             margin: 0;
             padding: 0;
@@ -32,28 +63,29 @@ require_once __DIR__ . '/../conexion/conexion.php';
         
         body { 
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--bg-color);
             min-height: 100vh;
             padding: 16px;
+            color: var(--text-color);
         }
         
         .container { 
             max-width: 1200px; 
             margin: 0 auto; 
-            background: white; 
+            background: var(--card-bg); 
             border-radius: 20px; 
             padding: 20px; 
             box-shadow: 0 20px 60px rgba(0,0,0,0.2);
         }
         
         h1 { 
-            color: #050C18; 
+            color: var(--primary); 
             margin-bottom: 20px;
             font-size: 1.5rem;
             display: flex;
             align-items: center;
             gap: 12px;
-            border-bottom: 3px solid #3C91ED;
+            border-bottom: 3px solid var(--accent);
             padding-bottom: 12px;
             flex-wrap: wrap;
         }
@@ -66,25 +98,26 @@ require_once __DIR__ . '/../conexion/conexion.php';
             display: block; 
             margin-bottom: 8px; 
             font-weight: 600;
-            color: #495057;
+            color: var(--text-color);
             font-size: 0.9rem;
         }
         
         input, select, textarea { 
             width: 100%; 
             padding: 12px 15px; 
-            border: 2px solid #e0e0e0; 
+            border: 2px solid var(--border); 
             border-radius: 12px;
             font-size: 1rem;
             transition: all 0.3s ease;
             -webkit-appearance: none;
             appearance: none;
-            background: white;
+            background: var(--card-bg);
+            color: var(--text-color);
         }
         
         input:focus, select:focus, textarea:focus {
             outline: none;
-            border-color: #3C91ED;
+            border-color: var(--accent);
             box-shadow: 0 0 0 3px rgba(60, 145, 237, 0.1);
         }
         
@@ -134,7 +167,7 @@ require_once __DIR__ . '/../conexion/conexion.php';
             -webkit-overflow-scrolling: touch;
             margin: 20px 0;
             border-radius: 12px;
-            border: 1px solid #e9ecef;
+            border: 1px solid var(--border);
         }
         
         .table { 
@@ -144,7 +177,7 @@ require_once __DIR__ . '/../conexion/conexion.php';
         }
         
         .table th, .table td { 
-            border: 1px solid #dee2e6; 
+            border: 1px solid var(--border); 
             padding: 12px; 
             text-align: left; 
             vertical-align: middle;
@@ -171,12 +204,13 @@ require_once __DIR__ . '/../conexion/conexion.php';
             font-weight: bold; 
             margin-top: 20px;
             padding: 15px;
-            background: #f8f9fa;
+            background: var(--card-bg);
             border-radius: 12px;
+            border: 1px solid var(--border);
         }
         
         .total strong {
-            color: #3C91ED;
+            color: var(--accent);
             font-size: 1.1rem;
         }
         
@@ -247,8 +281,8 @@ require_once __DIR__ . '/../conexion/conexion.php';
             display: inline-block;
             width: 20px;
             height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #3C91ED;
+            border: 3px solid var(--border);
+            border-top: 3px solid var(--accent);
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
@@ -353,7 +387,7 @@ require_once __DIR__ . '/../conexion/conexion.php';
 </head>
 <body>
 <div class="container">
-    <h1><i class="fas fa-shopping-cart"></i> Nueva Orden de Compra</h1>
+    <h1><i class="fas fa-shopping-cart"></i> Nueva Orden de Compra<button id="themeToggle" style="margin-left:auto; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.3); color:white; width:36px; height:36px; border-radius:50%; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center;"><i class="fas fa-moon"></i></button></h1>
     
     <div id="errorMsg" class="error"></div>
     <div id="successMsg" class="success"></div>
@@ -404,7 +438,7 @@ require_once __DIR__ . '/../conexion/conexion.php';
                 </thead>
                 <tbody id="productosBody">
                     <tr>
-                        <td colspan="5" style="text-align: center; color: #6c757d;">
+                        <td colspan="5" style="text-align: center; color: var(--text-secondary);">
                             <i class="fas fa-info-circle"></i> No hay productos agregados
                         </td>
                     </tr>
@@ -641,7 +675,7 @@ require_once __DIR__ . '/../conexion/conexion.php';
         if (productos.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="5" style="text-align: center; color: #6c757d;">
+                    <td colspan="5" style="text-align: center; color: var(--text-secondary);">
                         <i class="fas fa-info-circle"></i> No hay productos agregados
                     </td>
                 </tr>
@@ -657,12 +691,12 @@ require_once __DIR__ . '/../conexion/conexion.php';
                     <td>
                         <input type="number" value="${p.cantidad}" min="1" 
                                onchange="actualizarCantidad(${index}, this.value)" 
-                               style="width:70px; padding:6px; border-radius:8px; border:1px solid #ddd; text-align:center; font-size:0.85rem;">
+                               style="width:70px; padding:6px; border-radius:8px; border:1px solid var(--border); text-align:center; font-size:0.85rem;">
                     </td>
                     <td>
                         <input type="number" step="0.01" value="${p.precio_unitario.toFixed(2)}" 
                                onchange="actualizarPrecio(${index}, this.value)" 
-                               style="width:100px; padding:6px; border-radius:8px; border:1px solid #ddd; text-align:right; font-size:0.85rem;">
+                               style="width:100px; padding:6px; border-radius:8px; border:1px solid var(--border); text-align:right; font-size:0.85rem;">
                     </td>
                     <td style="text-align:right; font-weight:bold;">${p.subtotal.toFixed(2)} Bs</td>
                     <td>
@@ -801,6 +835,27 @@ require_once __DIR__ . '/../conexion/conexion.php';
     // Inicializar
     cargarProveedores();
     cargarProductos();
+</script>
+<script>
+(function() {
+    const toggle = document.getElementById('themeToggle');
+    function applyDark(isDark) {
+        document.body.classList.toggle('dark-mode', isDark);
+        if (toggle) {
+            toggle.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        }
+    }
+    const saved = localStorage.getItem('darkMode');
+    if (saved === 'enabled') applyDark(true);
+    else if (saved === 'disabled') applyDark(false);
+    if (toggle) {
+        toggle.addEventListener('click', function() {
+            const isDark = !document.body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
+            applyDark(isDark);
+        });
+    }
+})();
 </script>
 </body>
 </html>

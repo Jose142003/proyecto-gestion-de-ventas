@@ -1,7 +1,8 @@
 <?php
 // actualizar_stock.php
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: http://localhost');
+$allowedOrigin = defined('CORS_ORIGIN') ? CORS_ORIGIN : 'http://localhost';
+header("Access-Control-Allow-Origin: $allowedOrigin");
 header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
@@ -40,7 +41,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     $producto_id = intval($input['producto_id']);
-    $cantidad = intval($input['cantidad']);
+    $cantidad = abs(intval($input['cantidad'] ?? 0));
+    if ($cantidad <= 0) { errorResponse('Cantidad debe ser mayor a 0'); }
     $usuario_id = isset($input['usuario_id']) ? intval($input['usuario_id']) : null;
     
     $pdo->beginTransaction();

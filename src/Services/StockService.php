@@ -15,46 +15,60 @@ class StockService
 
     public function reduceStock(int $productId, int $quantity): bool
     {
-        $check = $this->pdo->prepare("SELECT id, stock FROM products WHERE id = ?");
-        $check->execute([$productId]);
-        $product = $check->fetch(PDO::FETCH_ASSOC);
-        if (!$product) {
-            throw new \RuntimeException("Producto ID $productId no existe");
+        $inTransaction = $this->pdo->inTransaction();
+        if (!$inTransaction) {
+            $this->pdo->beginTransaction();
         }
-        if ($product['stock'] < $quantity) {
-            throw new \RuntimeException("Stock insuficiente para el producto ID: $productId (disponible: {$product['stock']}, solicitado: $quantity)");
-        }
-        $stockAnterior = (int)$product['stock'];
-        $this->pdo->beginTransaction();
         try {
+            $check = $this->pdo->prepare("SELECT id, stock FROM products WHERE id = ? FOR UPDATE");
+            $check->execute([$productId]);
+            $product = $check->fetch(PDO::FETCH_ASSOC);
+            if (!$product) {
+                throw new \RuntimeException("Producto ID $productId no existe");
+            }
+            if ($product['stock'] < $quantity) {
+                throw new \RuntimeException("Stock insuficiente para el producto ID: $productId (disponible: {$product['stock']}, solicitado: $quantity)");
+            }
+            $stockAnterior = (int)$product['stock'];
             $stmt = $this->pdo->prepare("UPDATE products SET stock = stock - ? WHERE id = ?");
             $stmt->execute([$quantity, $productId]);
             $this->logMovement($productId, $quantity, 'venta', $stockAnterior, $stockAnterior - $quantity);
-            $this->pdo->commit();
+            if (!$inTransaction) {
+                $this->pdo->commit();
+            }
             return true;
         } catch (\Exception $e) {
-            $this->pdo->rollBack();
+            if (!$inTransaction) {
+                $this->pdo->rollBack();
+            }
             throw $e;
         }
     }
 
     public function increaseStock(int $productId, int $quantity): void
     {
-        $check = $this->pdo->prepare("SELECT stock FROM products WHERE id = ?");
-        $check->execute([$productId]);
-        $product = $check->fetch(PDO::FETCH_ASSOC);
-        if (!$product) {
-            throw new \RuntimeException("Producto ID $productId no existe");
+        $inTransaction = $this->pdo->inTransaction();
+        if (!$inTransaction) {
+            $this->pdo->beginTransaction();
         }
-        $stockAnterior = (int)$product['stock'];
-        $this->pdo->beginTransaction();
         try {
+            $check = $this->pdo->prepare("SELECT stock FROM products WHERE id = ? FOR UPDATE");
+            $check->execute([$productId]);
+            $product = $check->fetch(PDO::FETCH_ASSOC);
+            if (!$product) {
+                throw new \RuntimeException("Producto ID $productId no existe");
+            }
+            $stockAnterior = (int)$product['stock'];
             $stmt = $this->pdo->prepare("UPDATE products SET stock = stock + ? WHERE id = ?");
             $stmt->execute([$quantity, $productId]);
             $this->logMovement($productId, $quantity, 'compra', $stockAnterior, $stockAnterior + $quantity);
-            $this->pdo->commit();
+            if (!$inTransaction) {
+                $this->pdo->commit();
+            }
         } catch (\Exception $e) {
-            $this->pdo->rollBack();
+            if (!$inTransaction) {
+                $this->pdo->rollBack();
+            }
             throw $e;
         }
     }

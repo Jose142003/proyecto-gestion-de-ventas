@@ -2,6 +2,7 @@
 session_start();
 
 require_once __DIR__ . '/../conexion/conexion.php';
+requerirAdmin();
 
 try {
     $pdo = conectarDB();
@@ -104,7 +105,7 @@ function exportarExcel($facturas) {
 function exportarPDF($facturas) {
     // Para PDF necesitarías una librería como TCPDF o FPDF
     // Aquí un ejemplo básico que crea HTML que se puede guardar como PDF
-    header('Content-Type: application/pdf');
+    header('Content-Type: text/html; charset=utf-8');
     header('Content-Disposition: attachment; filename="facturas_' . date('Y-m-d') . '.html"');
     
     $html = '

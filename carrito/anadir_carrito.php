@@ -20,11 +20,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Depuración: registrar lo que se recibe
     error_log("Datos recibidos: " . print_r($input, true));
     
-    $user_id = $input['user_id'] ?? 0;
+    $user_id = $_SESSION['user_id'] ?? 0;
     $product_id = $input['product_id'] ?? 0;
+    $variant_id = isset($input['variant_id']) ? intval($input['variant_id']) : 0;
     $quantity = $input['quantity'] ?? 1;
+    $quantity = max(1, intval($quantity));
     
-    error_log("user_id: $user_id, product_id: $product_id, quantity: $quantity");
+    error_log("user_id: $user_id, product_id: $product_id, variant_id: $variant_id, quantity: $quantity");
     
     if ($user_id == 0 || $product_id == 0) {
         http_response_code(400);
@@ -54,7 +56,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
         }
         
-        // Verificar que el producto existe y tiene stock
+        // Verificar que el producto existe
         $check_product = "SELECT id, name, price, stock FROM products WHERE id = :product_id";
         $stmt_check = $db->prepare($check_product);
         $stmt_check->bindParam(":product_id", $product_id);
@@ -68,21 +70,45 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
         }
         
+        $precio_final = (float)$product['price'];
+        $stock_disponible = (int)$product['stock'];
+        
+        // Si tiene variante, verificar y usar su precio/stock
+        if ($variant_id > 0) {
+            $vStmt = $db->prepare("SELECT id, precio_adicional, stock, activo FROM producto_variantes WHERE id = ? AND producto_id = ?");
+            $vStmt->execute([$variant_id, $product_id]);
+            $variante = $vStmt->fetch(PDO::FETCH_ASSOC);
+            if (!$variante || !$variante['activo']) {
+                http_response_code(404);
+                echo json_encode(["success" => false, "message" => "Variante no encontrada"]);
+                exit;
+            }
+            $precio_final += (float)$variante['precio_adicional'];
+            $stock_disponible = (int)$variante['stock'];
+        }
+        
         // Verificar stock disponible
-        if ($product['stock'] < $quantity) {
+        if ($stock_disponible < $quantity) {
             http_response_code(400);
             echo json_encode([
                 "success" => false, 
-                "message" => "Stock insuficiente. Solo quedan {$product['stock']} unidades"
+                "message" => "Stock insuficiente. Solo quedan {$stock_disponible} unidades"
             ]);
             exit;
         }
         
-        // Verificar si el producto ya está en el carrito
-        $check_cart = "SELECT id, quantity FROM cart_items WHERE user_id = :user_id AND product_id = :product_id";
+        // Verificar si el producto ya está en el carrito (misma variante)
+        if ($variant_id > 0) {
+            $check_cart = "SELECT id, quantity FROM cart_items WHERE user_id = :user_id AND product_id = :product_id AND variant_id = :variant_id";
+        } else {
+            $check_cart = "SELECT id, quantity FROM cart_items WHERE user_id = :user_id AND product_id = :product_id AND variant_id IS NULL";
+        }
         $stmt_cart = $db->prepare($check_cart);
         $stmt_cart->bindParam(":user_id", $user_id);
         $stmt_cart->bindParam(":product_id", $product_id);
+        if ($variant_id > 0) {
+            $stmt_cart->bindParam(":variant_id", $variant_id);
+        }
         $stmt_cart->execute();
         
         $existing_item = $stmt_cart->fetch(PDO::FETCH_ASSOC);
@@ -90,11 +116,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($existing_item) {
             // Verificar que no exceda el stock al actualizar
             $new_quantity = $existing_item['quantity'] + $quantity;
-            if ($new_quantity > $product['stock']) {
+            if ($new_quantity > $stock_disponible) {
                 http_response_code(400);
                 echo json_encode([
                     "success" => false, 
-                    "message" => "No hay suficiente stock. Máximo disponible: {$product['stock']} unidades"
+                    "message" => "No hay suficiente stock. Máximo disponible: {$stock_disponible} unidades"
                 ]);
                 exit;
             }
@@ -115,10 +141,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
         } else {
             // Insertar nuevo item
-            $insert_query = "INSERT INTO cart_items (user_id, product_id, quantity) VALUES (:user_id, :product_id, :quantity)";
+            $insert_query = "INSERT INTO cart_items (user_id, product_id, variant_id, quantity) VALUES (:user_id, :product_id, :variant_id, :quantity)";
             $stmt_insert = $db->prepare($insert_query);
             $stmt_insert->bindParam(":user_id", $user_id);
             $stmt_insert->bindParam(":product_id", $product_id);
+            $variant_id_val = $variant_id > 0 ? $variant_id : null;
+            $stmt_insert->bindParam(":variant_id", $variant_id_val, PDO::PARAM_INT);
             $stmt_insert->bindParam(":quantity", $quantity);
             
             if ($stmt_insert->execute()) {
@@ -145,7 +173,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             "product" => [
                 "id" => $product['id'],
                 "name" => $product['name'],
-                "price" => $product['price']
+                "price" => $precio_final
             ],
             "cart_count" => $count_result['count']
         ]);

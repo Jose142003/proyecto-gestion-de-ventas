@@ -1,46 +1,22 @@
 <?php
 // procesar_factura.php - Procesar acciones de facturas (marcar pagada, anular, crear, etc.)
-session_start();
 header('Content-Type: application/json');
 
 require_once __DIR__ . '/../conexion/conexion.php';
+iniciarSesion();
 verificarCSRF();
 
 try {
     $pdo = conectarDB();
     $pdo->exec("SET time_zone = '-04:00'");
-
-// Asegurar que la tabla auditoria_logs existe (fuera de transacciones)
-$pdo->exec("
-    CREATE TABLE IF NOT EXISTS auditoria_logs (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        usuario_id INT NULL,
-        usuario_nombre VARCHAR(100) NULL,
-        usuario_rol VARCHAR(50) NULL,
-        accion VARCHAR(100) NOT NULL,
-        modulo VARCHAR(50) NOT NULL,
-        descripcion TEXT NULL,
-        ip_address VARCHAR(45) NULL,
-        tabla_afectada VARCHAR(100) NULL,
-        registro_id INT NULL,
-        fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
-        edit_count INT NOT NULL DEFAULT 0,
-        edit_history TEXT NULL,
-        last_edit_by INT NULL,
-        last_edit_at DATETIME NULL
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-");
 } catch (PDOException $e) {
+    error_log("Error en procesar_factura.php (conexión): " . $e->getMessage());
     echo json_encode(['success' => false, 'message' => 'Error interno del servidor']);
     exit;
 }
 
-// Verificar permisos (solo admin o superadmin pueden procesar facturas)
-$es_admin = isset($_SESSION['user_rol']) && ($_SESSION['user_rol'] === 'admin' || $_SESSION['user_rol'] === 'superadmin');
-if (!$es_admin) {
-    echo json_encode(['success' => false, 'message' => 'No tienes permisos para realizar esta acción']);
-    exit;
-}
+// Verificar permisos (solo admin pueden procesar facturas)
+requerirAdmin();
 
 // Obtener datos del POST
 $input = file_get_contents('php://input');

@@ -64,17 +64,43 @@ try {
     $stmt->execute();
     $productos = $stmt->fetchAll();
     
+    // Función helper para normalizar URLs de imágenes
+    $normalizarImagen = function($url) {
+        if (empty($url)) {
+            return '';
+        }
+        // Si ya es una URL absoluta (http, https, data, o empieza con /)
+        if (strpos($url, 'http://') === 0 || strpos($url, 'https://') === 0
+            || strpos($url, 'data:') === 0 || strpos($url, '/') === 0) {
+            return $url;
+        }
+        // Es una ruta relativa sin / inicial
+        return url('/' . ltrim($url, './'));
+    };
+
+    // Obtener productos con variantes
+    $ids = array_column($productos, 'id');
+    $productosConVariantes = [];
+    if (!empty($ids)) {
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $vStmt = $pdo->prepare("SELECT DISTINCT producto_id FROM producto_variantes WHERE producto_id IN ($placeholders) AND activo = 1");
+        $vStmt->execute($ids);
+        $productosConVariantes = array_column($vStmt->fetchAll(), 'producto_id');
+        $productosConVariantes = array_map('intval', $productosConVariantes);
+    }
+
     // Normalizar nombres de campos para consistencia con pagina_modernizada
     $productos_normalizados = [];
     foreach ($productos as $producto) {
+        $pid = (int)$producto['id'];
         $productos_normalizados[] = [
-            'id' => (int)$producto['id'],
+            'id' => $pid,
             'sku' => $producto['sku'] ?? '',
             'name' => $producto['name'],
             'nombre' => $producto['name'],  // Alias
             'price' => (float)$producto['price'],
             'precio' => (float)$producto['price'],  // Alias
-            'image' => !empty($producto['image_url']) ? $producto['image_url'] : 'https://via.placeholder.com/300x300?text=Sin+Imagen',
+            'image' => $normalizarImagen($producto['image_url'] ?? ''),
             'image_url' => $producto['image_url'],
             'description' => $producto['description'] ?? '',
             'category' => $producto['category'] ?? 'General',
@@ -82,7 +108,8 @@ try {
             'rating' => (float)($producto['rating'] ?? 0),
             'stock' => (int)($producto['stock'] ?? 0),
             'active' => (int)$producto['active'],
-            'activo' => (int)$producto['active']  // Alias
+            'activo' => (int)$producto['active'],  // Alias
+            'has_variants' => in_array($pid, $productosConVariantes)
         ];
     }
     

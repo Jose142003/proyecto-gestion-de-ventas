@@ -3,6 +3,12 @@ session_start();
 header('Content-Type: text/html; charset=utf-8');
 
 require_once __DIR__ . '/../conexion/conexion.php';
+requerirAdmin();
+require_once __DIR__ . '/../config/i18n.php';
+require_once __DIR__ . '/../config/i18n_helpers.php';
+$locale = $_GET['lang'] ?? $_COOKIE['lang'] ?? 'es';
+setcookie('lang', $locale, time() + 86400 * 30, '/');
+\I18n::load($locale);
 
 try {
     $pdo = conectarDB();
@@ -217,6 +223,34 @@ $pedidos = $stmtPedidos->fetchAll(PDO::FETCH_ASSOC);
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
             .data-table { font-size: 0.8rem; }
         }
+    
+        :root {
+            --primary-color: #050C18;
+            --secondary-color: #294E90;
+            --accent-color: #3C91ED;
+            --bg-color: #f0f2f5;
+            --card-bg: #fff;
+            --text-color: #333;
+            --text-secondary: #555;
+            --text-muted: #666;
+            --border-color: #ddd;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --error-color: #dc3545;
+        }
+        body.dark-mode {
+            --primary-color: #0a0e1a;
+            --secondary-color: #1a1f2e;
+            --accent-color: #5aa9e6;
+            --bg-color: #0f1219;
+            --card-bg: #1e2436;
+            --text-color: #e4e6eb;
+            --text-secondary: #b0b3b8;
+            --text-muted: #999;
+            --border-color: #2c3348;
+        }
+        body.dark-mode { background: var(--bg-color); color: var(--text-color); }
+
     </style>
 </head>
 <body>
@@ -325,7 +359,16 @@ $pedidos = $stmtPedidos->fetchAll(PDO::FETCH_ASSOC);
     </div>
 </div>
 
-<script>
+
+        <script>
+        (function() {
+            var saved = localStorage.getItem('darkMode');
+            if (saved === 'enabled') {
+                document.body.classList.add('dark-mode');
+            }
+        })();
+        </script>
+    <script>
 function verPedido(pedidoId) {
     window.open(`/proyecto/proceso_compra/ver_pedido.php?id=${pedidoId}`, '_blank');
 }

@@ -2,10 +2,7 @@
 session_start();
 header('Content-Type: application/json');
 require_once __DIR__ . '/../conexion/conexion.php';
-
-if (!isset($_SESSION['user_id'])) {
-    jsonResponse(['success' => false, 'message' => 'No autorizado'], 401);
-}
+requerirAdmin();
 
 try {
     $pdo = conectarDB();
@@ -58,7 +55,7 @@ try {
     jsonResponse(['success' => true, 'message' => 'Envío creado correctamente', 'envio' => $envio]);
 
 } catch (PDOException $e) {
-    if ($pdo->inTransaction()) $pdo->rollBack();
+    if (isset($pdo) && $pdo->inTransaction()) $pdo->rollBack();
     error_log("Error en crear_envio: " . $e->getMessage());
     errorResponse('Error interno del servidor', 500);
 }

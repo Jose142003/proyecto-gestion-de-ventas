@@ -23,5 +23,5 @@ setcookie(session_name(), '', time() - 42000, $cookie_path, $cookie_domain, $coo
 $is_https = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on';
 setcookie('persist_token', '', time() - 42000, '/', '', $is_https, true);
 
-header('Location: /proyecto/interfaz_usuario/login.html');
+header('Location: ' . url('/interfaz_usuario/login.html'));
 exit;

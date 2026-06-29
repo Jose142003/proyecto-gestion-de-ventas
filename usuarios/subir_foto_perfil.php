@@ -27,13 +27,17 @@ try {
     $tabla_origen = $_SESSION['tabla_origen'] ?? null;
     $user_rol = $_SESSION['user_rol'] ?? $_SESSION['rol'] ?? 'usuario';
 
-    // Determinar qué tabla usar
+    // Determinar qué tabla usar (whitelist para evitar inyección SQL)
+    $tablasValidas = ['users', 'admin_users'];
     $tabla = 'users';
     $campo_foto = 'foto_perfil';
     
-    // Si es admin o viene de admin_users, usar admin_users
     if ($es_admin || $tabla_origen === 'admin_users') {
         $tabla = 'admin_users';
+    }
+    if (!in_array($tabla, $tablasValidas)) {
+        echo json_encode(['success' => false, 'message' => 'Error interno']);
+        exit;
     }
 
     // Verificar que se haya subido un archivo

@@ -1,21 +1,27 @@
 <?php
 session_start();
 require_once __DIR__ . '/../conexion/conexion.php';
+require_once __DIR__ . '/../config/i18n.php';
+require_once __DIR__ . '/../config/i18n_helpers.php';
 requerirAdmin();
 $usuarioNombre = $_SESSION['user_nombre'] ?? 'Admin';
+$locale = $_GET['lang'] ?? $_COOKIE['lang'] ?? 'es';
+$localesValidos = ['es', 'en'];
+if (!in_array($locale, $localesValidos)) $locale = 'es';
+\I18n::load($locale);
 ?>
 <!DOCTYPE html>
-<html lang="es">
+<html lang="<?php echo htmlspecialchars($locale); ?>">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Asistente Técnico - PIC Industrial</title>
+<title><?php echo __('tech_assistant'); ?> - PIC Industrial</title>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 <style>
-:root { --primary: #050C18; --secondary: #294E90; --accent: #3C91ED; --bg: #f0f2f5; }
+:root { --primary: #050C18; --secondary: #294E90; --accent: #3C91ED; --bg: #f0f2f5; --card-bg: #fff; --text-color: #333; --text-secondary: #555; --text-muted: #666; --border: #ddd; }
+body.dark-mode { --primary: #0a0e1a; --secondary: #1a1f2e; --accent: #5aa9e6; --bg: #0f1219; --card-bg: #1e2436; --text-color: #e4e6eb; --text-secondary: #aaa; --text-muted: #999; --border: #2c3348; }
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
-body { background: var(--bg); min-height: 100vh; display: flex; }
+body { background: var(--bg); min-height: 100vh; display: flex; color: var(--text-color); }
 .sidebar { width: 250px; background: var(--primary); color: white; padding: 20px 0; height: 100vh; position: fixed; overflow-y: auto; }
 .sidebar h2 { text-align: center; padding: 0 15px 20px; font-size: 16px; border-bottom: 1px solid rgba(255,255,255,.1); margin-bottom: 10px; }
 .sidebar h2 span { font-size: 11px; opacity: .7; display: block; }
@@ -26,13 +32,15 @@ body { background: var(--bg); min-height: 100vh; display: flex; }
 .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 .header h1 { font-size: 22px; color: var(--primary); }
 .header .badge { background: var(--accent); color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; }
+.toggle-theme-btn { background: var(--accent); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 16px; transition: .3s; }
+.toggle-theme-btn:hover { transform: scale(1.1); }
 .calculator-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.card { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,.08); margin-bottom: 20px; }
+.card { background: var(--card-bg); border-radius: 10px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,.08); margin-bottom: 20px; }
 .card h3 { font-size: 16px; color: var(--primary); margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
 .card h3 i { color: var(--accent); }
 .form-group { margin-bottom: 12px; }
-.form-group label { display: block; font-size: 13px; color: #555; margin-bottom: 4px; font-weight: 600; }
-.form-group input, .form-group select { width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; outline: none; }
+.form-group label { display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 4px; font-weight: 600; }
+.form-group input, .form-group select { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; outline: none; background: var(--card-bg); color: var(--text-color); }
 .form-group input:focus, .form-group select:focus { border-color: var(--accent); }
 .btn { padding: 8px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; transition: .3s; }
 .btn-primary { background: var(--accent); color: white; }
@@ -41,63 +49,66 @@ body { background: var(--bg); min-height: 100vh; display: flex; }
 .btn-success { background: #28a745; color: white; }
 .btn-sm { padding: 5px 12px; font-size: 12px; }
 .result-box { background: #f8f9ff; border: 1px solid #e0e5ff; border-radius: 8px; padding: 15px; margin-top: 15px; display: none; }
+body.dark-mode .result-box { background: #252b3d; border-color: #2c3348; }
 .result-box.show { display: block; }
-.result-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+.result-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); }
 .result-item:last-child { border: none; }
-.result-item .label { color: #666; font-size: 13px; }
+.result-item .label { color: var(--text-muted); font-size: 13px; }
 .result-item .value { font-weight: 700; color: var(--primary); font-size: 14px; }
 .result-item .value.highlight { color: var(--accent); font-size: 16px; }
 .product-suggest { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-top: 10px; }
-.product-item { background: #f8f9fa; border-radius: 6px; padding: 10px; text-align: center; }
+.product-item { background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px; padding: 10px; text-align: center; }
 .product-item .name { font-size: 12px; color: var(--primary); margin-bottom: 4px; }
 .product-item .price { font-size: 14px; font-weight: 700; color: var(--accent); }
-.product-item .stock { font-size: 11px; color: #999; }
-.tabs { display: flex; gap: 2px; margin-bottom: 20px; background: white; border-radius: 10px; padding: 4px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
-.tab { padding: 10px 20px; cursor: pointer; border-radius: 8px; font-size: 13px; font-weight: 600; color: #666; transition: .3s; border: none; background: none; }
-.tab:hover { background: #f0f2f5; }
+.product-item .stock { font-size: 11px; color: var(--text-muted); }
+.tabs { display: flex; gap: 2px; margin-bottom: 20px; background: var(--card-bg); border-radius: 10px; padding: 4px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+.tab { padding: 10px 20px; cursor: pointer; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--text-muted); transition: .3s; border: none; background: none; }
+.tab:hover { background: rgba(0,0,0,.05); }
+body.dark-mode .tab:hover { background: rgba(255,255,255,.05); }
 .tab.active { background: var(--accent); color: white; }
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 .compat-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .compat-table th { background: var(--primary); color: white; padding: 8px 12px; text-align: left; }
-.compat-table td { padding: 8px 12px; border-bottom: 1px solid #eee; }
-.compat-table tr:hover { background: #f8f9ff; }
+.compat-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
+.compat-table tr:hover { background: rgba(60,145,237,.05); }
 .badge-comp { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; }
 .badge-directo { background: #d4edda; color: #155724; }
 .badge-adaptador { background: #fff3cd; color: #856404; }
 .badge-funcional { background: #cce5ff; color: #004085; }
 .component-list { list-style: none; }
-.component-list li { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #f8f9fa; margin-bottom: 4px; border-radius: 4px; font-size: 13px; }
+.component-list li { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--card-bg); border: 1px solid var(--border); margin-bottom: 4px; border-radius: 4px; font-size: 13px; }
 .component-list li .remove { color: #dc3545; cursor: pointer; }
 .config-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
-.config-card { background: #f8f9fa; border-radius: 8px; padding: 15px; border-left: 3px solid var(--accent); }
+.config-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 15px; border-left: 3px solid var(--accent); }
 .config-card h4 { font-size: 14px; color: var(--primary); margin-bottom: 5px; }
-.config-card .meta { font-size: 11px; color: #999; }
+.config-card .meta { font-size: 11px; color: var(--text-muted); }
 .config-card .total { font-size: 16px; font-weight: 700; color: var(--accent); margin-top: 5px; }
 .search-box { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-.search-box input, .search-box select { padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
+.search-box input, .search-box select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; background: var(--card-bg); color: var(--text-color); }
 .search-box input { flex: 1; min-width: 200px; }
 @media (max-width: 768px) { .sidebar { display: none; } .main { margin-left: 0; } .calculator-container { grid-template-columns: 1fr; } .tabs { overflow-x:auto;white-space:nowrap } }
 @media print { .sidebar, .tabs, .header .badge, .btn, .logout { display:none!important } .main { margin:0!important;padding:10px!important } .card { break-inside:avoid;box-shadow:none!important;border:1px solid #ddd } }
-.loading { text-align: center; padding: 20px; color: #999; }
+.loading { text-align: center; padding: 20px; color: var(--text-muted); }
 .loading i { font-size: 24px; margin-bottom: 10px; }
 @keyframes slideIn { from { transform:translateX(100px);opacity:0 } to { transform:translateX(0);opacity:1 } }
 .maintenance-alert { background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
 .maintenance-alert.vencida { background: #f8d7da; border-color: #dc3545; }
 .maintenance-alert .info { font-size: 13px; }
 .maintenance-alert .info strong { display: block; }
-.maintenance-alert .date { font-size: 12px; color: #666; }
+.maintenance-alert .date { font-size: 12px; color: var(--text-muted); }
 </style>
 </head>
 <body>
 
 <div class="sidebar">
-    <h2>Asistente Técnico <span>PIC Industrial</span></h2>
-    <a href="/proyecto/panel_admin/panel_admin.php"><i class="fas fa-arrow-left"></i> Volver al Panel</a>
-    <a href="#" class="active" onclick="showTab('calculadora')"><i class="fas fa-calculator"></i> Calculadora</a>
-    <a href="#" onclick="showTab('compatibilidad')"><i class="fas fa-random"></i> Compatibilidad</a>
-    <a href="#" onclick="showTab('configurador')"><i class="fas fa-microchip"></i> Configurador</a>
-    <a href="#" onclick="showTab('mantenimiento')"><i class="fas fa-tools"></i> Mantenimiento</a>
+    <h2><?php echo __('tech_assistant'); ?> <span>PIC Industrial</span></h2>
+    <a href='<?= url('/panel_admin/panel_admin.php') ?>'><i class="fas fa-arrow-left"></i> <?php echo __('back_to_panel'); ?></a>
+    <a href="#" onclick="showTab('resumen')"><i class="fas fa-th-large"></i> <?php echo __('summary'); ?></a>
+    <a href="#" class="active" onclick="showTab('calculadora')"><i class="fas fa-calculator"></i> <?php echo __('calculator'); ?></a>
+    <a href="#" onclick="showTab('compatibilidad')"><i class="fas fa-random"></i> <?php echo __('compatibility'); ?></a>
+    <a href="#" onclick="showTab('configurador')"><i class="fas fa-microchip"></i> <?php echo __('configurator'); ?></a>
+    <a href="#" onclick="showTab('mantenimiento')"><i class="fas fa-tools"></i> <?php echo __('maintenance'); ?></a>
     <a href="https://www.instagram.com/piccavzla" target="_blank" style="margin-top:auto;border-top:1px solid rgba(255,255,255,.1);">
         <i class="fab fa-instagram"></i> @piccavzla
     </a>
@@ -106,17 +117,18 @@ body { background: var(--bg); min-height: 100vh; display: flex; }
 <div class="main">
     <div class="header">
         <div>
-            <h1><i class="fas fa-robot"></i> Asistente Técnico Inteligente</h1>
-            <small style="color:#999">Calculadora eléctrica · Compatibilidad · Configurador · Mantenimiento</small>
+            <h1><i class="fas fa-robot"></i> <?php echo __('intelligent_tech_assistant'); ?></h1>
+            <small style="color:var(--text-muted)"><?php echo __('calculator'); ?> · <?php echo __('compatibility'); ?> · <?php echo __('configurator'); ?> · <?php echo __('maintenance'); ?></small>
         </div>
+        <button class="toggle-theme-btn" id="themeToggle"><i class="fas fa-moon"></i></button>
     </div>
 
     <div class="tabs">
-        <button class="tab active" onclick="showTab('resumen')"><i class="fas fa-th-large"></i> Resumen</button>
-        <button class="tab" onclick="showTab('calculadora')"><i class="fas fa-calculator"></i> Calculadora</button>
-        <button class="tab" onclick="showTab('compatibilidad')"><i class="fas fa-random"></i> Compatibilidad</button>
-        <button class="tab" onclick="showTab('configurador')"><i class="fas fa-microchip"></i> Configurador</button>
-        <button class="tab" onclick="showTab('mantenimiento')"><i class="fas fa-tools"></i> Mantenimiento</button>
+        <button class="tab" onclick="showTab('resumen')"><i class="fas fa-th-large"></i> <?php echo __('summary'); ?></button>
+        <button class="tab active" onclick="showTab('calculadora')"><i class="fas fa-calculator"></i> <?php echo __('calculator'); ?></button>
+        <button class="tab" onclick="showTab('compatibilidad')"><i class="fas fa-random"></i> <?php echo __('compatibility'); ?></button>
+        <button class="tab" onclick="showTab('configurador')"><i class="fas fa-microchip"></i> <?php echo __('configurator'); ?></button>
+        <button class="tab" onclick="showTab('mantenimiento')"><i class="fas fa-tools"></i> <?php echo __('maintenance'); ?></button>
     </div>
 
     <div id="tab-resumen" class="tab-content">
@@ -124,28 +136,28 @@ body { background: var(--bg); min-height: 100vh; display: flex; }
             <div class="card" style="text-align:center;padding:25px">
                 <div style="font-size:32px;color:var(--accent);margin-bottom:8px"><i class="fas fa-calculator"></i></div>
                 <div style="font-size:28px;font-weight:700;color:var(--primary)" id="resumenCalculos">0</div>
-                <div style="font-size:13px;color:#999">Tipos de cálculo</div>
+                <div style="font-size:13px;color:var(--text-muted)"><?php echo __('calculation_types'); ?></div>
             </div>
             <div class="card" style="text-align:center;padding:25px">
                 <div style="font-size:32px;color:#28a745;margin-bottom:8px"><i class="fas fa-random"></i></div>
                 <div style="font-size:28px;font-weight:700;color:var(--primary)" id="resumenCompat">0</div>
-                <div style="font-size:13px;color:#999">Compatibilidades</div>
+                <div style="font-size:13px;color:var(--text-muted)"><?php echo __('compatibilities'); ?></div>
             </div>
             <div class="card" style="text-align:center;padding:25px">
                 <div style="font-size:32px;color:#fd7e14;margin-bottom:8px"><i class="fas fa-microchip"></i></div>
                 <div style="font-size:28px;font-weight:700;color:var(--primary)" id="resumenConfigs">0</div>
-                <div style="font-size:13px;color:#999">Configuraciones</div>
+                <div style="font-size:13px;color:var(--text-muted)"><?php echo __('configurations'); ?></div>
             </div>
             <div class="card" style="text-align:center;padding:25px">
                 <div style="font-size:32px;color:#dc3545;margin-bottom:8px"><i class="fas fa-tools"></i></div>
                 <div style="font-size:28px;font-weight:700;color:var(--primary)" id="resumenMant">0</div>
-                <div style="font-size:13px;color:#999">Alertas activas</div>
+                <div style="font-size:13px;color:var(--text-muted)"><?php echo __('active_alerts'); ?></div>
             </div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
             <div class="card">
-                <h3><i class="fas fa-cubes"></i> Tipos de Cálculo Disponibles</h3>
-                <div id="listaTiposCalculo" style="font-size:13px;color:#666;line-height:2">
+                <h3><i class="fas fa-cubes"></i> <?php echo __('available_calculation_types'); ?></h3>
+                <div id="listaTiposCalculo" style="font-size:13px;color:var(--text-muted);line-height:2">
                     <div><i class="fas fa-bolt" style="color:var(--accent);width:20px"></i> Motor Trifásico</div>
                     <div><i class="fas fa-bolt" style="color:#28a745;width:20px"></i> Motor Monofásico</div>
                     <div><i class="fas fa-lightbulb" style="color:#fd7e14;width:20px"></i> Carga Resistiva</div>
@@ -153,12 +165,12 @@ body { background: var(--bg); min-height: 100vh; display: flex; }
                 </div>
             </div>
             <div class="card">
-                <h3><i class="fas fa-info-circle"></i> ¿Cómo usar el Asistente?</h3>
-                <ol style="font-size:13px;color:#666;line-height:2;padding-left:20px">
-                    <li><strong>Calculadora</strong> — Ingrese HP, voltaje y distancia para obtener protecciones y cable recomendado</li>
-                    <li><strong>Compatibilidad</strong> — Busque alternativas de otras marcas para un producto</li>
-                    <li><strong>Configurador</strong> — Arme un tablero completo con productos del catálogo</li>
-                    <li><strong>Mantenimiento</strong> — Programe alertas para mantenimiento preventivo</li>
+                <h3><i class="fas fa-info-circle"></i> <?php echo __('how_to_use_assistant'); ?></h3>
+                <ol style="font-size:13px;color:var(--text-muted);line-height:2;padding-left:20px">
+                    <li><strong><?php echo __('calculator'); ?></strong> — Ingrese HP, voltaje y distancia para obtener protecciones y cable recomendado</li>
+                    <li><strong><?php echo __('compatibility'); ?></strong> — Busque alternativas de otras marcas para un producto</li>
+                    <li><strong><?php echo __('configurator'); ?></strong> — Arme un tablero completo con productos del catálogo</li>
+                    <li><strong><?php echo __('maintenance'); ?></strong> — Programe alertas para mantenimiento preventivo</li>
                 </ol>
             </div>
         </div>
@@ -167,7 +179,7 @@ body { background: var(--bg); min-height: 100vh; display: flex; }
     <div id="tab-calculadora" class="tab-content active">
         <div class="calculator-container">
             <div class="card">
-                <h3><i class="fas fa-sliders-h"></i> Parámetros de Entrada</h3>
+                <h3><i class="fas fa-sliders-h"></i> <?php echo __('input_parameters'); ?></h3>
                 <div class="form-group">
                     <label>Tipo de equipo</label>
                     <select id="tipoEquipo" onchange="actualizarFormulario()">
@@ -179,25 +191,25 @@ body { background: var(--bg); min-height: 100vh; display: flex; }
                 </div>
                 <div id="parametrosEntrada"></div>
                 <button class="btn btn-primary" onclick="calcular()" style="margin-top:10px;width:100%">
-                    <i class="fas fa-calculator"></i> Calcular
+                    <i class="fas fa-calculator"></i> <?php echo __('calculate'); ?>
                 </button>
             </div>
 
             <div class="card">
-                <h3><i class="fas fa-chart-bar"></i> Resultados</h3>
+                <h3><i class="fas fa-chart-bar"></i> <?php echo __('results'); ?></h3>
                 <div id="resultadoCalculo" class="result-box"></div>
                 <div id="loadingCalculo" class="loading" style="display:none">
-                    <i class="fas fa-spinner fa-spin"></i><br>Calculando...
+                    <i class="fas fa-spinner fa-spin"></i><br><?php echo __('calculating'); ?>
                 </div>
                 <div id="resultadoDefault" style="text-align:center;padding:40px;color:#ccc">
                     <i class="fas fa-arrow-left" style="font-size:40px;display:block;margin-bottom:10px"></i>
-                    Ingrese los parámetros y calcule
+                    <?php echo __('enter_parameters_and_calculate'); ?>
                 </div>
             </div>
         </div>
 
         <div class="card">
-            <h3><i class="fas fa-lightbulb"></i> Recomendaciones Técnicas</h3>
+            <h3><i class="fas fa-lightbulb"></i> <?php echo __('technical_recommendations'); ?></h3>
             <div id="recomendacionesTecnicas">
                 <ul style="padding-left:20px;font-size:13px;color:#666;line-height:1.8">
                     <li>Use breakers curva D para motores (soportan picos de arranque)</li>
@@ -296,8 +308,8 @@ body { background: var(--bg); min-height: 100vh; display: flex; }
 
     <div id="tab-mantenimiento" class="tab-content">
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:15px">
-            <a href="/proyecto/admin/generar_reporte_mantenimiento.php" target="_blank" class="btn btn-primary" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;background:#dc3545"><i class="fas fa-file-pdf"></i> Reporte PDF</a>
-            <a href="/proyecto/admin/generar_reporte_mantenimiento.php?excel=1" target="_blank" class="btn btn-primary" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;background:#28a745"><i class="fas fa-file-excel"></i> Exportar Excel</a>
+            <a href='<?= url('/admin/generar_reporte_mantenimiento.php') ?>' target="_blank" class="btn btn-primary" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;background:#dc3545"><i class="fas fa-file-pdf"></i> Reporte PDF</a>
+            <a href='<?= url('/admin/generar_reporte_mantenimiento.php?excel=1') ?>' target="_blank" class="btn btn-primary" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;background:#28a745"><i class="fas fa-file-excel"></i> Exportar Excel</a>
             <button class="btn btn-primary" onclick="window.print()" style="display:inline-flex;align-items:center;gap:6px;background:#6c757d"><i class="fas fa-print"></i> Imprimir</button>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
@@ -339,6 +351,7 @@ body { background: var(--bg); min-height: 100vh; display: flex; }
 </div>
 
 <script>
+(function() { var saved = localStorage.getItem('darkMode'); if (saved === 'enabled') document.body.classList.add('dark-mode'); })();
 let productosCache = [];
 
 function toast(msg, tipo) {
@@ -373,9 +386,9 @@ function showTab(tab) {
 
 async function cargarResumen() {
     const [comp, configs, mant] = await Promise.all([
-        fetchApi('/proyecto/asistente/compatibilidad.php'),
-        fetchApi('/proyecto/asistente/configurador.php'),
-        fetchApi('/proyecto/asistente/mantenimiento.php')
+        fetchApi('<?= url('/asistente/compatibilidad.php') ?>'),
+        fetchApi('<?= url('/asistente/configurador.php') ?>'),
+        fetchApi('<?= url('/asistente/mantenimiento.php') ?>')
     ]);
     document.getElementById('resumenCalculos').textContent = 4;
     document.getElementById('resumenCompat').textContent = comp.success && comp.resumen ? comp.resumen.reduce((a, c) => a + parseInt(c.total), 0) : '...';
@@ -469,14 +482,14 @@ async function calcular() {
     document.getElementById('loadingCalculo').style.display = 'block';
     document.getElementById('resultadoCalculo').classList.remove('show');
     const params = getParametros();
-    const res = await fetchApi('/proyecto/asistente/calcular.php', params);
+    const res = await fetchApi('<?= url('/asistente/calcular.php') ?>', params);
     document.getElementById('loadingCalculo').style.display = 'none';
     document.getElementById('resultadoCalculo').innerHTML = renderResultados(res);
     document.getElementById('resultadoCalculo').classList.add('show');
 }
 
 async function cargarCategoriasCompat() {
-    const res = await fetchApi('/proyecto/asistente/compatibilidad.php?accion=categorias');
+    const res = await fetchApi('<?= url('/asistente/compatibilidad.php?accion=categorias') ?>');
     if (res.success) {
         document.getElementById('compatCategoria').innerHTML = '<option value="">Todas las categorías</option>' + res.categorias.map(c => `<option value="${c}">${c}</option>`).join('');
     }
@@ -484,7 +497,7 @@ async function cargarCategoriasCompat() {
 
 async function cargarMarcas() {
     const cat = document.getElementById('compatCategoria').value;
-    const res = await fetchApi('/proyecto/asistente/compatibilidad.php?accion=marcas&categoria=' + cat);
+    const res = await fetchApi('<?= url('/asistente/compatibilidad.php?accion=marcas&categoria=') ?>' + cat);
     if (res.success) {
         document.getElementById('compatMarca').innerHTML = '<option value="">Todas las marcas</option>' + res.marcas.map(m => `<option value="${m}">${m}</option>`).join('');
     }
@@ -498,7 +511,7 @@ async function buscarCompatibilidad() {
     if (cat) p.set('categoria', cat);
     if (marca) p.set('marca', marca);
     if (modelo) p.set('modelo', modelo);
-    const res = await fetchApi('/proyecto/asistente/compatibilidad.php?' + p);
+    const res = await fetchApi('<?= url('/asistente/compatibilidad.php?') ?>' + p);
     if (res.success && res.resultados.length) {
         let html = '<table class="compat-table"><thead><tr><th>Categoría</th><th>Marca A</th><th>Modelo A</th><th></th><th>Marca B</th><th>Modelo B</th><th>Tipo</th><th>Notas</th></tr></thead><tbody>';
         res.resultados.forEach(r => {
@@ -517,7 +530,7 @@ async function buscarCompatPorProducto() {
     if (!id) return;
     const isNum = /^\d+$/.test(id);
     const url = isNum ? `accion=producto&producto_id=${id}` : `accion=buscar&modelo=${id}`;
-    const res = await fetchApi('/proyecto/asistente/compatibilidad.php?' + url);
+    const res = await fetchApi('<?= url('/asistente/compatibilidad.php?') ?>' + url);
     if (res.success && res.producto) {
         let html = `<div class="card"><h4>${res.producto.name}</h4><p style="font-size:13px;color:#666">Categoría: ${res.producto.category} | Marca: ${res.marca_detectada}</p>`;
         if (res.compatibilidades && res.compatibilidades.length) {
@@ -563,7 +576,7 @@ function limpiarCompatProducto() {
 async function cargarProductos() {
     if (productosCache.length) return;
     try {
-        const res = await fetch('/proyecto/producto/obtener_productos.php');
+        const res = await fetch('<?= url('/producto/obtener_productos.php') ?>');
         const data = await res.json();
         productosCache = Array.isArray(data) ? data : (data.productos || data.products || data.data || []);
     } catch (e) {
@@ -635,13 +648,13 @@ async function guardarConfiguracion() {
         voltaje: +document.getElementById('confVoltaje').value || 220,
         componentes, total_estimado: +document.getElementById('confTotal').textContent
     };
-    const res = await fetchApi('/proyecto/asistente/configurador.php', data);
+    const res = await fetchApi('<?= url('/asistente/configurador.php') ?>', data);
     if (res.success) { toast('✓ Configuración guardada', 'ok'); cargarConfiguraciones(); }
     else { toast('Error: ' + (res.error || 'Desconocido'), 'err'); }
 }
 
 async function cargarConfiguraciones() {
-    const res = await fetchApi('/proyecto/asistente/configurador.php?accion=listar');
+    const res = await fetchApi('<?= url('/asistente/configurador.php?accion=listar') ?>');
     if (res.success && res.configuraciones.length) {
         let html = '<div class="config-list">';
         res.configuraciones.forEach(c => {
@@ -663,7 +676,7 @@ async function cargarConfiguraciones() {
 }
 
 async function cargarConfig(id) {
-    const res = await fetchApi('/proyecto/asistente/configurador.php?accion=cargar&id=' + id);
+    const res = await fetchApi('<?= url('/asistente/configurador.php?accion=cargar&id=') ?>' + id);
     if (res.success) {
         const c = res.configuracion;
         const params = typeof c.parametros === 'string' ? JSON.parse(c.parametros) : (c.parametros || {});
@@ -683,12 +696,12 @@ async function cargarConfig(id) {
 
 async function eliminarConfig(id) {
     if (!confirm('¿Eliminar esta configuración?')) return;
-    const res = await fetchApi('/proyecto/asistente/configurador.php', { accion: 'eliminar', id });
+    const res = await fetchApi('<?= url('/asistente/configurador.php') ?>', { accion: 'eliminar', id });
     if (res.success) { toast('Configuración eliminada', 'ok'); cargarConfiguraciones(); }
 }
 
 async function cargarAlertas() {
-    const res = await fetchApi('/proyecto/asistente/mantenimiento.php?accion=pendientes');
+    const res = await fetchApi('<?= url('/asistente/mantenimiento.php?accion=pendientes') ?>');
     if (res.success) {
         let html = '';
         if (res.vencidas.length) {
@@ -709,7 +722,7 @@ async function cargarAlertas() {
 }
 
 async function completarAlerta(id) {
-    const res = await fetchApi('/proyecto/asistente/mantenimiento.php', { accion: 'completar', id });
+    const res = await fetchApi('<?= url('/asistente/mantenimiento.php') ?>', { accion: 'completar', id });
     if (res.success) { toast('Mantenimiento completado', 'ok'); cargarAlertas(); }
 }
 
@@ -721,7 +734,7 @@ async function programarMantenimiento() {
         fecha_compra: document.getElementById('mantFechaCompra').value || new Date().toISOString().split('T')[0]
     };
     if (!data.producto_id) { toast('Ingrese un ID de producto', 'err'); return; }
-    const res = await fetchApi('/proyecto/asistente/mantenimiento.php', data);
+    const res = await fetchApi('<?= url('/asistente/mantenimiento.php') ?>', data);
     if (res.success) {
         let msg = '✓ Alerta: ' + res.proximo_mantenimiento;
         if (res.telegram_notificado) msg += ' | Telegram OK';
@@ -732,7 +745,7 @@ async function programarMantenimiento() {
 }
 
 async function cargarRecomendacionesMant() {
-    const res = await fetchApi('/proyecto/asistente/mantenimiento.php?accion=intervalos');
+    const res = await fetchApi('<?= url('/asistente/mantenimiento.php?accion=intervalos') ?>');
     if (res.success && res.recomendaciones) {
         document.getElementById('recomendacionesMantenimiento').innerHTML = '<ul style="padding-left:20px;line-height:1.8">' +
             Object.entries(res.recomendaciones).map(([k, v]) => `<li>${k}: cada ${v} días</li>`).join('') + '</ul>';

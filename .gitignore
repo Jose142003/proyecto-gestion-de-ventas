@@ -32,6 +32,7 @@ android/.idea
 
 # Backups
 backups/backups/*.sql
+backups_db/*.sql
 
 # Debug files
 test_*.php
@@ -41,6 +42,7 @@ run_migration.php
 
 # Runtime / cache
 tasas/*.json
+uploads/cache/
 telegram/*.pid
 telegram/*.log
 telegram/*.txt

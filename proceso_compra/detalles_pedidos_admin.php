@@ -56,14 +56,14 @@ try {
     <title>Detalles del Pedido - Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
       <!-- PWA Meta Tags -->
-    <link rel="manifest" href="/proyecto/manifest.json">
+    <link rel="manifest" href="<?= url('/manifest.json') ?>">
     <meta name="theme-color" content="#050C18">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="PIC Industrial">
-    <link rel="apple-touch-icon" href="/proyecto/img/pic.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="/proyecto/img/pic.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="/proyecto/img/pic.png">
+    <link rel="apple-touch-icon" href="<?= url('/img/pic.png') ?>">
+    <link rel="icon" type="image/png" sizes="192x192" href="<?= url('/img/pic.png') ?>">
+    <link rel="icon" type="image/png" sizes="512x512" href="<?= url('/img/pic.png') ?>">
     <style>
         :root {
             --primary-blue: #294E90;
@@ -235,8 +235,8 @@ try {
         
         <div class="total">
             <p>Subtotal: Bs. <?php echo number_format($subtotal, 2, ',', '.'); ?></p>
-            <p>IVA (13%): Bs. <?php echo number_format($subtotal * 0.13, 2, ',', '.'); ?></p>
-            <p style="font-size: 1.5rem;">TOTAL: Bs. <?php echo number_format($subtotal * 1.13, 2, ',', '.'); ?></p>
+            <p>IVA (16%): Bs. <?php echo number_format($subtotal * 0.16, 2, ',', '.'); ?></p>
+            <p style="font-size: 1.5rem;">TOTAL: Bs. <?php echo number_format($subtotal * 1.16, 2, ',', '.'); ?></p>
         </div>
         
         <?php if(!empty($pedido['observaciones'])): ?>

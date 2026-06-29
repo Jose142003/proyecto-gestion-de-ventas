@@ -1,6 +1,12 @@
 <?php
 session_start();
 require_once __DIR__ . '/../conexion/conexion.php';
+require_once __DIR__ . '/../config/i18n.php';
+require_once __DIR__ . '/../config/i18n_helpers.php';
+
+$locale = $_GET['lang'] ?? $_COOKIE['lang'] ?? 'es';
+setcookie('lang', $locale, time()+31536000, '/');
+\I18n::load($locale);
 
 if (!isset($_SESSION['user_id']) || !esAdmin()) {
     $loginUrl = defined('BASE_URL') ? rtrim(BASE_URL, '/') . '/interfaz_usuario/login.html' : '/interfaz_usuario/login.html';
@@ -75,7 +81,7 @@ $estados_envio = [
 ];
 ?>
 <!DOCTYPE html>
-<html lang="es">
+<html lang="<?php echo htmlspecialchars($locale); ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -102,17 +108,34 @@ $estados_envio = [
             --light-gray: #f8f9fa;
             --border: #e9ecef;
             --shadow: 0 4px 6px rgba(0,0,0,0.1);
+            --bg-color: #f0f2f5;
+            --text-color: #2d3748;
+            --card-bg: #ffffff;
+        }
+        body.dark-mode {
+            --primary: #0a0e1a;
+            --secondary: #1a1f2e;
+            --accent: #3C91ED;
+            --light: #5aa9e6;
+            --bg-color: #0f1219;
+            --text-color: #e4e6eb;
+            --card-bg: #1e2436;
+            --border: #2c3348;
+            --shadow: 0 4px 6px rgba(0,0,0,0.3);
+            --light-gray: #1a1f2e;
+            --gray: #aaa;
+            --dark: #e4e6eb;
         }
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--bg-color);
             min-height: 100vh;
             padding: 20px;
-            color: #2d3748;
+            color: var(--text-color);
         }
         .container { max-width: 1400px; margin: 0 auto; }
         .header {
-            background: white;
+            background: var(--card-bg);
             border-radius: 16px;
             padding: 20px 30px;
             margin-bottom: 25px;
@@ -145,7 +168,7 @@ $estados_envio = [
         .btn-secondary:hover { background: var(--border); }
         .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
         .card {
-            background: white;
+            background: var(--card-bg);
             border-radius: 16px;
             overflow: hidden;
             margin-bottom: 25px;
@@ -153,7 +176,7 @@ $estados_envio = [
         }
         .card-header {
             padding: 20px 25px;
-            background: white;
+            background: var(--card-bg);
             border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
@@ -222,7 +245,8 @@ $estados_envio = [
             border-radius: 8px;
             font-size: 0.85rem;
             transition: all 0.3s;
-            background: white;
+            background: var(--card-bg);
+            color: var(--text-color);
         }
         .form-control:focus, .form-select:focus {
             outline: none;
@@ -251,25 +275,26 @@ $estados_envio = [
     <div class="container">
         <div class="header">
             <div class="header-left">
-                <h1><i class="fas fa-truck"></i> Gestionar Envíos</h1>
-                <p><?php echo htmlspecialchars($total ?? '', ENT_QUOTES, 'UTF-8'); ?> envíos registrados</p>
+                <h1><i class="fas fa-truck"></i> <?php echo __('manage_shipments'); ?></h1>
+                <p><?php echo __('shipments_registered', ['count' => $total ?? 0]); ?></p>
             </div>
             <div class="header-actions">
-                <a href="<?php echo defined('BASE_URL') ? rtrim(BASE_URL, '/') : ''; ?>/panel_admin/panel_admin.php" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Panel</a>
+                <button id="themeToggle" class="btn btn-secondary"><i class="fas fa-moon"></i></button>
+                <a href="<?php echo defined('BASE_URL') ? rtrim(BASE_URL, '/') : ''; ?>/panel_admin/panel_admin.php" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> <?php echo __('back_to_panel'); ?></a>
             </div>
         </div>
 
         <div class="card">
             <div class="card-header">
-                <h2><i class="fas fa-filter"></i> Filtros</h2>
+                <h2><i class="fas fa-filter"></i> <?php echo __('filters'); ?></h2>
             </div>
             <div class="card-body">
                 <form method="GET" action="">
                     <div class="filtros-row">
                         <div class="filtro-group">
-                            <label>Estado</label>
+                            <label><?php echo __('status'); ?></label>
                             <select name="estado" class="form-select">
-                                <option value="todos">Todos</option>
+                                <option value="todos"><?php echo __('all'); ?></option>
                                 <?php foreach ($estados_envio as $key => $est): ?>
                                 <option value="<?php echo htmlspecialchars($key ?? '', ENT_QUOTES, 'UTF-8'); ?>" <?php echo $estado_filtro === $key ? 'selected' : ''; ?>>
                                     <?php echo htmlspecialchars($est['label'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
@@ -278,9 +303,9 @@ $estados_envio = [
                             </select>
                         </div>
                         <div class="filtro-group">
-                            <label>Transportista</label>
+                            <label><?php echo __('carrier'); ?></label>
                             <select name="transportista" class="form-select">
-                                <option value="">Todos</option>
+                                <option value=""><?php echo __('all'); ?></option>
                                 <?php foreach ($transportistas as $t): ?>
                                 <option value="<?php echo htmlspecialchars($t); ?>" <?php echo $transportista_filtro === $t ? 'selected' : ''; ?>>
                                     <?php echo htmlspecialchars($t); ?>
@@ -289,15 +314,15 @@ $estados_envio = [
                             </select>
                         </div>
                         <div class="filtro-group">
-                            <label>Fecha Desde</label>
+                            <label><?php echo __('from_date'); ?></label>
                             <input type="date" name="fecha_desde" class="form-control" value="<?php echo htmlspecialchars($fecha_desde); ?>">
                         </div>
                         <div class="filtro-group">
-                            <label>Fecha Hasta</label>
+                            <label><?php echo __('to_date'); ?></label>
                             <input type="date" name="fecha_hasta" class="form-control" value="<?php echo htmlspecialchars($fecha_hasta); ?>">
                         </div>
                         <div class="filtro-group" style="align-self: flex-end;">
-                            <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Filtrar</button>
+                            <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> <?php echo __('filter'); ?></button>
                         </div>
                     </div>
                 </form>
@@ -306,8 +331,8 @@ $estados_envio = [
 
         <div class="card">
             <div class="card-header">
-                <h2><i class="fas fa-list"></i> Listado de Envíos</h2>
-                <span class="total-count">Mostrando <?php echo count($envios); ?> de <?php echo $total; ?></span>
+                <h2><i class="fas fa-list"></i> <?php echo __('shipment_list'); ?></h2>
+                <span class="total-count"><?php echo __('showing'); ?> <?php echo count($envios); ?> <?php echo __('of'); ?> <?php echo $total; ?></span>
             </div>
             <div class="card-body">
                 <?php if (count($envios) > 0): ?>
@@ -315,14 +340,14 @@ $estados_envio = [
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>Pedido</th>
-                                <th>Cliente</th>
-                                <th>Transportista</th>
-                                <th>N° Guía</th>
-                                <th>Estado</th>
-                                <th>Fecha Envío</th>
-                                <th>Acciones</th>
+                                <th><?php echo __('id'); ?></th>
+                                <th><?php echo __('order'); ?></th>
+                                <th><?php echo __('client'); ?></th>
+                                <th><?php echo __('carrier'); ?></th>
+                                <th><?php echo __('guide_number'); ?></th>
+                                <th><?php echo __('status'); ?></th>
+                                <th><?php echo __('ship_date'); ?></th>
+                                <th><?php echo __('actions'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -347,7 +372,7 @@ $estados_envio = [
                                     <span style="font-family: monospace;"><?php echo htmlspecialchars($e['numero_guia']); ?></span>
                                     <?php if (!empty($e['url_rastreo'])): ?>
                                     <br><a href="<?php echo htmlspecialchars($e['url_rastreo']); ?>" target="_blank" style="color: var(--accent); font-size: 0.75rem;">
-                                        <i class="fas fa-external-link-alt"></i> Rastrear
+                                        <i class="fas fa-external-link-alt"></i> <?php echo __('track'); ?>
                                     </a>
                                     <?php endif; ?>
                                 </td>
@@ -360,7 +385,7 @@ $estados_envio = [
                                 <td>
                                     <div class="action-buttons">
                                         <a href="envio_detalle.php?envio_id=<?php echo $e['id']; ?>" class="btn btn-primary btn-sm">
-                                            <i class="fas fa-eye"></i> Detalle
+                                            <i class="fas fa-eye"></i> <?php echo __('detail'); ?>
                                         </a>
                                     </div>
                                 </td>
@@ -372,7 +397,7 @@ $estados_envio = [
                 <?php if ($pages > 1): ?>
                 <div class="pagination">
                     <a href="?page=<?php echo max(1, $page - 1); ?>&estado=<?php echo urlencode($estado_filtro); ?>&transportista=<?php echo urlencode($transportista_filtro); ?>&fecha_desde=<?php echo urlencode($fecha_desde); ?>&fecha_hasta=<?php echo urlencode($fecha_hasta); ?>" class="<?php echo $page <= 1 ? 'disabled' : ''; ?>">
-                        <i class="fas fa-chevron-left"></i> Anterior
+                        <i class="fas fa-chevron-left"></i> <?php echo __('previous'); ?>
                     </a>
                     <?php for ($i = max(1, $page - 2); $i <= min($pages, $page + 2); $i++): ?>
                     <a href="?page=<?php echo $i; ?>&estado=<?php echo urlencode($estado_filtro); ?>&transportista=<?php echo urlencode($transportista_filtro); ?>&fecha_desde=<?php echo urlencode($fecha_desde); ?>&fecha_hasta=<?php echo urlencode($fecha_hasta); ?>" class="<?php echo $i === $page ? 'active' : ''; ?>">
@@ -380,19 +405,40 @@ $estados_envio = [
                     </a>
                     <?php endfor; ?>
                     <a href="?page=<?php echo min($pages, $page + 1); ?>&estado=<?php echo urlencode($estado_filtro); ?>&transportista=<?php echo urlencode($transportista_filtro); ?>&fecha_desde=<?php echo urlencode($fecha_desde); ?>&fecha_hasta=<?php echo urlencode($fecha_hasta); ?>" class="<?php echo $page >= $pages ? 'disabled' : ''; ?>">
-                        Siguiente <i class="fas fa-chevron-right"></i>
+                        <?php echo __('next'); ?> <i class="fas fa-chevron-right"></i>
                     </a>
                 </div>
                 <?php endif; ?>
                 <?php else: ?>
                 <div class="no-data">
                     <i class="fas fa-truck"></i>
-                    <h3>No hay envíos registrados</h3>
-                    <p>No se encontraron envíos con los filtros seleccionados.</p>
+                    <h3><?php echo __('no_shipments'); ?></h3>
+                    <p><?php echo __('no_shipments_filters'); ?></p>
                 </div>
                 <?php endif; ?>
             </div>
         </div>
     </div>
+<script>
+(function() {
+    var toggle = document.getElementById('themeToggle');
+    function applyDark(isDark) {
+        document.body.classList.toggle('dark-mode', isDark);
+        if (toggle) {
+            toggle.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        }
+    }
+    var saved = localStorage.getItem('darkMode');
+    if (saved === 'enabled') applyDark(true);
+    else if (saved === 'disabled') applyDark(false);
+    if (toggle) {
+        toggle.addEventListener('click', function() {
+            var isDark = !document.body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
+            applyDark(isDark);
+        });
+    }
+})();
+</script>
 </body>
 </html>

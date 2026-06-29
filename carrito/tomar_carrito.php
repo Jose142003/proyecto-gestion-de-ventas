@@ -1,13 +1,18 @@
 <?php
 session_start();
-require_once '../conexion/conexion.php';
+require_once __DIR__ . '/../conexion/conexion.php';
 header('Content-Type: application/json');
 
 if ($_SERVER["REQUEST_METHOD"] == "GET") {
-    $user_id = $_GET['user_id'] ?? 0;
+    $user_id = $_SESSION['user_id'] ?? 0;
     
     if ($user_id == 0) {
         echo json_encode(["success" => false, "message" => "ID de usuario no válido"]);
+        exit;
+    }
+    
+    if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+        echo json_encode(["success" => false, "message" => "Debes iniciar sesión"]);
         exit;
     }
     
@@ -15,9 +20,11 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
     
     try {
         $query = "
-            SELECT ci.*, p.name, p.price, p.image_url, p.description 
+            SELECT ci.*, p.name, p.price, p.image_url, p.description,
+                   v.sku_variante, v.nombre_variante, v.precio_adicional, v.imagen_url as variant_image
             FROM cart_items ci 
             JOIN products p ON ci.product_id = p.id 
+            LEFT JOIN producto_variantes v ON ci.variant_id = v.id
             WHERE ci.user_id = :user_id
         ";
         
@@ -29,16 +36,21 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
         
         // Calcular el total
         $total = 0;
-        foreach ($cartItems as $item) {
-            $itemTotal = floatval($item['price']) * intval($item['quantity']);
+        foreach ($cartItems as &$item) {
+            $precioBase = floatval($item['price']);
+            $precioAdicional = floatval($item['precio_adicional'] ?? 0);
+            $precioFinal = $precioBase + $precioAdicional;
+            $item['precio_final'] = $precioFinal;
+            $itemTotal = $precioFinal * intval($item['quantity']);
             $total += $itemTotal;
         }
+        unset($item);
         
         echo json_encode([
             "success" => true,
             "items" => $cartItems,
             "count" => count($cartItems),
-            "total" => $total  // Agregar el total calculado
+            "total" => $total
         ]);
         
     } catch (PDOException $e) {

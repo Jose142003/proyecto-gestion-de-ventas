@@ -71,6 +71,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $info && !$yaRespondio) {
         .rating-nums .num:hover { border-color:#667eea; color:#667eea; }
         .rating-nums .num.selected { background:linear-gradient(135deg,#667eea,#764ba2); color:white; border-color:transparent; }
         .rating-labels { display:flex; justify-content:space-between; font-size:0.75rem; color:#999; margin-top:-15px; margin-bottom:20px; }
+    
+        :root {
+            --primary-color: #050C18;
+            --secondary-color: #294E90;
+            --accent-color: #3C91ED;
+            --bg-color: #f0f2f5;
+            --card-bg: #fff;
+            --text-color: #333;
+            --text-secondary: #555;
+            --text-muted: #666;
+            --border-color: #ddd;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --error-color: #dc3545;
+        }
+        body.dark-mode {
+            --primary-color: #0a0e1a;
+            --secondary-color: #1a1f2e;
+            --accent-color: #5aa9e6;
+            --bg-color: #0f1219;
+            --card-bg: #1e2436;
+            --text-color: #e4e6eb;
+            --text-secondary: #b0b3b8;
+            --text-muted: #999;
+            --border-color: #2c3348;
+        }
+        body.dark-mode { background: var(--bg-color); color: var(--text-color); }
+
     </style>
 </head>
 <body>
@@ -133,5 +161,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $info && !$yaRespondio) {
             document.getElementById('btnEnviar').disabled = false;
         }
     </script>
+
+        <script>
+        (function() {
+            var saved = localStorage.getItem('darkMode');
+            if (saved === 'enabled') {
+                document.body.classList.add('dark-mode');
+            }
+        })();
+        </script>
 </body>
 </html>

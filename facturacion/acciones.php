@@ -1,6 +1,7 @@
 <?php
 // acciones.php - Manejar acciones de facturación
 header('Content-Type: application/json');
+session_start();
 
 require_once __DIR__ . '/../conexion/conexion.php';
 requerirAdmin();
@@ -149,14 +150,72 @@ function anularFactura($pdo, $facturaId, $usuarioId) {
     }
 }
 
-// Función para generar factura (si necesitas)
+// Función para generar factura desde pedido
 function generarFactura($pdo, $pedidoId, $usuarioId) {
-    // Aquí iría la lógica para generar una factura desde un pedido
-    // Por ahora solo es un placeholder
-    echo json_encode([
-        'success' => true, 
-        'message' => 'Factura generada exitosamente',
-        'factura_id' => random_int(1000, 9999)
-    ]);
+    $stmt = $pdo->prepare("SELECT * FROM pedidos WHERE id = ?");
+    $stmt->execute([$pedidoId]);
+    $pedido = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$pedido) {
+        throw new Exception("Pedido no encontrado");
+    }
+
+    $stmtCheck = $pdo->prepare("SELECT id FROM facturas WHERE pedido_id = ?");
+    $stmtCheck->execute([$pedidoId]);
+    if ($stmtCheck->fetch()) {
+        throw new Exception("El pedido ya tiene una factura asociada");
+    }
+
+    $pdo->beginTransaction();
+    try {
+        $anio = date('Y');
+        try {
+            $stmtSeq = $pdo->prepare("SELECT siguiente_valor FROM secuencias_facturacion WHERE tipo = 'factura' AND anio = ? FOR UPDATE");
+            $stmtSeq->execute([$anio]);
+            $seq = $stmtSeq->fetch();
+        } catch (PDOException $e) {
+            $pdo->exec("CREATE TABLE IF NOT EXISTS secuencias_facturacion (id INT AUTO_INCREMENT PRIMARY KEY, tipo VARCHAR(50), prefijo VARCHAR(10), siguiente_valor INT, anio INT, UNIQUE KEY unique_tipo_anio (tipo, anio))");
+            $stmtSeq = $pdo->prepare("SELECT siguiente_valor FROM secuencias_facturacion WHERE tipo = 'factura' AND anio = ? FOR UPDATE");
+            $stmtSeq->execute([$anio]);
+            $seq = $stmtSeq->fetch();
+        }
+
+        if ($seq) {
+            $numValor = $seq['siguiente_valor'];
+            $pdo->prepare("UPDATE secuencias_facturacion SET siguiente_valor = ? WHERE tipo = 'factura' AND anio = ?")->execute([$numValor + 1, $anio]);
+        } else {
+            $numValor = 1;
+            $pdo->prepare("INSERT INTO secuencias_facturacion (tipo, prefijo, siguiente_valor, anio) VALUES ('factura', 'FAC', 2, ?)")->execute([$anio]);
+        }
+
+        $numeroFactura = 'FAC-' . $anio . '-' . str_pad($numValor, 6, '0', STR_PAD_LEFT);
+
+        $stmtIns = $pdo->prepare("INSERT INTO facturas (pedido_id, usuario_id, numero_factura, subtotal, iva, total, metodo_pago, estado, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'pendiente', NOW())");
+        $stmtIns->execute([$pedidoId, $pedido['usuario_id'], $numeroFactura, $pedido['subtotal'], $pedido['iva'], $pedido['total'], $pedido['metodo_pago']]);
+        $facturaId = $pdo->lastInsertId();
+
+        $stmtDet = $pdo->prepare("SELECT * FROM pedido_detalles WHERE pedido_id = ?");
+        $stmtDet->execute([$pedidoId]);
+        $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
+
+        $stmtInsDet = $pdo->prepare("INSERT INTO factura_detalles (factura_id, producto_id, cantidad, precio_unitario, subtotal, producto_nombre) VALUES (?, ?, ?, ?, ?, ?)");
+        foreach ($detalles as $d) {
+            $stmtInsDet->execute([$facturaId, $d['producto_id'], $d['cantidad'], $d['precio_unitario'], $d['subtotal'], $d['producto_nombre']]);
+        }
+
+        $pdo->prepare("UPDATE pedidos SET estado = 'facturado' WHERE id = ?")->execute([$pedidoId]);
+
+        $pdo->commit();
+
+        echo json_encode([
+            'success' => true,
+            'message' => "Factura $numeroFactura generada exitosamente",
+            'factura_id' => $facturaId,
+            'numero_factura' => $numeroFactura
+        ]);
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        throw $e;
+    }
 }
 ?>

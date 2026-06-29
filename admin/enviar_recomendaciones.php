@@ -1,4 +1,6 @@
 <?php
+session_start();
+
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_WARNING & ~E_NOTICE);
 ini_set('display_errors', 0);
 
@@ -89,7 +91,7 @@ function enviarRecomendaciones(PDO $pdo, string $clienteEmail, string $clienteNo
             ";
         }
 
-        $unsubscribeLink = rtrim((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost')) . '/proyecto/interfaz_usuario/recomendaciones_suscripcion.php?email=' . urlencode($clienteEmail) . '&accion=desuscribir';
+        $unsubscribeLink = rtrim((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost')) . url('/interfaz_usuario/recomendaciones_suscripcion.php?email=' . urlencode($clienteEmail) . '&accion=desuscribir';
 
         $html = "<html><body style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px'>";
         $html .= "<div style='background:linear-gradient(135deg,#2c3e50,#3498db);color:white;padding:25px;text-align:center;border-radius:12px 12px 0 0'>";
@@ -100,7 +102,7 @@ function enviarRecomendaciones(PDO $pdo, string $clienteEmail, string $clienteNo
         $html .= "<p>Hemos seleccionado algunos productos que creemos pueden ser de tu interés:</p>";
         $html .= "<div style='margin:20px 0;text-align:center'>{$productosHtml}</div>";
         $html .= "<div style='text-align:center;margin-top:20px'>";
-        $html .= "<a href='" . rtrim((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost')) . "/proyecto/interfaz_usuario/index.html' style='display:inline-block;background:#3498db;color:white;padding:12px 30px;border-radius:6px;text-decoration:none;font-weight:600'>Ver más productos</a>";
+        $html .= "<a href='" . rtrim((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost')) . url('/interfaz_usuario/index.html') . "' style='display:inline-block;background:#3498db;color:white;padding:12px 30px;border-radius:6px;text-decoration:none;font-weight:600'>Ver más productos</a>";
         $html .= "</div>";
         $html .= "</div>";
         $html .= "<div style='text-align:center;padding:15px;color:#999;font-size:0.75em'>";
@@ -158,7 +160,7 @@ function enviarNotificacionNuevoProducto(PDO $pdo, int $productoId, string $prod
                 $html .= "<div style='font-size:1.3rem;font-weight:700;color:#2c3e50'>{$precio}</div>";
                 $html .= "</div>";
                 $html .= "<div style='text-align:center;margin-top:15px'>";
-                $html .= "<a href='" . rtrim((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost')) . "/proyecto/interfaz_usuario/index.html' style='display:inline-block;background:#e74c3c;color:white;padding:12px 30px;border-radius:6px;text-decoration:none;font-weight:600'>Ver en la tienda</a>";
+                $html .= "<a href='" . rtrim((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost')) . url('/interfaz_usuario/index.html') . "' style='display:inline-block;background:#e74c3c;color:white;padding:12px 30px;border-radius:6px;text-decoration:none;font-weight:600'>Ver en la tienda</a>";
                 $html .= "</div></div>";
                 $html .= "<div style='text-align:center;padding:15px;color:#999;font-size:0.75em'>Proyectos Industriales del Centro &copy; " . date('Y') . "</div></body></html>";
 

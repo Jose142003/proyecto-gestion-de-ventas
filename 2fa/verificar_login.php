@@ -126,7 +126,7 @@ try {
     $_SESSION['2fa_verified'] = true;
     $_SESSION['2fa_verified_at'] = time();
 
-    echo json_encode(['success' => true, 'message' => 'Autenticación exitosa', 'redirect_url' => '/proyecto/panel_admin/panel_admin.php']);
+    echo json_encode(['success' => true, 'message' => 'Autenticación exitosa', 'redirect_url' => url('/panel_admin/panel_admin.php')]);
 
 } catch (Throwable $e) {
     http_response_code(500);

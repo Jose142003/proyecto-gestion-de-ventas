@@ -52,7 +52,7 @@ function iniciarSesionUsuario(array $userData): string {
         $redirect = BASE_URL . '/interfaz_usuario/pagina_modernizada.php';
     }
 
-    $secret_key = defined('APP_SECRET') ? APP_SECRET : 'change-this-to-a-random-secret-in-production';
+    $secret_key = defined('APP_SECRET') ? APP_SECRET : (getenv('APP_SECRET') ?: (defined('BASE_URL') ? 'prod-secret-' . md5(BASE_URL) : 'fallback-secret-not-secure'));
     $token_data = $userData['id'] . '|' . $userData['nombre'] . '|' . $userData['user_table'];
     $token_sig = hash_hmac('sha256', $token_data, $secret_key);
     $token_value = base64_encode($token_data . '|' . $token_sig);
@@ -118,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$email]);
             if ($stmt->rowCount() > 0) {
                 $u = $stmt->fetch();
-                if (password_verify($password, $u['password']) || hash_equals(hash('sha256', $password), $u['password']) || hash_equals(strtoupper(hash('sha256', $password)), $u['password'])) {
+                if (password_verify($password, $u['password'])) {
                     $user = $u;
                     $userTable = 'admin_users';
                 }
@@ -284,7 +284,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([$email]);
         if ($stmt->rowCount() > 0) {
             $u = $stmt->fetch();
-            if (password_verify($password, $u['password']) || hash_equals(hash('sha256', $password), $u['password']) || hash_equals(strtoupper(hash('sha256', $password)), $u['password'])) {
+            if (password_verify($password, $u['password'])) {
                 $user = $u;
                 $userTable = 'admin_users';
             }

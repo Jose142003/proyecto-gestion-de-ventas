@@ -2,6 +2,11 @@
 // informacion_producto.php - Muestra información técnica y estadísticas del producto
 
 require_once __DIR__ . '/../conexion/conexion.php';
+require_once __DIR__ . '/../config/i18n.php';
+require_once __DIR__ . '/../config/i18n_helpers.php';
+$locale = $_GET['lang'] ?? $_COOKIE['lang'] ?? 'es';
+setcookie('lang', $locale, time()+31536000, '/');
+\I18n::load($locale);
 
 // Obtener ID del producto
 $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
@@ -159,7 +164,7 @@ try {
 }
 ?>
 <!DOCTYPE html>
-<html lang="es">
+<html lang="<?php echo htmlspecialchars($locale); ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -172,8 +177,37 @@ try {
             font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
         }
         
+        :root {
+            --primary: #050C18;
+            --secondary: #294E90;
+            --accent: #3C91ED;
+            --light: #7EBDE9;
+            --bg-color: #f0f2f5;
+            --text-color: #333;
+            --text-secondary: #666;
+            --card-bg: #ffffff;
+            --border: #e0e0e0;
+            --success: #2ed573;
+            --warning: #ffa502;
+            --danger: #ff4757;
+            --info: #3498db;
+            --shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        body.dark-mode {
+            --primary: #0a0e1a;
+            --secondary: #1a1f2e;
+            --accent: #3C91ED;
+            --light: #5aa9e6;
+            --bg-color: #0f1219;
+            --text-color: #e4e6eb;
+            --text-secondary: #aaa;
+            --card-bg: #1e2436;
+            --border: #2c3348;
+            --shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--bg-color);
             min-height: 100vh;
             padding: 20px;
         }
@@ -181,15 +215,15 @@ try {
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            background: white;
+            background: var(--card-bg);
             border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            box-shadow: var(--shadow);
             overflow: hidden;
         }
         
         /* HEADER */
         .header {
-            background: linear-gradient(90deg, #1a237e 0%, #283593 100%);
+            background: var(--primary);
             color: white;
             padding: 30px 40px;
             display: flex;
@@ -251,8 +285,8 @@ try {
         /* PANEL IZQUIERDO - INFORMACIÓN BÁSICA */
         .left-panel {
             padding: 40px;
-            background: #f8f9fa;
-            border-right: 1px solid #e0e0e0;
+            background: var(--card-bg);
+            border-right: 1px solid var(--border);
         }
         
         .product-header {
@@ -261,7 +295,7 @@ try {
             gap: 25px;
             margin-bottom: 40px;
             padding-bottom: 25px;
-            border-bottom: 2px solid #e0e0e0;
+            border-bottom: 2px solid var(--border);
         }
         
         .product-image {
@@ -269,39 +303,39 @@ try {
             height: 150px;
             object-fit: contain;
             border-radius: 12px;
-            background: white;
+            background: var(--card-bg);
             padding: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            border: 1px solid #ddd;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
         }
         
         .product-basic-info h2 {
             font-size: 24px;
-            color: #1a237e;
+            color: var(--primary);
             margin-bottom: 10px;
         }
         
         .product-sku {
-            color: #666;
+            color: var(--text-secondary);
             font-size: 14px;
             margin-bottom: 15px;
         }
         
         /* INFORMACIÓN TÉCNICA */
         .tech-section {
-            background: white;
+            background: var(--card-bg);
             padding: 25px;
             border-radius: 12px;
             margin-bottom: 30px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            box-shadow: var(--shadow);
         }
         
         .section-title {
-            color: #1a237e;
+            color: var(--primary);
             font-size: 18px;
             margin-bottom: 20px;
             padding-bottom: 10px;
-            border-bottom: 2px solid #e0e0e0;
+            border-bottom: 2px solid var(--border);
             display: flex;
             align-items: center;
             gap: 10px;
@@ -321,20 +355,20 @@ try {
             display: flex;
             justify-content: space-between;
             padding: 12px 15px;
-            background: #f8f9fa;
+            background: var(--card-bg);
             border-radius: 8px;
             border-left: 4px solid #4caf50;
         }
         
         .info-label {
             font-weight: 600;
-            color: #333;
+            color: var(--text-color);
             font-size: 14px;
         }
         
         .info-value {
             font-weight: 500;
-            color: #555;
+            color: var(--text-secondary);
             text-align: right;
             font-size: 14px;
         }
@@ -342,7 +376,7 @@ try {
         /* PANEL DERECHO - ESTADÍSTICAS */
         .right-panel {
             padding: 40px;
-            background: white;
+            background: var(--card-bg);
         }
         
         /* ESTADÍSTICAS DE INVENTARIO */
@@ -404,6 +438,11 @@ try {
         .stock-level.verde-claro { background: linear-gradient(135deg, #a5d6a7 0%, #81c784 100%); color: #333; }
         .stock-level.verde { background: linear-gradient(135deg, #66bb6a 0%, #4caf50 100%); color: white; }
         .stock-level.verde-oscuro { background: linear-gradient(135deg, #388e3c 0%, #2e7d32 100%); color: white; }
+
+        thead {
+            background: var(--primary);
+            color: white;
+        }
         
         /* TABLAS */
         .table-container {
@@ -419,11 +458,6 @@ try {
             min-width: 600px;
         }
         
-        thead {
-            background: linear-gradient(90deg, #1a237e 0%, #283593 100%);
-            color: white;
-        }
-        
         th {
             padding: 15px;
             text-align: left;
@@ -432,17 +466,17 @@ try {
         }
         
         tbody tr {
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid var(--border);
         }
         
         tbody tr:hover {
-            background-color: #f5f5f5;
+            background-color: var(--border);
         }
         
         td {
             padding: 15px;
             font-size: 13px;
-            color: #555;
+            color: var(--text-color);
         }
         
         /* PRODUCTOS SIMILARES */
@@ -454,23 +488,23 @@ try {
         }
         
         .similar-card {
-            background: white;
+            background: var(--card-bg);
             border-radius: 10px;
             padding: 15px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-            border: 1px solid #e0e0e0;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
             transition: all 0.3s;
         }
         
         .similar-card:hover {
             transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+            box-shadow: var(--shadow);
         }
         
         .similar-name {
             font-size: 13px;
             font-weight: 600;
-            color: #1a237e;
+            color: var(--primary);
             margin-bottom: 8px;
         }
         
@@ -490,12 +524,12 @@ try {
         /* PIE DE PÁGINA */
         .footer {
             padding: 25px 40px;
-            background: #f8f9fa;
-            border-top: 1px solid #e0e0e0;
+            background: var(--card-bg);
+            border-top: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            color: #666;
+            color: var(--text-secondary);
             font-size: 14px;
         }
         
@@ -526,7 +560,7 @@ try {
             
             .left-panel {
                 border-right: none;
-                border-bottom: 1px solid #e0e0e0;
+                border-bottom: 1px solid var(--border);
             }
         }
         
@@ -582,7 +616,7 @@ try {
             <div class="error-container">
                 <h2><?php echo htmlspecialchars($error); ?></h2>
                 <p>ID de producto: <?php echo $id; ?></p>
-                <a href="/proyecto/panel_admin/panel_admin.php" class="btn-volver">
+                <a href='<?= url('/panel_admin/panel_admin.php') ?>' class="btn-volver">
                     ← Volver al Panel de Administración
                 </a>
             </div>
@@ -592,7 +626,8 @@ try {
             <div class="header">
                 <h1>📊 <strong>INFORMACIÓN TÉCNICA</strong> DEL PRODUCTO</h1>
                 <div class="header-actions">
-                    <a href="/proyecto/panel_admin/panel_admin.php" class="btn-volver">
+                    <button id="themeToggle" style="background:rgba(255,255,255,0.2); border:none; color:white; width:36px; height:36px; border-radius:50%; cursor:pointer; font-size:16px;"><i class="fas fa-moon"></i></button>
+                    <a href='<?= url('/panel_admin/panel_admin.php') ?>' class="btn-volver">
                         ← Volver al Panel Admin
                     </a>
                     <div class="badge">ID: <?php echo $producto['id']; ?> | <?php echo date('d/m/Y H:i'); ?></div>
@@ -670,7 +705,7 @@ try {
                         <div class="section-title">
                             <span>📝</span> DESCRIPCIÓN DEL PRODUCTO
                         </div>
-                        <div style="padding: 15px; background: #f8f9fa; border-radius: 8px; line-height: 1.6; color: #555;">
+                        <div style="padding: 15px; background: var(--card-bg); border-radius: 8px; line-height: 1.6; color: var(--text-color);">
                             <?php echo nl2br(htmlspecialchars($producto['descripcion'])); ?>
                         </div>
                     </div>
@@ -681,7 +716,7 @@ try {
                         <div class="section-title">
                             <span>⚙️</span> ESPECIFICACIONES ADICIONALES
                         </div>
-                        <div style="padding: 15px; background: #f8f9fa; border-radius: 8px; font-family: monospace; font-size: 13px; white-space: pre-wrap;">
+                        <div style="padding: 15px; background: var(--card-bg); border-radius: 8px; font-family: monospace; font-size: 13px; white-space: pre-wrap; color: var(--text-color);">
                             <?php echo htmlspecialchars($producto['specs']); ?>
                         </div>
                     </div>
@@ -738,11 +773,11 @@ try {
                             ?>
                             <div class="similar-card">
                                 <div class="similar-name"><?php echo htmlspecialchars($similar['name']); ?></div>
-                                <div style="font-size: 12px; color: #666; margin-bottom: 5px;">SKU: <?php echo htmlspecialchars($similar['sku']); ?></div>
+                                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 5px;">SKU: <?php echo htmlspecialchars($similar['sku']); ?></div>
                                 <div style="font-size: 14px; font-weight: bold; color: #e74c3c;">
                                     <?php echo htmlspecialchars($producto['currency']); ?> <?php echo number_format($similar['price'], 2, ',', '.'); ?>
                                 </div>
-                                <div style="font-size: 11px; color: #666; margin: 5px 0;">⭐ <?php echo $similar['rating']; ?>/5</div>
+                                <div style="font-size: 11px; color: var(--text-secondary); margin: 5px 0;">⭐ <?php echo $similar['rating']; ?>/5</div>
                                 <div class="similar-stock <?php echo $clase_stock; ?>">
                                     Stock: <?php echo $similar['stock']; ?> unid.
                                 </div>
@@ -791,5 +826,26 @@ try {
         
         console.log('Información técnica cargada para producto ID: <?php echo $id; ?>');
     </script>
+<script>
+(function() {
+    const toggle = document.getElementById('themeToggle');
+    function applyDark(isDark) {
+        document.body.classList.toggle('dark-mode', isDark);
+        if (toggle) {
+            toggle.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        }
+    }
+    const saved = localStorage.getItem('darkMode');
+    if (saved === 'enabled') applyDark(true);
+    else if (saved === 'disabled') applyDark(false);
+    if (toggle) {
+        toggle.addEventListener('click', function() {
+            const isDark = !document.body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
+            applyDark(isDark);
+        });
+    }
+})();
+</script>
 </body>
 </html>

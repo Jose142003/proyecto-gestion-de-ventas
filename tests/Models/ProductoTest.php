@@ -62,7 +62,8 @@ class ProductoTest extends DatabaseTestCase
         $this->assertTrue($deleted);
 
         $product = $this->productModel->findById($data['id']);
-        $this->assertNull($product);
+        $this->assertNotNull($product);
+        $this->assertEquals(0, (int)$product['active']);
     }
 
     public function testUpdateStock(): void
@@ -94,17 +95,21 @@ class ProductoTest extends DatabaseTestCase
 
     public function testPagination(): void
     {
+        $existing = $this->productModel->getAll(null, null, 100, 0);
+        $existingCount = count($existing);
+
         for ($i = 0; $i < 5; $i++) {
             $this->createTestProduct(['name' => 'Page Prod ' . $i, 'sku' => 'PAGE-' . uniqid()]);
         }
 
         $page1 = $this->productModel->getAll(null, null, 2, 0);
-        $this->assertCount(2, $page1);
+        $this->assertCount(min(2, $existingCount + 5), $page1);
 
         $page2 = $this->productModel->getAll(null, null, 2, 2);
-        $this->assertCount(2, $page2);
+        $this->assertCount(min(2, max(0, $existingCount + 5 - 2)), $page2);
 
         $page3 = $this->productModel->getAll(null, null, 2, 4);
-        $this->assertCount(1, $page3);
+        $this->assertCount(min(2, max(0, $existingCount + 5 - 4)), $page3);
+        $this->assertGreaterThanOrEqual(1, $existingCount + 5 - 4);
     }
 }

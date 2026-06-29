@@ -3,6 +3,7 @@ error_reporting(0);
 ini_set('display_errors', 0);
 
 header('Content-Type: application/json');
+header('Cache-Control: no-store');
 $cors_origin = getenv('CORS_ORIGIN') ?: (defined('BASE_URL') ? rtrim(BASE_URL, '/') : 'http://localhost');
 header("Access-Control-Allow-Origin: $cors_origin");
 header('Access-Control-Allow-Credentials: true');
@@ -17,6 +18,7 @@ register_shutdown_function(function () {
 
 require_once __DIR__ . '/../conexion/conexion.php';
 require_once __DIR__ . '/totp.php';
+verificarCSRF();
 requerirAdmin();
 
 function columnaExiste($pdo, $tabla, $columna): bool {

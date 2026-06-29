@@ -1,4 +1,6 @@
 <?php
+session_start();
+
 require_once '../conexion/conexion.php';
 requerirAdmin();
 header('Content-Type: application/json');
@@ -14,8 +16,20 @@ try {
         $columns[] = $row['Field'];
     }
     
-    // Determinar si existe una columna de fecha para products
-    $has_created_at = in_array('created_at', $columns);
+    $has_sku = in_array('sku', $columns);
+    
+    $search = $_GET['search'] ?? '';
+    $hasSearch = $search !== '';
+    if ($hasSearch) {
+        $searchInt = is_numeric($search) ? (int)$search : 0;
+        $searchLike = $pdo->quote("%$search%");
+        $whereSearch = "WHERE p.id = $searchInt OR p.name LIKE $searchLike";
+        if ($has_sku) {
+            $whereSearch .= " OR p.sku LIKE $searchLike";
+        }
+    } else {
+        $whereSearch = '';
+    }
     
     // Verificar tablas inventory y product_stats
     $tables_exist = true;
@@ -74,6 +88,7 @@ try {
                     (SELECT COUNT(*) FROM cart_items ci WHERE ci.product_id = p.id) as en_carritos
                     
                 FROM products p
+                $whereSearch
                 ORDER BY 
                     CASE 
                         WHEN p.stock <= 0 THEN 1
@@ -135,6 +150,7 @@ try {
                 FROM products p
                 LEFT JOIN inventory i ON p.id = i.product_id
                 LEFT JOIN product_stats ps ON p.id = ps.product_id
+                $whereSearch
                 ORDER BY 
                     CASE 
                         WHEN p.stock <= 0 THEN 1

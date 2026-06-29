@@ -8,8 +8,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     verificarCSRF();
     $input = json_decode(file_get_contents('php://input'), true);
     
-    $user_id = $input['user_id'] ?? 0;
+    $user_id = $_SESSION['user_id'] ?? 0;
     $product_id = $input['product_id'] ?? 0;
+    $variant_id = isset($input['variant_id']) ? intval($input['variant_id']) : 0;
     
     if ($user_id == 0 || $product_id == 0) {
         http_response_code(400);
@@ -20,10 +21,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $db = conectarDB();
     
     try {
-        $delete_query = "DELETE FROM cart_items WHERE user_id = :user_id AND product_id = :product_id";
+        if ($variant_id > 0) {
+            $delete_query = "DELETE FROM cart_items WHERE user_id = :user_id AND product_id = :product_id AND variant_id = :variant_id";
+        } else {
+            $delete_query = "DELETE FROM cart_items WHERE user_id = :user_id AND product_id = :product_id AND variant_id IS NULL";
+        }
         $stmt_delete = $db->prepare($delete_query);
         $stmt_delete->bindParam(":user_id", $user_id);
         $stmt_delete->bindParam(":product_id", $product_id);
+        if ($variant_id > 0) {
+            $stmt_delete->bindParam(":variant_id", $variant_id);
+        }
         $stmt_delete->execute();
         
         if ($stmt_delete->rowCount() > 0) {

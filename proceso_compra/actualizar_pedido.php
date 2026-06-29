@@ -37,13 +37,47 @@ try {
     $usuario_nombre = $usuario['nombre'] ?? 'Sistema';
     $usuario_rol = $usuario['rol'] ?? 'admin';
     
+    // State machine: transiciones permitidas
+    $allowedTransitions = [
+        'pendiente' => ['confirmado', 'cancelado'],
+        'confirmado' => ['enviado', 'cancelado'],
+        'enviado' => ['entregado', 'cancelado'],
+        'entregado' => [],
+        'cancelado' => [],
+        'facturado' => ['entregado', 'cancelado'],
+    ];
+
     $updates = [];
     $params = [];
     
-    // Actualizar estado
+    // Actualizar estado con validación de máquina de estados
     if (isset($data['estado'])) {
+        $nuevoEstado = $data['estado'];
+        
+        // Obtener estado actual del pedido
+        $stmtEstado = $pdo->prepare("SELECT estado FROM pedidos WHERE id = ?");
+        $stmtEstado->execute([$pedido_id]);
+        $pedidoActual = $stmtEstado->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$pedidoActual) {
+            echo json_encode(['success' => false, 'message' => 'Pedido no encontrado']);
+            exit;
+        }
+        
+        $estadoActual = $pedidoActual['estado'];
+        
+        if (!isset($allowedTransitions[$estadoActual])) {
+            echo json_encode(['success' => false, 'message' => "Estado actual '$estadoActual' no es válido"]);
+            exit;
+        }
+        
+        if (!in_array($nuevoEstado, $allowedTransitions[$estadoActual])) {
+            echo json_encode(['success' => false, 'message' => "No se puede cambiar de '$estadoActual' a '$nuevoEstado'"]);
+            exit;
+        }
+        
         $updates[] = "estado = ?";
-        $params[] = $data['estado'];
+        $params[] = $nuevoEstado;
     }
     
     // Actualizar notas internas

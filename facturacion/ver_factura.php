@@ -10,6 +10,7 @@ try {
     $pdo = conectarDB();
     $pdo->exec("SET time_zone = '-04:00'");
 } catch (PDOException $e) {
+    error_log("Error en ver_factura.php: " . $e->getMessage());
     die("Error interno del servidor");
 }
 
@@ -783,6 +784,34 @@ $empresa_email = "picca.ventas@gmail.com";
             
             @page { size: A4; margin: 1cm; }
         }
+    
+        :root {
+            --primary-color: #050C18;
+            --secondary-color: #294E90;
+            --accent-color: #3C91ED;
+            --bg-color: #f0f2f5;
+            --card-bg: #fff;
+            --text-color: #333;
+            --text-secondary: #555;
+            --text-muted: #666;
+            --border-color: #ddd;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --error-color: #dc3545;
+        }
+        body.dark-mode {
+            --primary-color: #0a0e1a;
+            --secondary-color: #1a1f2e;
+            --accent-color: #5aa9e6;
+            --bg-color: #0f1219;
+            --card-bg: #1e2436;
+            --text-color: #e4e6eb;
+            --text-secondary: #b0b3b8;
+            --text-muted: #999;
+            --border-color: #2c3348;
+        }
+        body.dark-mode { background: var(--bg-color); color: var(--text-color); }
+
     </style>
 </head>
 <body>
@@ -1087,12 +1116,21 @@ $empresa_email = "picca.ventas@gmail.com";
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
         btn.disabled = true;
         
-        fetchConCSRF('/proyecto/usuarios/enviar_factura_email.php', { factura_id: id, email: emailCliente })
+        fetchConCSRF('<?= url('/usuarios/enviar_factura_email.php') ?>', { factura_id: id, email: emailCliente })
         .then(response => response.json())
         .then(data => { alert(data.success ? '✅ ' + data.message : '❌ ' + data.message); })
         .catch(() => { alert('❌ Error de conexión'); })
         .finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
     }
     </script>
+
+        <script>
+        (function() {
+            var saved = localStorage.getItem('darkMode');
+            if (saved === 'enabled') {
+                document.body.classList.add('dark-mode');
+            }
+        })();
+        </script>
 </body>
 </html>

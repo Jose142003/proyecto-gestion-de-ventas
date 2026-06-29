@@ -40,6 +40,34 @@ if ($email && $accion) {
         .icon { font-size:4rem; margin-bottom:15px; color:#27ae60; }
         .btn { display:inline-block; background:#2c3e50; color:white; padding:12px 30px; border-radius:8px; text-decoration:none; font-weight:600; }
         .btn:hover { background:#3498db; }
+    
+        :root {
+            --primary-color: #050C18;
+            --secondary-color: #294E90;
+            --accent-color: #3C91ED;
+            --bg-color: #f0f2f5;
+            --card-bg: #fff;
+            --text-color: #333;
+            --text-secondary: #555;
+            --text-muted: #666;
+            --border-color: #ddd;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --error-color: #dc3545;
+        }
+        body.dark-mode {
+            --primary-color: #0a0e1a;
+            --secondary-color: #1a1f2e;
+            --accent-color: #5aa9e6;
+            --bg-color: #0f1219;
+            --card-bg: #1e2436;
+            --text-color: #e4e6eb;
+            --text-secondary: #b0b3b8;
+            --text-muted: #999;
+            --border-color: #2c3348;
+        }
+        body.dark-mode { background: var(--bg-color); color: var(--text-color); }
+
     </style>
 </head>
 <body>
@@ -49,5 +77,14 @@ if ($email && $accion) {
         <p><?= $mensaje ? 'Puedes cambiar esta opción en cualquier momento.' : 'Enlace no válido.' ?></p>
         <a href="/proyecto/interfaz_usuario/index.html" class="btn"><i class="fas fa-home"></i> Volver a la tienda</a>
     </div>
+
+        <script>
+        (function() {
+            var saved = localStorage.getItem('darkMode');
+            if (saved === 'enabled') {
+                document.body.classList.add('dark-mode');
+            }
+        })();
+        </script>
 </body>
 </html>

@@ -48,7 +48,7 @@ try {
         echo json_encode(['success' => true, 'message' => 'Movimientos de caja limpiados correctamente.']);
     }
 } catch (Exception $e) {
-    if (isset($db)) $db->rollBack();
+    if (isset($db) && $db->inTransaction()) $db->rollBack();
     error_log("Error limpiar caja: " . $e->getMessage());
     echo json_encode(['success' => false, 'message' => 'Error al limpiar caja: ' . $e->getMessage()]);
 }

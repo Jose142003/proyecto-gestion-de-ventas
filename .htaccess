@@ -2,6 +2,7 @@
     RewriteEngine On
     RewriteRule ^manifest\.json$ manifest.php [L,QSA]
     RewriteRule ^interfaz_usuario/pagina_modernizada\.html$ interfaz_usuario/pagina_modernizada_check.php [L,QSA]
+    ErrorDocument 404 /proyecto/interfaz_usuario/404.php
 </IfModule>
 
 <IfModule mod_headers.c>
@@ -22,7 +23,11 @@
     Options -Indexes
 </IfModule>
 
+# Protect .env files
+RedirectMatch 404 /\.env
+
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteRule ^(vendor|backups/backups|logs|sql|tests) - [F,L]
+    RewriteRule ^backups_db/ - [F,L]
 </IfModule>

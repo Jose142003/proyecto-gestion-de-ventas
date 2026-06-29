@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 
 require_once __DIR__ . '/../conexion/conexion.php';
@@ -54,14 +54,14 @@ try {
     <title>Factura <?php echo htmlspecialchars($factura['numero_factura'] ?? ''); ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
       <!-- PWA Meta Tags -->
-    <link rel="manifest" href="/proyecto/manifest.json">
+    <link rel="manifest" href="<?= url('/manifest.json') ?>">
     <meta name="theme-color" content="#050C18">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="PIC Industrial">
-    <link rel="apple-touch-icon" href="/proyecto/img/pic.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="/proyecto/img/pic.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="/proyecto/img/pic.png">
+    <link rel="apple-touch-icon" href="<?= url('/img/pic.png') ?>">
+    <link rel="icon" type="image/png" sizes="192x192" href="<?= url('/img/pic.png') ?>">
+    <link rel="icon" type="image/png" sizes="512x512" href="<?= url('/img/pic.png') ?>">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: #f5f5f5; padding: 20px; }
@@ -154,7 +154,7 @@ try {
                 <button class="btn btn-print" onclick="window.print()">
                     <i class="fas fa-print"></i> Imprimir Factura
                 </button>
-                <a href="/proyecto/interfaz_usuario/pagina_modernizada.php" class="btn btn-home">
+                <a href='<?= url('/interfaz_usuario/pagina_modernizada.php') ?>' class="btn btn-home">
                     <i class="fas fa-home"></i> Volver al Inicio
                 </a>
             </div>

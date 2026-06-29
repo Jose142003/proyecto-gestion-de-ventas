@@ -35,7 +35,20 @@ try {
     $stmt = $pdo->prepare("SELECT estado FROM pedidos WHERE id = ?");
     $stmt->execute([$pedido_id]);
     $pedidoActual = $stmt->fetch(PDO::FETCH_ASSOC);
-    $estado_anterior = $pedidoActual ? $pedidoActual['estado'] : 'pendiente';
+    
+    if (!$pedidoActual) {
+        $pdo->rollBack();
+        echo json_encode(['success' => false, 'message' => 'Pedido no encontrado']);
+        exit;
+    }
+    
+    if ($pedidoActual['estado'] === 'cancelado') {
+        $pdo->rollBack();
+        echo json_encode(['success' => false, 'message' => 'El pedido ya está cancelado']);
+        exit;
+    }
+    
+    $estado_anterior = $pedidoActual['estado'];
     
     // Actualizar estado del pedido
     $sql = "UPDATE pedidos SET estado = 'cancelado', observaciones = CONCAT(IFNULL(observaciones, ''), ' | Cancelado: ', :motivo), updated_at = NOW() WHERE id = :pedido_id";

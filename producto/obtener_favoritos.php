@@ -2,9 +2,12 @@
 header('Content-Type: application/json');
 require_once __DIR__ . '/../conexion/conexion.php';
 
+session_start();
+requerirSesion();
+
 $conn = Database::getConnection();
 
-$usuario_id = isset($_GET['user_id']) ? intval($_GET['user_id']) : 0;
+$usuario_id = $_SESSION['user_id'];
 
 if ($usuario_id <= 0) {
     echo json_encode(['success' => false, 'favoritos' => [], 'ids' => []]);

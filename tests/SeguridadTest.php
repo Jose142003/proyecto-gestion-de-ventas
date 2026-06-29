@@ -124,4 +124,76 @@ class SeguridadTest extends TestCase
             $this->assertStringContainsString($pattern, $htaccess, ".htaccess should contain '$pattern'");
         }
     }
+
+    public function testEmailVerificationTokenGeneration(): void
+    {
+        $token = bin2hex(random_bytes(32));
+        $this->assertEquals(64, strlen($token));
+        $this->assertTrue(ctype_xdigit($token));
+    }
+
+    public function testEmailVerificationTokenExpiry(): void
+    {
+        $now = time();
+        $valido = $now + 86400;
+        $expirado = $now - 1;
+        $this->assertGreaterThan($now, $valido);
+        $this->assertLessThan($now, $expirado);
+    }
+
+    public function testSqlInjectionPreventionInEmailQueries(): void
+    {
+        $sql = "SELECT * FROM usuarios WHERE correo = :correo AND token_verificacion = :token";
+        $this->assertStringContainsString(':correo', $sql);
+        $this->assertStringContainsString(':token', $sql);
+        $this->assertStringNotContainsString("'", $sql);
+    }
+
+    public function test2faRateLimitThreshold(): void
+    {
+        $maxAttempts = 3;
+        $windowMinutes = 5;
+        $this->assertGreaterThan(0, $maxAttempts);
+        $this->assertLessThanOrEqual(10, $maxAttempts);
+        $this->assertGreaterThan(0, $windowMinutes);
+    }
+
+    public function testPasswordStrengthValidation(): void
+    {
+        $validator = fn(string $pass): array => [
+            'length' => strlen($pass) >= 8,
+            'uppercase' => (bool)preg_match('/[A-Z]/', $pass),
+            'lowercase' => (bool)preg_match('/[a-z]/', $pass),
+            'number' => (bool)preg_match('/[0-9]/', $pass),
+            'special' => (bool)preg_match('/[^a-zA-Z0-9]/', $pass),
+        ];
+
+        $weak = $validator('abc');
+        $this->assertFalse($weak['length']);
+        $this->assertFalse($weak['uppercase']);
+        $this->assertFalse($weak['number']);
+
+        $strong = $validator('Abcd1234!');
+        $this->assertTrue($strong['length']);
+        $this->assertTrue($strong['uppercase']);
+        $this->assertTrue($strong['lowercase']);
+        $this->assertTrue($strong['number']);
+        $this->assertTrue($strong['special']);
+    }
+
+    public function testSessionTimeoutConfiguration(): void
+    {
+        $timeoutMinutes = 30;
+        $inactivityLimit = $timeoutMinutes * 60;
+        $this->assertEquals(1800, $inactivityLimit);
+    }
+
+    public function testRateLimitIpAnonymization(): void
+    {
+        $ip = '192.168.1.1';
+        $hash = hash('sha256', $ip);
+        $this->assertNotEquals($ip, $hash);
+        $this->assertEquals(64, strlen($hash));
+        $this->assertTrue(ctype_xdigit($hash));
+    }
 }

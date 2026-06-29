@@ -225,7 +225,8 @@ function generarHTMLFacturaEmail($factura, $detalles) {
         foreach ($detalles as $detalle) {
             $subtotal += floatval($detalle['subtotal'] ?? 0);
         }
-        $iva = $subtotal * 0.16;
+        $ivaPorcentaje = function_exists('obtenerIvaPorcentaje') ? obtenerIvaPorcentaje($pdo) : 16;
+        $iva = $subtotal * $ivaPorcentaje / 100;
         $total = $subtotal + $iva;
     }
     

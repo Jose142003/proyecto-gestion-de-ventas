@@ -1,7 +1,8 @@
 <?php
 // verificar_stock.php
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: http://localhost');
+$allowedOrigin = defined('CORS_ORIGIN') ? CORS_ORIGIN : 'http://localhost';
+header("Access-Control-Allow-Origin: $allowedOrigin");
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 

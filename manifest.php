@@ -12,7 +12,7 @@ echo json_encode([
     'name' => 'Proyectos Industriales Del Centro',
     'short_name' => 'PIC Industrial',
     'description' => 'Suministros industriales de alta calidad - Tienda oficial',
-    'start_url' => $baseUrl . '/interfaz_usuario/pagina_modernizada.html',
+    'start_url' => $baseUrl . '/interfaz_usuario/pagina_modernizada.php',
     'display' => 'standalone',
     'theme_color' => '#050C18',
     'background_color' => '#F3F3F3',

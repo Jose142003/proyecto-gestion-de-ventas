@@ -1,7 +1,12 @@
-﻿<?php
+<?php
 session_start();
 
 require_once __DIR__ . '/../conexion/conexion.php';
+require_once __DIR__ . '/../config/i18n.php';
+require_once __DIR__ . '/../config/i18n_helpers.php';
+$locale = $_GET['lang'] ?? $_COOKIE['lang'] ?? 'es';
+setcookie('lang', $locale, time()+31536000, '/');
+\I18n::load($locale);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verificarCSRF();
@@ -10,6 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 try {
     $pdo = conectarDB();
 } catch (PDOException $e) {
+    error_log("Error en nueva_factura.php: " . $e->getMessage());
     die("Error interno del servidor");
 }
 
@@ -18,7 +24,7 @@ $page_title = 'Nueva Factura';
 
 // Obtener información del usuario de la sesión
 if (!isset($_SESSION['user_id'])) {
-    header('Location: /proyecto/interfaz_usuario/login.html');
+    header('Location: ' . url('/interfaz_usuario/login.html'));
     exit;
 }
 $usuario_id = $_SESSION['user_id'];
@@ -64,7 +70,7 @@ try {
 }
 ?>
 <!DOCTYPE html>
-<html lang="es">
+<html lang="<?php echo htmlspecialchars($locale); ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -73,25 +79,46 @@ try {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
       <!-- PWA Meta Tags -->
-    <link rel="manifest" href="/proyecto/manifest.json">
+    <link rel="manifest" href="<?= url('/manifest.json') ?>">
     <meta name="theme-color" content="#050C18">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="PIC Industrial">
-    <link rel="apple-touch-icon" href="/proyecto/img/pic.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="/proyecto/img/pic.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="/proyecto/img/pic.png">
+    <link rel="apple-touch-icon" href="<?= url('/img/pic.png') ?>">
+    <link rel="icon" type="image/png" sizes="192x192" href="<?= url('/img/pic.png') ?>">
+    <link rel="icon" type="image/png" sizes="512x512" href="<?= url('/img/pic.png') ?>">
     <style>
         :root {
+            --primary: #050C18;
+            --secondary: #294E90;
+            --accent: #3C91ED;
+            --light: #7EBDE9;
+            --bg-color: #F3F3F3;
+            --text-color: #333;
+            --card-bg: #ffffff;
+            --border: #e0e0e0;
+            --border-light: #eee;
+            --success: #2ed573;
+            --warning: #ffa502;
+            --danger: #ff4757;
+            --info: #3498db;
             --bush-black: #050C18;
             --yishin-blue: #294E90;
             --chefcheorem-blue: #3C91ED;
             --maya-blue: #7EBDE9;
             --white-smoke: #F3F3F3;
-            --success: #2ed573;
-            --warning: #ffa502;
-            --danger: #ff4757;
-            --info: #3498db;
+        }
+        body.dark-mode {
+            --bg-color: #0f1219;
+            --text-color: #e4e6eb;
+            --card-bg: #1e2436;
+            --border: #2c3348;
+            --border-light: #2c3348;
+            --primary: #0a0e1a;
+            --secondary: #1a1f2e;
+            --bush-black: #0a0e1a;
+            --yishin-blue: #1a1f2e;
+            --white-smoke: #0f1219;
         }
         
         * {
@@ -102,8 +129,8 @@ try {
         }
         
         body {
-            background-color: var(--white-smoke);
-            color: #333;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             line-height: 1.6;
             min-height: 100vh;
         }
@@ -115,7 +142,7 @@ try {
         }
         
         .invoice-header {
-            background: white;
+            background: var(--card-bg);
             border-radius: 15px;
             padding: 30px;
             margin-bottom: 30px;
@@ -129,7 +156,7 @@ try {
             align-items: center;
             margin-bottom: 30px;
             padding-bottom: 20px;
-            border-bottom: 2px solid #eee;
+            border-bottom: 2px solid var(--border-light);
             flex-wrap: wrap;
             gap: 15px;
         }
@@ -159,10 +186,10 @@ try {
         }
         
         .info-card {
-            background: #f8f9fa;
+            background: var(--card-bg);
             border-radius: 10px;
             padding: 25px;
-            border: 2px solid #e9ecef;
+            border: 2px solid var(--border);
         }
         
         .info-card h3 {
@@ -187,18 +214,19 @@ try {
             display: block;
             margin-bottom: 8px;
             font-weight: 600;
-            color: #495057;
+            color: var(--text-color);
             font-size: 0.95rem;
         }
         
         .form-control {
             width: 100%;
             padding: 12px 15px;
-            border: 2px solid #e0e0e0;
+            border: 2px solid var(--border);
             border-radius: 8px;
             font-size: 1rem;
             transition: all 0.3s ease;
-            background: white;
+            background: var(--card-bg);
+            color: var(--text-color);
         }
         
         .form-control:focus {
@@ -209,7 +237,7 @@ try {
         
         .select2-container .select2-selection--single {
             height: 46px !important;
-            border: 2px solid #e0e0e0 !important;
+            border: 2px solid var(--border) !important;
             border-radius: 8px !important;
             padding: 10px !important;
         }
@@ -223,8 +251,27 @@ try {
             height: 44px !important;
         }
         
+        .select2-dropdown {
+            background: var(--card-bg);
+            border-color: var(--border);
+        }
+        .select2-container--default .select2-results__option[aria-selected=true] {
+            background: var(--secondary);
+        }
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background: var(--chefcheorem-blue);
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: var(--text-color) !important;
+        }
+        .select2-search--dropdown .select2-search__field {
+            background: var(--card-bg);
+            border-color: var(--border);
+            color: var(--text-color);
+        }
+        
         .invoice-products {
-            background: white;
+            background: var(--card-bg);
             border-radius: 15px;
             padding: 30px;
             margin-bottom: 30px;
@@ -250,11 +297,11 @@ try {
         }
         
         .product-add-form {
-            background: #f8f9fa;
+            background: var(--card-bg);
             border-radius: 10px;
             padding: 25px;
             margin-bottom: 25px;
-            border: 2px solid #e9ecef;
+            border: 2px solid var(--border);
         }
         
         .form-row {
@@ -322,13 +369,19 @@ try {
         
         .products-table td {
             padding: 12px;
-            border-bottom: 1px solid #dee2e6;
-            color: #333;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-color);
             font-size: 0.9rem;
         }
         
         .products-table tr:hover td {
             background-color: rgba(60, 145, 237, 0.05);
+        }
+        body.dark-mode .products-table tr:hover td {
+            background-color: rgba(60, 145, 237, 0.12);
+        }
+        body.dark-mode .section-title {
+            border-bottom-color: var(--border);
         }
         
         .btn-remove {
@@ -351,7 +404,7 @@ try {
         }
         
         .invoice-summary {
-            background: white;
+            background: var(--card-bg);
             border-radius: 15px;
             padding: 30px;
             margin-bottom: 30px;
@@ -366,10 +419,10 @@ try {
         }
         
         .summary-card {
-            background: #f8f9fa;
+            background: var(--card-bg);
             border-radius: 10px;
             padding: 25px;
-            border: 2px solid #e9ecef;
+            border: 2px solid var(--border);
         }
         
         .summary-row {
@@ -377,7 +430,7 @@ try {
             justify-content: space-between;
             align-items: center;
             padding: 12px 0;
-            border-bottom: 1px solid #dee2e6;
+            border-bottom: 1px solid var(--border);
             flex-wrap: wrap;
             gap: 10px;
         }
@@ -399,7 +452,7 @@ try {
             justify-content: flex-end;
             gap: 15px;
             padding-top: 30px;
-            border-top: 2px solid #eee;
+            border-top: 2px solid var(--border-light);
             flex-wrap: wrap;
         }
         
@@ -443,6 +496,14 @@ try {
             background-color: #555;
             transform: translateY(-2px);
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        body.dark-mode .btn-secondary {
+            background-color: #2c3348;
+            color: #e4e6eb;
+        }
+        body.dark-mode .btn-secondary:hover {
+            background-color: #3a435e;
         }
         
         .btn-success {
@@ -510,7 +571,8 @@ try {
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(255, 255, 255, 0.9);
+            background: var(--card-bg);
+            opacity: 0.9;
             display: none;
             flex-direction: column;
             justify-content: center;
@@ -518,11 +580,15 @@ try {
             z-index: 9999;
             backdrop-filter: blur(5px);
         }
+        body.dark-mode .loading-overlay {
+            background: #0f1219;
+            opacity: 0.95;
+        }
         
         .loading-spinner {
             width: 50px;
             height: 50px;
-            border: 4px solid #f3f3f3;
+            border: 4px solid var(--border);
             border-top: 4px solid var(--chefcheorem-blue);
             border-radius: 50%;
             animation: spin 1s linear infinite;
@@ -543,7 +609,7 @@ try {
             font-weight: 600;
             margin-bottom: 20px;
             padding: 10px 18px;
-            background: white;
+            background: var(--card-bg);
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             transition: all 0.3s ease;
@@ -650,6 +716,35 @@ try {
             }
         }
         
+        .theme-toggle {
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            color: var(--text-color);
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            flex-shrink: 0;
+        }
+        .theme-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .qty-input {
+            width: 70px;
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            background: var(--card-bg);
+            color: var(--text-color);
+        }
+        
         @media (max-width: 480px) {
             .products-table {
                 min-width: 500px;
@@ -659,14 +754,17 @@ try {
 </head>
 <body>
     <div class="invoice-container">
-        <a href="/proyecto/panel_admin/panel_admin.php" class="back-button">
+        <a href='<?= url('/panel_admin/panel_admin.php') ?>' class="back-button">
             <i class="fas fa-arrow-left"></i> Volver al Panel
         </a>
         
         <div class="invoice-header">
             <div class="header-title">
                 <h1><i class="fas fa-file-invoice-dollar"></i> Nueva Factura</h1>
-                <div class="invoice-number" id="numeroFactura"><?php echo htmlspecialchars($numero_factura); ?></div>
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div class="invoice-number" id="numeroFactura"><?php echo htmlspecialchars($numero_factura); ?></div>
+                    <button class="theme-toggle" id="themeToggle" title="Cambiar tema"><i class="fas fa-moon"></i></button>
+                </div>
             </div>
             
             <div class="invoice-info-grid">
@@ -769,8 +867,8 @@ try {
                     </thead>
                     <tbody id="productosTableBody">
                         <tr id="emptyRow">
-                            <td colspan="5" style="text-align: center; padding: 40px; color: #666;">
-                                <i class="fas fa-box" style="font-size: 2.5rem; color: #ccc; margin-bottom: 10px; display: block;"></i>
+                            <td colspan="5" style="text-align: center; padding: 40px; color: var(--text-color);">
+                                <i class="fas fa-box" style="font-size: 2.5rem; color: var(--border); margin-bottom: 10px; display: block;"></i>
                                 <strong>No hay productos agregados</strong>
                                 <p style="font-size: 0.85rem; margin-top: 5px;">Agrega productos usando el formulario superior</p>
                             </td>
@@ -1094,7 +1192,7 @@ try {
         // Cancelar
         $('#btnCancelar').click(function() {
             if (confirm('¿Está seguro de cancelar? Se perderán los datos no guardados.')) {
-                window.location.href = '/proyecto/panel_admin/panel_admin.php';
+                window.location.href = '<?= url('/panel_admin/panel_admin.php') ?>';
             }
         });
         
@@ -1111,7 +1209,7 @@ try {
             <tr id="productoRow-${index}">
                 <td>${escapeHtml(producto.nombre)}</td>
                 <td>Bs. ${producto.precio.toFixed(2)}</td>
-                <td><input type="number" value="${producto.cantidad}" min="1" onchange="actualizarCantidadProducto(${index}, this.value)" style="width:70px; padding:5px; border-radius:4px; border:1px solid #ddd;"></td>
+                <td><input type="number" class="qty-input" value="${producto.cantidad}" min="1" onchange="actualizarCantidadProducto(${index}, this.value)"></td>
                 <td>Bs. ${producto.subtotal.toFixed(2)}</td>
                 <td>
                     <button class="btn-remove" onclick="eliminarProducto(${index})">
@@ -1133,7 +1231,7 @@ try {
         $(`#productoRow-${index}`).html(`
             <td>${escapeHtml(producto.nombre)}</td>
             <td>Bs. ${producto.precio.toFixed(2)}</td>
-            <td><input type="number" value="${producto.cantidad}" min="1" onchange="actualizarCantidadProducto(${index}, this.value)" style="width:70px; padding:5px; border-radius:4px; border:1px solid #ddd;"></td>
+            <td><input type="number" class="qty-input" value="${producto.cantidad}" min="1" onchange="actualizarCantidadProducto(${index}, this.value)"></td>
             <td>Bs. ${producto.subtotal.toFixed(2)}</td>
             <td>
                 <button class="btn-remove" onclick="eliminarProducto(${index})">
@@ -1439,5 +1537,26 @@ try {
             });
     }
     </script>
+<script>
+(function() {
+    const toggle = document.getElementById('themeToggle');
+    function applyDark(isDark) {
+        document.body.classList.toggle('dark-mode', isDark);
+        if (toggle) {
+            toggle.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        }
+    }
+    const saved = localStorage.getItem('darkMode');
+    if (saved === 'enabled') applyDark(true);
+    else if (saved === 'disabled') applyDark(false);
+    if (toggle) {
+        toggle.addEventListener('click', function() {
+            const isDark = !document.body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
+            applyDark(isDark);
+        });
+    }
+})();
+</script>
 </body>
 </html>

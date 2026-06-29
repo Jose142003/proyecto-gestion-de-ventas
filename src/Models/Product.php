@@ -38,9 +38,13 @@ class Product
 
         $where = $conditions ? "WHERE " . implode(" AND ", $conditions) : "";
         $stmt = $this->pdo->prepare("SELECT * FROM products {$where} LIMIT ? OFFSET ?");
-        $params[] = $limit;
-        $params[] = $offset;
-        $stmt->execute($params);
+        $i = 1;
+        foreach ($params as $p) {
+            $stmt->bindValue($i++, $p);
+        }
+        $stmt->bindValue($i++, $limit, PDO::PARAM_INT);
+        $stmt->bindValue($i++, $offset, PDO::PARAM_INT);
+        $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -79,7 +83,7 @@ class Product
 
     public function delete(int $id): bool
     {
-        $stmt = $this->pdo->prepare("DELETE FROM products WHERE id = ?");
+        $stmt = $this->pdo->prepare("UPDATE products SET active = 0 WHERE id = ?");
         $stmt->execute([$id]);
         return $stmt->rowCount() > 0;
     }

@@ -132,9 +132,7 @@ if (!function_exists('iniciarSesion')) {
 
 if (!function_exists('generarTokenCSRF')) {
     function generarTokenCSRF(): string {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
+        iniciarSesion();
         if (empty($_SESSION['_csrf_token'])) {
             $_SESSION['_csrf_token'] = bin2hex(random_bytes(32));
         }
@@ -144,9 +142,7 @@ if (!function_exists('generarTokenCSRF')) {
 
 if (!function_exists('validarTokenCSRF')) {
     function validarTokenCSRF(?string $token): bool {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
+        iniciarSesion();
         if (empty($_SESSION['_csrf_token']) || empty($token)) {
             return false;
         }
@@ -285,6 +281,50 @@ if (!function_exists('auditoriaRegistrarConDetalle')) {
             ]);
         } catch (Exception $e) {
             logSistema("Error registrando auditoría con detalle: " . $e->getMessage(), 'ERROR');
+        }
+    }
+}
+
+// ========== ERROR HANDLING HELPER ==========
+if (!function_exists('manejarError')) {
+    function manejarError(Throwable $e, string $contexto = '', string $mensajeUsuario = 'Error interno del servidor'): void {
+        $logMsg = '[' . date('Y-m-d H:i:s') . '] [ERROR] ' . ($contexto ? "[$contexto] " : '') . $e->getMessage() . ' en ' . $e->getFile() . ':' . $e->getLine();
+        error_log($logMsg);
+        if (function_exists('logSistema')) {
+            logSistema($contexto ?: 'error', 'ERROR: ' . $e->getMessage());
+        }
+    }
+}
+
+// ========== EMPRESA HELPER ==========
+if (!function_exists('obtenerConfigEmpresa')) {
+    function obtenerConfigEmpresa(PDO $pdo): array {
+        $default = [
+            'nombre' => 'Proyectos Industriales del Centro (PIC)',
+            'rif' => 'J-29384799-0',
+            'telefono' => '0414-3417373',
+            'direccion' => 'Av. Principal, Edif. PIC',
+        ];
+        try {
+            $stmt = $pdo->query("SELECT clave, valor FROM configuracion_sistema WHERE clave IN ('empresa_nombre', 'empresa_rif', 'empresa_telefono', 'empresa_direccion')");
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $key = str_replace('empresa_', '', $row['clave']);
+                $default[$key] = $row['valor'];
+            }
+        } catch (Exception $e) {}
+        return $default;
+    }
+}
+
+// ========== IVA HELPER ==========
+if (!function_exists('obtenerIvaPorcentaje')) {
+    function obtenerIvaPorcentaje(PDO $pdo): int {
+        try {
+            $stmt = $pdo->query("SELECT valor FROM configuracion_sistema WHERE clave = 'iva_porcentaje'");
+            $iva = $stmt ? $stmt->fetchColumn() : false;
+            return $iva ? (int)$iva : 16;
+        } catch (Exception $e) {
+            return 16;
         }
     }
 }

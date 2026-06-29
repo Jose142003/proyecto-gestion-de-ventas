@@ -14,6 +14,8 @@ register_shutdown_function(function () {
 
 require_once __DIR__ . '/../conexion/conexion.php';
 require_once __DIR__ . '/totp.php';
+seguridadVerificarBloqueoIp();
+seguridadVerificarRateLimit();
 
 $input = json_decode(file_get_contents('php://input'), true);
 $code = trim($input['code'] ?? $_POST['code'] ?? '');
@@ -62,14 +64,14 @@ try {
         exit;
     }
 
-    $pdo->prepare("UPDATE sesiones_2fa_clientes SET intentos = intentos + 1 WHERE id = ?")->execute([$sesion['id']]);
-
     if ($sesion['intentos'] >= 5) {
         $pdo->prepare("UPDATE sesiones_2fa_clientes SET completado = TRUE WHERE id = ?")->execute([$sesion['id']]);
         http_response_code(400);
         echo json_encode(['success' => false, 'message' => 'Demasiados intentos. Inicie sesión nuevamente.']);
         exit;
     }
+
+    $pdo->prepare("UPDATE sesiones_2fa_clientes SET intentos = intentos + 1 WHERE id = ?")->execute([$sesion['id']]);
 
     $isValid = false;
     $secret = $sesion['2fa_secret'];
@@ -122,7 +124,7 @@ try {
     $_SESSION['2fa_verified'] = true;
     $_SESSION['2fa_verified_at'] = time();
 
-    echo json_encode(['success' => true, 'message' => 'Autenticación exitosa', 'redirect_url' => '/proyecto/interfaz_usuario/pagina_modernizada.php']);
+    echo json_encode(['success' => true, 'message' => 'Autenticación exitosa', 'redirect_url' => url('/interfaz_usuario/pagina_modernizada.php')]);
 
 } catch (Throwable $e) {
     http_response_code(500);

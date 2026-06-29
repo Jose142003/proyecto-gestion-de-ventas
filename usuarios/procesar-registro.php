@@ -2,7 +2,8 @@
 // procesar-registro.php - VERSIÓN CORREGIDA
 session_name('CLIENTSESSID');
 session_start();
-require_once '../conexion/conexion.php';
+require_once __DIR__ . '/../conexion/conexion.php';
+require_once __DIR__ . '/enviar_token_email.php';
 
 header('Content-Type: application/json');
 
@@ -13,6 +14,16 @@ define('REQUERIR_TOKEN_ADMIN', true);
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $db = Database::getConnection();
     
+    // ========== HONEYPOT: campo oculto anti-bots ==========
+    if (!empty($_POST['_timestamp']) || !empty($_POST['website'])) {
+        http_response_code(400);
+        echo json_encode(["success" => false, "message" => "Solicitud rechazada"]);
+        exit;
+    }
+
+    // ========== RATE LIMITING ==========
+    seguridadVerificarRateLimit();
+
     // ========== RECOLECTAR DATOS ==========
     $nombre = trim($_POST['nombre'] ?? '');
     $cedula = trim($_POST['cedula'] ?? '');
@@ -69,9 +80,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
     
     // Validar contraseña
-    if (strlen($password) < 8) {
+    $passwordValidation = seguridadValidarPassword($password);
+    if (!$passwordValidation['valida']) {
         http_response_code(400);
-        echo json_encode(["success" => false, "message" => "La contraseña debe tener al menos 8 caracteres"]);
+        echo json_encode(["success" => false, "message" => implode('. ', $passwordValidation['errores'])]);
         exit;
     }
     
@@ -167,7 +179,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 echo json_encode([
                     "success" => true, 
                     "message" => "Administrador registrado exitosamente",
-                    "redirect_url" => "/proyecto/panel_admin/panel_admin.php"
+                    "redirect_url" => url('/panel_admin/panel_admin.php')
                 ]);
             } else {
                 echo json_encode(["success" => false, "message" => "Error al registrar el administrador"]);
@@ -213,7 +225,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $hashed_password = password_hash($password, PASSWORD_BCRYPT);
             
             $query = "INSERT INTO users (nombre, cedula, telefono, correo, password, direccion, estado, rol, is_active, email_verified, created_at) 
-                      VALUES (:nombre, :cedula, :telefono, :correo, :password, :direccion, :estado, :rol, 1, 1, NOW())";
+                      VALUES (:nombre, :cedula, :telefono, :correo, :password, :direccion, :estado, :rol, 1, 0, NOW())";
             
             $stmt = $db->prepare($query);
             $stmt->bindParam(":nombre", $nombre);
@@ -243,6 +255,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 } catch (Exception $e) {
                 }
                 
+                $verificationToken = bin2hex(random_bytes(32));
+                $tokenData = json_encode([
+                    'token' => $verificationToken,
+                    'type' => 'email_verification',
+                    'expires' => date('Y-m-d H:i:s', strtotime('+24 hours'))
+                ]);
+                $stmtToken = $db->prepare("UPDATE users SET verification_token = ? WHERE id = ?");
+                $stmtToken->execute([$tokenData, $user_id]);
+
+                $emailSent = enviarEmailVerificacion($correo, $nombre, $verificationToken);
+
                 // ========== ESTABLECER SESIÓN PARA CLIENTE ==========
                 $_SESSION = array();
                 $_SESSION['loggedin'] = true;
@@ -253,11 +276,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $_SESSION['tabla_origen'] = 'users';
                 $_SESSION['es_admin'] = false;
                 $_SESSION['is_cliente'] = true;
-                
+
+                $msg = $emailSent
+                    ? "Usuario registrado exitosamente. Revisa tu correo para verificar tu cuenta."
+                    : "Usuario registrado exitosamente. No se pudo enviar el correo de verificación (configura SMTP en .env).";
+
                 echo json_encode([
-                    "success" => true, 
-                    "message" => "Usuario registrado exitosamente",
-                    "redirect_url" => "/proyecto/interfaz_usuario/pagina_modernizada.php"
+                    "success" => true,
+                    "message" => $msg,
+                    "redirect_url" => url('/interfaz_usuario/pagina_modernizada.php'),
+                    "email_sent" => $emailSent
                 ]);
             } else {
                 echo json_encode(["success" => false, "message" => "Error al registrar el usuario"]);

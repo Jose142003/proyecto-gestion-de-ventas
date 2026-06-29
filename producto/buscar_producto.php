@@ -11,7 +11,7 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
         
         $query = "SELECT id, name, price, image_url, description, rating, specs, stock 
                   FROM products 
-                  WHERE name LIKE :search OR description LIKE :search";
+                  WHERE (name LIKE :search OR description LIKE :search) AND active = 1";
         
         $stmt = $db->prepare($query);
         $searchTerm = "%" . $search . "%";

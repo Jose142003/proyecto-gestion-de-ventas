@@ -6,11 +6,15 @@ error_reporting(E_ALL & ~E_DEPRECATED & ~E_WARNING & ~E_NOTICE);
 ini_set('display_errors', 0);
 
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/i18n.php';
 
 if (isset($_COOKIE['CLIENTSESSID'])) {
     session_name('CLIENTSESSID');
 }
 session_start();
+
+$locale = $_GET['lang'] ?? $_COOKIE['lang'] ?? 'es';
+\I18n::load($locale);
 
 // ============================================================================
 // IMPORTANTE: NO modificar la sesión existente del cliente
@@ -40,12 +44,9 @@ else if (isset($_SESSION['user_id']) && isset($_SESSION['tabla_origen']) && $_SE
     $usuario_correo = $_SESSION['user_email'] ?? null;
     $es_cliente = true; // Para efectos del pedido, permitir compra
 }
-// Si no hay sesión, intentar obtener de la URL (fallback)
-else {
-    $usuario_id_url = $_GET['usuario_id'] ?? 0;
-    if ($usuario_id_url > 0) {
-        $usuario_id = $usuario_id_url;
-    }
+// Requerir sesión de usuario
+if (!$usuario_id) {
+    die("Acceso denegado: debe iniciar sesión para realizar un pedido.");
 }
 
 header('Content-Type: text/html; charset=utf-8');
@@ -91,14 +92,7 @@ $tipo_divisa = $_GET['tipoDivisa'] ?? 'BS';
 $monto_divisa = floatval($_GET['montoDivisa'] ?? 0);
 
 // ============================================================================
-// 3. OBTENER ID DE USUARIO (priorizar sesión, luego URL)
-// ============================================================================
-if (!$usuario_id && $usuario_id_url > 0) {
-    $usuario_id = $usuario_id_url;
-}
-
-// ============================================================================
-// 4. CONEXIÓN A LA BASE DE DATOS
+// 3. CONEXIÓN A LA BASE DE DATOS
 // ============================================================================
 $conn = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 if (!$conn) {
@@ -253,118 +247,167 @@ if (!$pedido_id && !empty($productosDesdeURL)) {
         $numero_pedido = $prefijo . str_pad($siguiente, 6, '0', STR_PAD_LEFT);
     }
     
-    $subtotal_calc = $total / 1.16;
-    $iva_calc = $total - $subtotal_calc;
+    // Recalculate from DB to prevent price manipulation
+    $subtotal_calc = 0;
+    $productosCalculados = [];
     
-    $insert_query = "INSERT INTO pedidos (usuario_id, cliente_id, numero_pedido, subtotal, iva, total, estado, metodo_pago, referencia_pago, observaciones, created_at) 
-                     VALUES (?, ?, ?, ?, ?, ?, 'pendiente', ?, ?, ?, NOW())";
-    $stmt_insert = mysqli_prepare($conn, $insert_query);
-    $observaciones = "Pedido por {$metodo_normalizado}" . ($referencia ? " - Ref: {$referencia}" : "");
-    $referencia_null = $referencia ?: null;
-    
-    mysqli_stmt_bind_param($stmt_insert, 'iisddssss', 
-        $usuario_id,
-        $cliente_id,
-        $numero_pedido,
-        $subtotal_calc,
-        $iva_calc,
-        $total,
-        $metodo_normalizado,
-        $referencia_null,
-        $observaciones
-    );
-    mysqli_stmt_execute($stmt_insert);
-    $pedido_id = mysqli_insert_id($conn);
-    mysqli_stmt_close($stmt_insert);
-    
-    if ($pedido_id) {
-        $insert_detalle = "INSERT INTO pedido_detalles (pedido_id, producto_id, cantidad, precio_unitario, subtotal, producto_nombre) 
-                          VALUES (?, ?, ?, ?, ?, ?)";
-        $stmt_detalle = mysqli_prepare($conn, $insert_detalle);
+    foreach ($productosDesdeURL as $item) {
+        $producto_id = intval($item['id'] ?? 0);
+        $cantidad = intval($item['cantidad'] ?? 1);
+        $precio = 0;
+        $nombre = $item['nombre'] ?? $item['name'] ?? 'Producto';
         
-        foreach ($productosDesdeURL as $item) {
-            $producto_id = $item['id'] ?? 0;
-            $cantidad = $item['cantidad'] ?? 1;
-            $precio = $item['precio'] ?? 0;
-            $subtotal_item = $precio * $cantidad;
-            $nombre = $item['nombre'] ?? $item['name'] ?? 'Producto';
-            
-            mysqli_stmt_bind_param($stmt_detalle, 'iiidds', $pedido_id, $producto_id, $cantidad, $precio, $subtotal_item, $nombre);
-            mysqli_stmt_execute($stmt_detalle);
-            
-            if ($producto_id > 0) {
-                $stock_query = "UPDATE products SET stock = stock - ? WHERE id = ?";
-                $stmt_stock = mysqli_prepare($conn, $stock_query);
-                mysqli_stmt_bind_param($stmt_stock, 'ii', $cantidad, $producto_id);
-                mysqli_stmt_execute($stmt_stock);
-                mysqli_stmt_close($stmt_stock);
+        if ($producto_id > 0) {
+            $price_query = "SELECT price, name FROM products WHERE id = ?";
+            $stmt_price = mysqli_prepare($conn, $price_query);
+            mysqli_stmt_bind_param($stmt_price, 'i', $producto_id);
+            mysqli_stmt_execute($stmt_price);
+            $result_price = mysqli_stmt_get_result($stmt_price);
+            if ($price_row = mysqli_fetch_assoc($result_price)) {
+                $precio = floatval($price_row['price']);
+                $nombre = $price_row['name'];
             }
+            mysqli_stmt_close($stmt_price);
         }
-        mysqli_stmt_close($stmt_detalle);
         
-        $clear_cart = "DELETE FROM cart_items WHERE user_id = ?";
-        $stmt_clear = mysqli_prepare($conn, $clear_cart);
-        mysqli_stmt_bind_param($stmt_clear, 'i', $usuario_id);
-        mysqli_stmt_execute($stmt_clear);
-        mysqli_stmt_close($stmt_clear);
+        $subtotal_item = $precio * $cantidad;
+        $subtotal_calc += $subtotal_item;
         
-        // ====================================================================
-        // CREAR FACTURA AUTOMÁTICAMENTE
-        // ====================================================================
-        $anio_act = date('Y');
-        $like_pattern = "FAC-{$anio_act}-%";
-        $stmt_seq = mysqli_prepare($conn, "SELECT numero_factura FROM facturas WHERE numero_factura LIKE ? ORDER BY id DESC LIMIT 1");
-        mysqli_stmt_bind_param($stmt_seq, 's', $like_pattern);
-        mysqli_stmt_execute($stmt_seq);
-        $result_seq = mysqli_stmt_get_result($stmt_seq);
-        $last_fact = mysqli_fetch_assoc($result_seq);
-        mysqli_stmt_close($stmt_seq);
-        if ($last_fact) {
-            preg_match('/FAC-' . $anio_act . '-(\d+)/', $last_fact['numero_factura'], $matches);
-            $sig = isset($matches[1]) ? intval($matches[1]) + 1 : 1;
-        } else {
-            $sig = 1;
-        }
-        $num_factura = "FAC-{$anio_act}-" . str_pad($sig, 6, '0', STR_PAD_LEFT);
+        $productosCalculados[] = [
+            'producto_id' => $producto_id,
+            'cantidad' => $cantidad,
+            'precio' => $precio,
+            'subtotal_item' => $subtotal_item,
+            'nombre' => $nombre
+        ];
+    }
+    
+    $ivaPorcentaje = obtenerIvaPorcentaje($db);
+    $iva_calc = $subtotal_calc * $ivaPorcentaje / 100;
+    $total_calc = $subtotal_calc + $iva_calc;
+    $total = $total_calc;
+    
+    $conn->begin_transaction();
+    try {
+        $insert_query = "INSERT INTO pedidos (usuario_id, cliente_id, numero_pedido, subtotal, iva, total, estado, metodo_pago, referencia_pago, observaciones, created_at) 
+                         VALUES (?, ?, ?, ?, ?, ?, 'pendiente', ?, ?, ?, NOW())";
+        $stmt_insert = mysqli_prepare($conn, $insert_query);
+        $observaciones = "Pedido por {$metodo_normalizado}" . ($referencia ? " - Ref: {$referencia}" : "");
+        $referencia_null = $referencia ?: null;
         
-        $stmt_check = mysqli_prepare($conn, "SELECT id FROM facturas WHERE numero_factura = ?");
-        mysqli_stmt_bind_param($stmt_check, 's', $num_factura);
-        mysqli_stmt_execute($stmt_check);
-        mysqli_stmt_store_result($stmt_check);
-        while (mysqli_stmt_num_rows($stmt_check) > 0) {
-            mysqli_stmt_close($stmt_check);
-            $sig++;
+        mysqli_stmt_bind_param($stmt_insert, 'iisddssss', 
+            $usuario_id,
+            $cliente_id,
+            $numero_pedido,
+            $subtotal_calc,
+            $iva_calc,
+            $total_calc,
+            $metodo_normalizado,
+            $referencia_null,
+            $observaciones
+        );
+        mysqli_stmt_execute($stmt_insert);
+        $pedido_id = mysqli_insert_id($conn);
+        mysqli_stmt_close($stmt_insert);
+        
+        if ($pedido_id) {
+            $insert_detalle = "INSERT INTO pedido_detalles (pedido_id, producto_id, cantidad, precio_unitario, subtotal, producto_nombre) 
+                              VALUES (?, ?, ?, ?, ?, ?)";
+            $stmt_detalle = mysqli_prepare($conn, $insert_detalle);
+            
+            foreach ($productosCalculados as $item) {
+                $producto_id = $item['producto_id'];
+                $cantidad = $item['cantidad'];
+                $precio = $item['precio'];
+                $subtotal_item_val = $item['subtotal_item'];
+                $nombre_item = $item['nombre'];
+                
+                mysqli_stmt_bind_param($stmt_detalle, 'iiidds', $pedido_id, $producto_id, $cantidad, $precio, $subtotal_item_val, $nombre_item);
+                mysqli_stmt_execute($stmt_detalle);
+                
+                if ($producto_id > 0) {
+                    $stock_query = "UPDATE products SET stock = GREATEST(stock - ?, 0) WHERE id = ?";
+                    $stmt_stock = mysqli_prepare($conn, $stock_query);
+                    mysqli_stmt_bind_param($stmt_stock, 'ii', $cantidad, $producto_id);
+                    mysqli_stmt_execute($stmt_stock);
+                    mysqli_stmt_close($stmt_stock);
+                }
+            }
+            mysqli_stmt_close($stmt_detalle);
+            
+            $clear_cart = "DELETE FROM cart_items WHERE user_id = ?";
+            $stmt_clear = mysqli_prepare($conn, $clear_cart);
+            mysqli_stmt_bind_param($stmt_clear, 'i', $usuario_id);
+            mysqli_stmt_execute($stmt_clear);
+            mysqli_stmt_close($stmt_clear);
+            
+            // ====================================================================
+            // CREAR FACTURA AUTOMÁTICAMENTE
+            // ====================================================================
+            $anio_act = date('Y');
+            $like_pattern = "FAC-{$anio_act}-%";
+            $stmt_seq = mysqli_prepare($conn, "SELECT numero_factura FROM facturas WHERE numero_factura LIKE ? ORDER BY id DESC LIMIT 1");
+            mysqli_stmt_bind_param($stmt_seq, 's', $like_pattern);
+            mysqli_stmt_execute($stmt_seq);
+            $result_seq = mysqli_stmt_get_result($stmt_seq);
+            $last_fact = mysqli_fetch_assoc($result_seq);
+            mysqli_stmt_close($stmt_seq);
+            if ($last_fact) {
+                preg_match('/FAC-' . $anio_act . '-(\d+)/', $last_fact['numero_factura'], $matches);
+                $sig = isset($matches[1]) ? intval($matches[1]) + 1 : 1;
+            } else {
+                $sig = 1;
+            }
             $num_factura = "FAC-{$anio_act}-" . str_pad($sig, 6, '0', STR_PAD_LEFT);
+            
             $stmt_check = mysqli_prepare($conn, "SELECT id FROM facturas WHERE numero_factura = ?");
             mysqli_stmt_bind_param($stmt_check, 's', $num_factura);
             mysqli_stmt_execute($stmt_check);
             mysqli_stmt_store_result($stmt_check);
+            while (mysqli_stmt_num_rows($stmt_check) > 0) {
+                mysqli_stmt_close($stmt_check);
+                $sig++;
+                $num_factura = "FAC-{$anio_act}-" . str_pad($sig, 6, '0', STR_PAD_LEFT);
+                $stmt_check = mysqli_prepare($conn, "SELECT id FROM facturas WHERE numero_factura = ?");
+                mysqli_stmt_bind_param($stmt_check, 's', $num_factura);
+                mysqli_stmt_execute($stmt_check);
+                mysqli_stmt_store_result($stmt_check);
+            }
+            mysqli_stmt_close($stmt_check);
+            
+            // Set invoice/pedido estado based on confirmed payment methods
+            $pago_confirmado = in_array($metodo_normalizado, ['transferencia', 'pago_movil']);
+            $estado_fact = $pago_confirmado ? 'pagada' : 'pendiente';
+            $estado_pedido = $pago_confirmado ? 'facturado' : 'pendiente';
+            $obs_fact = "Pedido por {$metodo_normalizado}" . ($referencia ? " - Ref: {$referencia}" : "");
+            
+            $ins_fact = "INSERT INTO facturas (numero_factura, cliente_id, pedido_id, fecha_emision, fecha_vencimiento, subtotal, iva, total, metodo_pago, estado, usuario_id, observaciones) VALUES (?, ?, ?, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 30 DAY), ?, ?, ?, ?, ?, ?, ?)";
+            $stmt_fact = mysqli_prepare($conn, $ins_fact);
+            mysqli_stmt_bind_param($stmt_fact, 'siidddssis', $num_factura, $cliente_id, $pedido_id, $subtotal_calc, $iva_calc, $total_calc, $metodo_normalizado, $estado_fact, $usuario_id, $obs_fact);
+            mysqli_stmt_execute($stmt_fact);
+            $factura_id = mysqli_insert_id($conn);
+            mysqli_stmt_close($stmt_fact);
+            
+            // Copiar detalles
+            $ins_det_fact = "INSERT INTO factura_detalles (factura_id, producto_id, cantidad, precio_unitario, subtotal) SELECT ?, producto_id, cantidad, precio_unitario, subtotal FROM pedido_detalles WHERE pedido_id = ?";
+            $stmt_det_fact = mysqli_prepare($conn, $ins_det_fact);
+            mysqli_stmt_bind_param($stmt_det_fact, 'ii', $factura_id, $pedido_id);
+            mysqli_stmt_execute($stmt_det_fact);
+            mysqli_stmt_close($stmt_det_fact);
+            
+            // Update pedido estado
+            $upd_ped = "UPDATE pedidos SET estado = ?, fecha_facturacion = NOW() WHERE id = ?";
+            $stmt_upd = mysqli_prepare($conn, $upd_ped);
+            mysqli_stmt_bind_param($stmt_upd, 'si', $estado_pedido, $pedido_id);
+            mysqli_stmt_execute($stmt_upd);
+            mysqli_stmt_close($stmt_upd);
         }
-        mysqli_stmt_close($stmt_check);
         
-        $estado_fact = 'pendiente';
-        $obs_fact = "Pedido por {$metodo_normalizado}" . ($referencia ? " - Ref: {$referencia}" : "");
-        
-        $ins_fact = "INSERT INTO facturas (numero_factura, cliente_id, pedido_id, fecha_emision, fecha_vencimiento, subtotal, iva, total, metodo_pago, estado, usuario_id, observaciones) VALUES (?, ?, ?, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 30 DAY), ?, ?, ?, ?, ?, ?, ?)";
-        $stmt_fact = mysqli_prepare($conn, $ins_fact);
-        mysqli_stmt_bind_param($stmt_fact, 'siidddssis', $num_factura, $cliente_id, $pedido_id, $subtotal_calc, $iva_calc, $total, $metodo_normalizado, $estado_fact, $usuario_id, $obs_fact);
-        mysqli_stmt_execute($stmt_fact);
-        $factura_id = mysqli_insert_id($conn);
-        mysqli_stmt_close($stmt_fact);
-        
-        // Copiar detalles
-        $ins_det_fact = "INSERT INTO factura_detalles (factura_id, producto_id, cantidad, precio_unitario, subtotal) SELECT ?, producto_id, cantidad, precio_unitario, subtotal FROM pedido_detalles WHERE pedido_id = ?";
-        $stmt_det_fact = mysqli_prepare($conn, $ins_det_fact);
-        mysqli_stmt_bind_param($stmt_det_fact, 'ii', $factura_id, $pedido_id);
-        mysqli_stmt_execute($stmt_det_fact);
-        mysqli_stmt_close($stmt_det_fact);
-        
-        // Marcar pedido como facturado
-        $upd_ped = "UPDATE pedidos SET estado = 'facturado', fecha_facturacion = NOW() WHERE id = ?";
-        $stmt_upd = mysqli_prepare($conn, $upd_ped);
-        mysqli_stmt_bind_param($stmt_upd, 'i', $pedido_id);
-        mysqli_stmt_execute($stmt_upd);
-        mysqli_stmt_close($stmt_upd);
+        $conn->commit();
+    } catch (Exception $e) {
+        $conn->rollback();
+        error_log("Error creating order: " . $e->getMessage());
+        die("Error al procesar el pedido. Por favor intente nuevamente.");
     }
 }
 
@@ -481,15 +524,9 @@ mysqli_close($conn);
 // ============================================================================
 // 12. CALCULAR TOTAL A MOSTRAR
 // ============================================================================
-$totalMostrar = $total;
-if ($totalMostrar == 0 && $pedido_data) {
-    $totalMostrar = $pedido_data['total'];
-}
+$totalMostrar = $pedido_data['total'] ?? $total;
 
-$metodo_final = $metodo_normalizado;
-if (empty($metodo_final) && $pedido_data && $pedido_data['metodo_pago']) {
-    $metodo_final = $pedido_data['metodo_pago'];
-}
+$metodo_final = $pedido_data['metodo_pago'] ?? $metodo_normalizado;
 
 // ============================================================================
 // 13. DETERMINAR PÁGINA DE RETORNO SEGÚN TIPO DE USUARIO
@@ -504,11 +541,11 @@ if (isset($_SESSION['tabla_origen']) && $_SESSION['tabla_origen'] === 'admin_use
 $return_url = '/proyecto/interfaz_usuario/pagina_modernizada.php';
 ?>
 <!DOCTYPE html>
-<html lang="es">
+<html lang="<?php echo htmlspecialchars($locale); ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pedido Confirmado - PIC</title>
+    <title><?php echo \I18n::trans('order_confirmed'); ?> - PIC</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
       <!-- PWA Meta Tags -->
     <link rel="manifest" href="/proyecto/manifest.json">
@@ -549,6 +586,17 @@ $return_url = '/proyecto/interfaz_usuario/pagina_modernizada.php';
         .estado-badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
         .estado-pendiente { background: #ffa502; color: white; }
         .estado-pagada { background: #2ed573; color: white; }
+        body.dark-mode { background: #121212; }
+        body.dark-mode .container { background: #1e1e2e; }
+        body.dark-mode .header { background: linear-gradient(135deg, #0a0a1a, #1a1a2e); }
+        body.dark-mode .content { color: #F3F3F3; }
+        body.dark-mode .success-message h2 { color: #2ed573; }
+        body.dark-mode .info-card { background: #2a2a3a; color: #F3F3F3; }
+        body.dark-mode .info-card h3 { color: #3C91ED; }
+        body.dark-mode .info-row { color: #F3F3F3; border-color: #4a4a4a; }
+        body.dark-mode .productos-table td { color: #F3F3F3; border-color: #4a4a4a; }
+        body.dark-mode .total-row { background: #2a2a3a; color: #F3F3F3; }
+        body.dark-mode .info-value { color: #7EBDE9; }
         @media print { .btn-actions { display: none; } }
         @media (max-width: 768px) {
             .content { padding: 20px; }
@@ -562,51 +610,51 @@ $return_url = '/proyecto/interfaz_usuario/pagina_modernizada.php';
 <div class="container">
     <div class="header">
         <i class="fas fa-check-circle"></i>
-        <h1>¡Pedido Confirmado!</h1>
-        <p>Tu pedido ha sido registrado exitosamente</p>
+        <h1><?php echo \I18n::trans('order_confirmed'); ?></h1>
+        <p><?php echo \I18n::trans('order_registered'); ?></p>
     </div>
     
     <div class="content">
         <div class="success-message">
-            <h2>Gracias por tu compra</h2>
-            <p>Hemos recibido tu pedido y lo estamos procesando.</p>
+            <h2><?php echo \I18n::trans('thanks_for_purchase'); ?></h2>
+            <p><?php echo \I18n::trans('we_are_processing'); ?></p>
         </div>
         
         <?php if (in_array($metodo_final, ['efectivo', 'mixto'])): ?>
         <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 10px; padding: 15px; margin-bottom: 20px; color: #856404;">
             <i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>
-            <strong>Pago pendiente:</strong> Como el método de pago es <strong><?php echo strtoupper($metodo_final); ?></strong>, debes culminar el pago en la empresa para recibir tu producto. De lo contrario no se entregará el pedido.
+            <strong><?php echo \I18n::trans('payment_pending'); ?></strong> <?php echo str_replace(':method', strtoupper($metodo_final), \I18n::trans('payment_pending_notice')); ?>
         </div>
         <?php endif; ?>
 
         <div class="info-card">
-            <h3><i class="fas fa-receipt"></i> Detalles del Pedido</h3>
-            <div class="info-row"><span class="info-label">Número de Pedido:</span><span class="info-value"><strong><?php echo escapeHtml($numero_pedido); ?></strong></span></div>
-            <div class="info-row"><span class="info-label">Fecha:</span><span class="info-value"><?php echo date('d/m/Y H:i:s'); ?></span></div>
-            <div class="info-row"><span class="info-label">Método de Pago:</span><span class="info-value"><?php echo getMetodoPagoBadge($metodo_final); ?></span></div>
+            <h3><i class="fas fa-receipt"></i> <?php echo \I18n::trans('order_details'); ?></h3>
+            <div class="info-row"><span class="info-label"><?php echo \I18n::trans('order_number'); ?></span><span class="info-value"><strong><?php echo escapeHtml($numero_pedido); ?></strong></span></div>
+            <div class="info-row"><span class="info-label"><?php echo \I18n::trans('date'); ?>:</span><span class="info-value"><?php echo date('d/m/Y H:i:s'); ?></span></div>
+            <div class="info-row"><span class="info-label"><?php echo \I18n::trans('payment_method_label'); ?></span><span class="info-value"><?php echo getMetodoPagoBadge($metodo_final); ?></span></div>
             <?php if ($referencia): ?>
-            <div class="info-row"><span class="info-label">Referencia:</span><span class="info-value"><?php echo escapeHtml($referencia); ?></span></div>
+            <div class="info-row"><span class="info-label"><?php echo \I18n::trans('reference_label'); ?></span><span class="info-value"><?php echo escapeHtml($referencia); ?></span></div>
             <?php endif; ?>
             <?php if ($es_pago_mixto && $monto_transferencia > 0): ?>
-            <div class="info-row"><span class="info-label">Monto Transferencia:</span><span class="info-value">Bs. <?php echo number_format($monto_transferencia, 2); ?></span></div>
+            <div class="info-row"><span class="info-label"><?php echo \I18n::trans('transfer_amount'); ?></span><span class="info-value">Bs. <?php echo number_format($monto_transferencia, 2); ?></span></div>
             <?php endif; ?>
             <?php if ($es_pago_mixto && $monto_efectivo > 0): ?>
-            <div class="info-row"><span class="info-label">Monto Efectivo:</span><span class="info-value">Bs. <?php echo number_format($monto_efectivo, 2); ?></span></div>
+            <div class="info-row"><span class="info-label"><?php echo \I18n::trans('cash_amount'); ?></span><span class="info-value">Bs. <?php echo number_format($monto_efectivo, 2); ?></span></div>
             <?php endif; ?>
-            <div class="info-row"><span class="info-label">Estado:</span><span class="info-value"><?php echo getEstadoBadge($pedido_data['estado'] ?? 'pendiente'); ?></span></div>
+            <div class="info-row"><span class="info-label"><?php echo \I18n::trans('status'); ?>:</span><span class="info-value"><?php echo getEstadoBadge($pedido_data['estado'] ?? 'pendiente'); ?></span></div>
         </div>
         
         <div class="info-card">
-            <h3><i class="fas fa-user"></i> Información del Cliente</h3>
-            <div class="info-row"><span class="info-label">Nombre:</span><span class="info-value"><?php echo escapeHtml($pedido_data['cliente_nombre'] ?? $usuario_nombre ?? 'Cliente'); ?></span></div>
-            <div class="info-row"><span class="info-label">Email:</span><span class="info-value"><?php echo escapeHtml($pedido_data['cliente_email'] ?? $usuario_correo ?? 'cliente@email.com'); ?></span></div>
-            <div class="info-row"><span class="info-label">Teléfono:</span><span class="info-value"><?php echo escapeHtml($pedido_data['cliente_telefono'] ?? $usuario_telefono ?? 'No registrado'); ?></span></div>
+            <h3><i class="fas fa-user"></i> <?php echo \I18n::trans('client_info'); ?></h3>
+            <div class="info-row"><span class="info-label"><?php echo \I18n::trans('name_label'); ?></span><span class="info-value"><?php echo escapeHtml($pedido_data['cliente_nombre'] ?? $usuario_nombre ?? \I18n::trans('guest')); ?></span></div>
+            <div class="info-row"><span class="info-label"><?php echo \I18n::trans('email_label'); ?></span><span class="info-value"><?php echo escapeHtml($pedido_data['cliente_email'] ?? $usuario_correo ?? 'cliente@email.com'); ?></span></div>
+            <div class="info-row"><span class="info-label"><?php echo \I18n::trans('phone_label'); ?></span><span class="info-value"><?php echo escapeHtml($pedido_data['cliente_telefono'] ?? $usuario_telefono ?? \I18n::trans('no')); ?></span></div>
         </div>
         
-        <h3><i class="fas fa-boxes"></i> Productos</h3>
+        <h3><i class="fas fa-boxes"></i> <?php echo \I18n::trans('products_label'); ?></h3>
         <table class="productos-table">
             <thead>
-                <tr><th>Producto</th><th style="text-align:center">Cantidad</th><th style="text-align:right">Precio Unitario</th><th style="text-align:right">Subtotal</th></tr>
+                <tr><th><?php echo \I18n::trans('product_header'); ?></th><th style="text-align:center"><?php echo \I18n::trans('qty_header'); ?></th><th style="text-align:right"><?php echo \I18n::trans('unit_price_header'); ?></th><th style="text-align:right"><?php echo \I18n::trans('subtotal_header'); ?></th></tr>
             </thead>
             <tbody>
                 <?php if (!empty($productos)): ?>
@@ -619,19 +667,19 @@ $return_url = '/proyecto/interfaz_usuario/pagina_modernizada.php';
                     </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <tr><td colspan="4" style="text-align:center; color:#999;">No hay productos en este pedido</td></tr>
+                    <tr><td colspan="4" style="text-align:center; color:#999;"><?php echo \I18n::trans('no_products'); ?></td></tr>
                 <?php endif; ?>
             </tbody>
         </table>
         
         <div class="total-row">
-            <strong>Total a Pagar: Bs. <?php echo number_format($totalMostrar, 2); ?></strong>
+            <strong><?php echo \I18n::trans('total_to_pay_label'); ?> Bs. <?php echo number_format($totalMostrar, 2); ?></strong>
         </div>
         
         <div class="btn-actions no-print">
-            <button class="btn-primary" onclick="window.print()"><i class="fas fa-print"></i> Imprimir</button>
+            <button class="btn-primary" onclick="window.print()"><i class="fas fa-print"></i> <?php echo \I18n::trans('print'); ?></button>
             <a href="<?php echo $return_url; ?>" class="btn-primary" id="btnSeguirComprando">
-                <i class="fas fa-shopping-cart"></i> Seguir Comprando
+                <i class="fas fa-shopping-cart"></i> <?php echo \I18n::trans('continue_shopping'); ?>
             </a>
             <?php if ($es_administrador): ?>
             <a href="/proyecto/admin/panel_admin.php" class="btn-primary" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);">
@@ -646,6 +694,12 @@ $return_url = '/proyecto/interfaz_usuario/pagina_modernizada.php';
     <?php if ($es_administrador): ?>
     console.log('Usuario administrador - compra registrada correctamente');
     <?php endif; ?>
+    (function() {
+        const saved = localStorage.getItem('darkMode');
+        if (saved === 'enabled') {
+            document.body.classList.add('dark-mode');
+        }
+    })();
 </script>
 </body>
 </html>

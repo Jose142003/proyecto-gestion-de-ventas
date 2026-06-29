@@ -1,8 +1,13 @@
-﻿<?php
+<?php
 // editar_producto.php - Formulario para editar un producto
 session_start();
 
 require_once __DIR__ . '/../conexion/conexion.php';
+require_once __DIR__ . '/../config/i18n.php';
+require_once __DIR__ . '/../config/i18n_helpers.php';
+$locale = $_GET['lang'] ?? $_COOKIE['lang'] ?? 'es';
+setcookie('lang', $locale, time()+31536000, '/');
+\I18n::load($locale);
 
 // Verificar autenticación y permisos de administrador
 $isAdmin = false;
@@ -23,7 +28,7 @@ if (isset($_SESSION['user_id']) && isset($_SESSION['user_rol']) && $_SESSION['us
 }
 
 if (!$isAdmin) {
-    header('Location: /proyecto/interfaz_usuario/login.html');
+    header('Location: ' . url('/interfaz_usuario/login.html'));
     exit;
 }
 
@@ -44,7 +49,7 @@ $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 if ($id === 0) {
     header('Content-Type: text/html; charset=utf-8');
     echo '<!DOCTYPE html>
-    <html lang="es">
+    <html lang="<?php echo htmlspecialchars($locale); ?>">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -86,7 +91,7 @@ if ($id === 0) {
             <h1>ID de Producto no Válido</h1>
             <p>El ID proporcionado no es válido o no se especificó.</p>
             <a href="productos.php" class="btn">Ver Productos</a>
-            <a href="/proyecto/panel_admin/panel_admin.php" class="btn">Panel Admin</a>
+            <a href="<?= url('/panel_admin/panel_admin.php') ?>" class="btn">Panel Admin</a>
         </div>
     </body>
     </html>';
@@ -97,7 +102,7 @@ if ($id === 0) {
 $producto = null;
 $error = '';
 $success = '';
-$categorias = ['Electrónica', 'Ropa', 'Hogar', 'Deportes', 'Libros', 'Juguetes', 'Alimentos', 'Belleza'];
+$categorias = ['Sensores', 'Contactores', 'Relés', 'Variadores', 'Fuentes de Poder', 'Instrumentos de Medición', 'Botoneras', 'Protecciones', 'Temporizadores', 'Controladores', 'Accesorios', 'General'];
 $monedas = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'MXN'];
 
 // Procesar formulario cuando se envía
@@ -149,7 +154,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $destacado, $id
             ]);
             
-            if ($stmt->rowCount() > 0 || $stmt->errorCode() === '00000') {
+            if ($stmt->rowCount() > 0) {
                 $success = 'Producto actualizado correctamente';
                 auditoriaRegistrar('editar_producto', 'producto', "Producto ID $id editado: $nombre");
             } else {
@@ -185,7 +190,7 @@ try {
 if ($error && !$producto) {
     header('Content-Type: text/html; charset=utf-8');
     echo '<!DOCTYPE html>
-    <html lang="es">
+    <html lang="<?php echo htmlspecialchars($locale); ?>">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -226,7 +231,7 @@ if ($error && !$producto) {
         <div class="error-container">
             <div class="error-icon">❌</div>
             <h1>' . htmlspecialchars($error) . '</h1>
-            <a href="/proyecto/panel_admin/panel_admin.php" class="btn">Ver Productos</a>
+            <a href="<?= url('/panel_admin/panel_admin.php') ?>" class="btn">Ver Productos</a>
         </div>
     </body>
     </html>';
@@ -234,7 +239,7 @@ if ($error && !$producto) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="es">
+<html lang="<?php echo htmlspecialchars($locale); ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
@@ -492,8 +497,8 @@ if ($error && !$producto) {
                 <small><i class="fas fa-info-circle"></i> Los campos marcados con * son obligatorios</small>
             </div>
             <div>
-                <a href="/proyecto/panel_admin/panel_admin.php" class="btn-volver">
-                    <i class="fas fa-arrow-left"></i> Volver
+                <a href="<?= url('/panel_admin/panel_admin.php') ?>" class="btn-volver">
+                    <i class="fas fa-arrow-left"></i> <?php echo __('back'); ?>
                 </a>
             </div>
         </div>
@@ -535,7 +540,7 @@ if ($error && !$producto) {
                     </div>
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label class="form-label">Precio *</label>
+                            <label class="form-label"><?php echo __('price'); ?> *</label>
                             <input type="number" class="form-control" id="precio" name="precio" step="0.01" min="0"
                                    value="<?php echo htmlspecialchars($producto['price']); ?>" required>
                         </div>
@@ -549,8 +554,8 @@ if ($error && !$producto) {
                     </div>
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label class="form-label">Categoría</label>
-                            <select class="form-select" name="categoria">
+<label class="form-label"><?php echo __('category'); ?></label>
+            <select class="form-select" name="categoria">
                                 <?php foreach ($categorias as $cat): ?>
                                     <option value="<?php echo htmlspecialchars($cat); ?>" 
                                         <?php echo ($producto['category'] == $cat) ? 'selected' : ''; ?>>
@@ -582,7 +587,7 @@ if ($error && !$producto) {
                     </div>
                     <div class="col-12">
                         <div class="mb-3">
-                            <label class="form-label">Descripción</label>
+                            <label class="form-label"><?php echo __('description'); ?></label>
                             <textarea class="form-control" name="descripcion" rows="4"><?php echo htmlspecialchars(safeStripTags($producto['description'])); ?></textarea>
                         </div>
                     </div>
@@ -633,10 +638,10 @@ if ($error && !$producto) {
                 
                 <div class="form-actions">
                     <a href="detalles_producto.php?id=<?php echo $id; ?>" class="btn-secondary">
-                        <i class="fas fa-times"></i> Cancelar
+                        <i class="fas fa-times"></i> <?php echo __('cancel'); ?>
                     </a>
                     <button type="submit" class="btn-success">
-                        <i class="fas fa-save"></i> Guardar Cambios
+                        <i class="fas fa-save"></i> <?php echo __('save'); ?>
                     </button>
                 </div>
             </form>

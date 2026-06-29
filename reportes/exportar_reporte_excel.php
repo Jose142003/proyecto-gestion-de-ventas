@@ -1,11 +1,8 @@
 <?php
 session_start();
 
-if (!isset($_SESSION['user_id'])) {
-    die('Acceso no autorizado');
-}
-
 require_once __DIR__ . '/../conexion/conexion.php';
+requerirAdmin();
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;

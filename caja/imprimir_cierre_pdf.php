@@ -42,16 +42,18 @@ try {
     $stmtMov->execute([$caja['id']]);
     $movimientos = $stmtMov->fetchAll(PDO::FETCH_ASSOC);
 
-    $stmtTotales = $pdo->query("SELECT
+    $stmtTotales = $pdo->prepare("SELECT
         COALESCE(SUM(CASE WHEN tipo = 'ingreso' THEN monto ELSE 0 END), 0) as total_ingresos,
         COALESCE(SUM(CASE WHEN tipo = 'egreso' THEN monto ELSE 0 END), 0) as total_egresos
-        FROM caja_movimientos WHERE arqueo_id = {$caja['id']}");
+        FROM caja_movimientos WHERE arqueo_id = ?");
+    $stmtTotales->execute([$caja['id']]);
     $totales = $stmtTotales->fetch(PDO::FETCH_ASSOC);
 
-    $empresa = 'Proyectos Industriales del Centro (PIC)';
-    $rif = 'J-29384799-0';
-    $telefono = '0414-3417373';
-    $direccion = 'Av. Principal, Edif. PIC';
+    $empresaCfg = obtenerConfigEmpresa($pdo);
+    $empresa = $empresaCfg['nombre'];
+    $rif = $empresaCfg['rif'];
+    $telefono = $empresaCfg['telefono'];
+    $direccion = $empresaCfg['direccion'];
 
     $fecha_apertura = date('d/m/Y H:i', strtotime($caja['fecha_apertura']));
     $fecha_cierre = $caja['fecha_cierre'] ? date('d/m/Y H:i', strtotime($caja['fecha_cierre'])) : 'Pendiente';

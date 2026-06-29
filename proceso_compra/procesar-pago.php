@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // proceso_compra/procesar-pago.php
 
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_WARNING & ~E_NOTICE);
@@ -20,7 +20,7 @@ if (!$user_id || !isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true
     echo json_encode([
         'success' => false, 
         'message' => 'Debes iniciar sesión para continuar',
-        'redirect' => '/proyecto/interfaz_usuario/login.html'
+        'redirect' => url('/interfaz_usuario/login.html')
     ]);
     exit;
 }
@@ -65,7 +65,7 @@ try {
     }
 
     // Generar número de pedido único usando UUID
-    $numero_pedido = 'PED-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(4)));
+    $numero_pedido = 'PED-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(2)));
     $pdo->beginTransaction();
 
     // Verificar si existe columna referencia_pago (usando fetch, no rowCount que es poco confiable en PDO)
@@ -118,6 +118,10 @@ try {
             $subtotal_item, 
             $item['name']
         ]);
+        
+        // Deduct stock
+        $stmt_stock = $pdo->prepare("UPDATE products SET stock = stock - ? WHERE id = ?");
+        $stmt_stock->execute([intval($item['quantity']), intval($item['id'])]);
     }
     
     // ========================================================================

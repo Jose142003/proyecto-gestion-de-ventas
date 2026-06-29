@@ -255,14 +255,14 @@ function exportarReportePDF($mes, $anio, $nombre_mes, $stats, $productos_top, $c
         <meta charset="UTF-8">
         <title>Reporte de Ventas ' . htmlspecialchars($nombre_mes) . ' ' . htmlspecialchars($anio) . '</title>
           <!-- PWA Meta Tags -->
-    <link rel="manifest" href="/proyecto/manifest.json">
+    <link rel="manifest" href="<?= url('/manifest.json') ?>">
     <meta name="theme-color" content="#050C18">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="PIC Industrial">
-    <link rel="apple-touch-icon" href="/proyecto/img/pic.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="/proyecto/img/pic.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="/proyecto/img/pic.png">
+    <link rel="apple-touch-icon" href="<?= url('/img/pic.png') ?>">
+    <link rel="icon" type="image/png" sizes="192x192" href="<?= url('/img/pic.png') ?>">
+    <link rel="icon" type="image/png" sizes="512x512" href="<?= url('/img/pic.png') ?>">
         <style>
             body { font-family: Arial, sans-serif; margin: 30px; }
             .header { text-align: center; margin-bottom: 40px; }

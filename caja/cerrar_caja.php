@@ -3,11 +3,8 @@ session_start();
 header('Content-Type: application/json');
 
 require_once dirname(__DIR__) . '/conexion/conexion.php';
-
-if (!isset($_SESSION['user_id'])) {
-    echo json_encode(['success' => false, 'message' => 'No autorizado']);
-    exit;
-}
+requerirAdmin();
+verificarCSRF();
 
 try {
     $db = conectarDB();
